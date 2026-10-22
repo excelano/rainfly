@@ -1,0 +1,72 @@
+// SettingsStore.swift
+// Author: David M. Anderson
+// Built with AI assistance (Claude, Anthropic)
+
+import Foundation
+
+/// How values are shown. The engine and the stores always work in °C and m/s.
+struct DisplayUnits: Codable, Equatable, Sendable {
+    var fahrenheit: Bool
+    var mph: Bool
+
+    static var locale: DisplayUnits {
+        let system = Locale.current.measurementSystem
+        return DisplayUnits(fahrenheit: system == .us, mph: system != .metric)
+    }
+
+    func temperature(_ celsius: Double) -> Double { fahrenheit ? celsius * 9 / 5 + 32 : celsius }
+    func celsius(_ shown: Double) -> Double { fahrenheit ? (shown - 32) * 5 / 9 : shown }
+
+    /// A difference between two temperatures, which converts without the offset.
+    func temperatureSpan(_ celsius: Double) -> Double { fahrenheit ? celsius * 9 / 5 : celsius }
+    func celsiusSpan(_ shown: Double) -> Double { fahrenheit ? shown * 5 / 9 : shown }
+
+    func speed(_ metersPerSecond: Double) -> Double { mph ? metersPerSecond / Self.metersPerSecondPerMph : metersPerSecond }
+    func metersPerSecond(_ shown: Double) -> Double { mph ? shown * Self.metersPerSecondPerMph : shown }
+
+    var speedUnit: String { mph ? "mph" : "m/s" }
+
+    private static let metersPerSecondPerMph = 0.44704
+}
+
+/// The settings that are not thresholds.
+struct Preferences: Codable, Equatable, Sendable {
+    var units = DisplayUnits.locale
+    var pressureWatch = true
+
+    init() {}
+
+    /// A field missing from saved preferences keeps its default.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        units = try c.decodeIfPresent(DisplayUnits.self, forKey: .units) ?? .locale
+        pressureWatch = try c.decodeIfPresent(Bool.self, forKey: .pressureWatch) ?? true
+    }
+}
+
+/// Settings and preferences in the App Group's defaults, shared with the complication.
+struct SettingsStore {
+    let defaults: UserDefaults
+
+    init(defaults: UserDefaults = UserDefaults(suiteName: AppGroup.id) ?? .standard) {
+        self.defaults = defaults
+    }
+
+    var settings: Settings {
+        get { load("settings") ?? Settings() }
+        nonmutating set { save(newValue, "settings") }
+    }
+
+    var preferences: Preferences {
+        get { load("preferences") ?? Preferences() }
+        nonmutating set { save(newValue, "preferences") }
+    }
+
+    private func load<Value: Decodable>(_ key: String) -> Value? {
+        defaults.data(forKey: key).flatMap { try? JSONDecoder().decode(Value.self, from: $0) }
+    }
+
+    private func save<Value: Encodable>(_ value: Value, _ key: String) {
+        defaults.set(try? JSONEncoder().encode(value), forKey: key)
+    }
+}

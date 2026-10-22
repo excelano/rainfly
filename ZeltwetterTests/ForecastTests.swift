@@ -38,9 +38,10 @@ struct NightWindowTests {
 
 struct VerdictTextTests {
     private func text(_ night: NightForecast, _ settings: Settings = Settings(), fahrenheit: Bool = false) -> VerdictText {
-        VerdictText(
+        let units = DisplayUnits(fahrenheit: fahrenheit, mph: false)
+        return VerdictText(
             night: night, verdict: FlyEngine.evaluate(night, settings: settings), settings: settings,
-            fahrenheit: fahrenheit, locale: Locale(identifier: "en_US")
+            units: units, locale: Locale(identifier: "en_US")
         )
     }
 
@@ -117,6 +118,11 @@ struct VerdictTextTests {
     }
 }
 
+func temporarySettings() -> SettingsStore {
+    let name = "zeltwetter-\(UUID().uuidString)"
+    return SettingsStore(defaults: UserDefaults(suiteName: name)!)
+}
+
 private func temporaryCache() -> ForecastCache {
     let url = FileManager.default.temporaryDirectory.appending(path: "zeltwetter-\(UUID().uuidString).json")
     return ForecastCache(store: Store(url: url))
@@ -187,7 +193,7 @@ struct ForecastModelTests {
     @Test func emptyCacheFetchesAndEvaluates() async {
         let provider = FakeProvider(fetchedAt: afternoon)
         let cache = temporaryCache()
-        let model = ForecastModel(provider: provider, cache: cache) { [here] in here }
+        let model = ForecastModel(provider: provider, cache: cache, store: temporarySettings()) { [here] in here }
         await model.refreshIfStale(now: afternoon)
         #expect(await provider.fetches == 1)
         #expect(model.verdict?.flyOn == false)
@@ -198,7 +204,7 @@ struct ForecastModelTests {
     @Test func freshCacheIsNotRefetched() async {
         let provider = FakeProvider(fetchedAt: afternoon)
         let cache = temporaryCache()
-        let model = ForecastModel(provider: provider, cache: cache) { [here] in here }
+        let model = ForecastModel(provider: provider, cache: cache, store: temporarySettings()) { [here] in here }
         await model.refreshIfStale(now: afternoon)
         await model.refreshIfStale(now: afternoon.addingTimeInterval(ForecastModel.refreshAge - 60))
         #expect(await provider.fetches == 1)
@@ -207,7 +213,7 @@ struct ForecastModelTests {
     @Test func staleCacheIsRefetched() async {
         let provider = FakeProvider(fetchedAt: afternoon)
         let cache = temporaryCache()
-        let model = ForecastModel(provider: provider, cache: cache) { [here] in here }
+        let model = ForecastModel(provider: provider, cache: cache, store: temporarySettings()) { [here] in here }
         await model.refreshIfStale(now: afternoon)
         await provider.setChance(0.5)
         await model.refreshIfStale(now: afternoon.addingTimeInterval(ForecastModel.refreshAge + 60))
@@ -218,9 +224,9 @@ struct ForecastModelTests {
     @Test func failedFetchKeepsTheCachedNight() async {
         let provider = FakeProvider(fetchedAt: afternoon)
         let cache = temporaryCache()
-        await ForecastModel(provider: provider, cache: cache) { [here] in here }.refreshIfStale(now: afternoon)
+        await ForecastModel(provider: provider, cache: cache, store: temporarySettings()) { [here] in here }.refreshIfStale(now: afternoon)
 
-        let offline = ForecastModel(provider: provider, cache: cache) { throw ForecastError.noLocation }
+        let offline = ForecastModel(provider: provider, cache: cache, store: temporarySettings()) { throw ForecastError.noLocation }
         await offline.refreshIfStale(now: afternoon.addingTimeInterval(ForecastModel.refreshAge + 60))
         #expect(offline.night != nil)
         #expect(offline.problem == ForecastError.noLocation.localizedDescription)
@@ -229,7 +235,7 @@ struct ForecastModelTests {
     @Test func settingsChangesReevaluate() async {
         let provider = FakeProvider(fetchedAt: afternoon)
         await provider.setChance(0.3)
-        let model = ForecastModel(provider: provider, cache: temporaryCache()) { [here] in here }
+        let model = ForecastModel(provider: provider, cache: temporaryCache(), store: temporarySettings()) { [here] in here }
         await model.refreshIfStale(now: afternoon)
         #expect(model.verdict?.flyOn == true)
         model.settings.rainChance = 0.4

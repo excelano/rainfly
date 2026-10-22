@@ -51,12 +51,12 @@ extension ComplicationFace {
 /// when the next night takes over.
 enum ComplicationTimeline {
     static func entries(
-        now: Date, settings: Settings, nightAt: (Date) -> NightForecast?
+        now: Date, settings: Settings, units: DisplayUnits, nightAt: (Date) -> NightForecast?
     ) -> [(date: Date, face: ComplicationFace)] {
         guard let night = nightAt(now) else { return [(now, .noForecast)] }
         let window = NightWindow(night, packByMinutes: settings.packByMinutes)
         let verdict = FlyEngine.evaluate(night, settings: settings)
-        let text = VerdictText(night: night, verdict: verdict, settings: settings)
+        let text = VerdictText(night: night, verdict: verdict, settings: settings, units: units)
 
         var marks = [now, night.sunset, night.sunrise] + verdict.firings.map(\.at)
         var hour = Calendar.current.dateInterval(of: .hour, for: now)?.end ?? window.packBy
@@ -74,7 +74,7 @@ enum ComplicationTimeline {
         let nextFace = next.map { next in
             let nextVerdict = FlyEngine.evaluate(next, settings: settings)
             return ComplicationFace(
-                VerdictText(night: next, verdict: nextVerdict, settings: settings), morning: false
+                VerdictText(night: next, verdict: nextVerdict, settings: settings, units: units), morning: false
             )
         }
         entries.append((window.packBy, nextFace ?? .noForecast))

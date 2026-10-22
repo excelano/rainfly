@@ -9,7 +9,7 @@ struct VerdictText {
     let night: NightForecast
     let verdict: Verdict
     let settings: Settings
-    var fahrenheit = Locale.current.measurementSystem == .us
+    let units: DisplayUnits
     var locale = Locale.current
 
     var headline: String { verdict.flyOn ? "Fly on" : "Fly off" }
@@ -91,14 +91,11 @@ struct VerdictText {
     }
 
     func degrees(_ celsius: Double) -> String {
-        let value = fahrenheit ? celsius * 9 / 5 + 32 : celsius
-        return "\(Int(value.rounded()))°"
+        "\(Int(units.temperature(celsius).rounded()))°"
     }
 
-    /// A difference between two temperatures, which converts without the offset.
     func degreeSpan(_ celsius: Double) -> String {
-        let value = fahrenheit ? celsius * 9 / 5 : celsius
-        return "\(Int(value.rounded()))°"
+        "\(Int(units.temperatureSpan(celsius).rounded()))°"
     }
 
     func percent(_ fraction: Double) -> String {

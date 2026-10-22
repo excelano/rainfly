@@ -18,23 +18,35 @@ final class ForecastModel {
     private(set) var attribution = Attribution.fallback
     private(set) var isRefreshing = false
     private(set) var problem: String?
-    var settings = Settings() {
-        didSet { evaluate() }
+    var settings: Settings {
+        didSet { changed { store.settings = settings } }
+    }
+    var preferences: Preferences {
+        didSet { changed { store.preferences = preferences } }
     }
 
     @ObservationIgnored private let provider: ForecastProvider
     @ObservationIgnored private let cache: ForecastCache
+    @ObservationIgnored private let store: SettingsStore
     @ObservationIgnored private let locate: @MainActor () async throws -> CampLocation
 
-    init(provider: ForecastProvider, cache: ForecastCache, locate: @escaping @MainActor () async throws -> CampLocation) {
+    init(
+        provider: ForecastProvider,
+        cache: ForecastCache,
+        store: SettingsStore,
+        locate: @escaping @MainActor () async throws -> CampLocation
+    ) {
         self.provider = provider
         self.cache = cache
+        self.store = store
         self.locate = locate
+        settings = store.settings
+        preferences = store.preferences
     }
 
     static func live() -> ForecastModel {
         let fix = LocationFix()
-        return ForecastModel(provider: WeatherKitProvider(), cache: ForecastCache()) {
+        return ForecastModel(provider: WeatherKitProvider(), cache: ForecastCache(), store: SettingsStore()) {
             let location = try await fix.current()
             return CampLocation(
                 name: CampLocation.hereName,
@@ -80,6 +92,13 @@ final class ForecastModel {
 
     private func evening(at now: Date) -> Date {
         NightWindow.evening(at: now, packByMinutes: settings.packByMinutes, calendar: .current)
+    }
+
+    /// Saves a change, re-decides and redraws the complication, which reads the same store.
+    private func changed(_ save: () -> Void) {
+        save()
+        evaluate()
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     private func evaluate() {

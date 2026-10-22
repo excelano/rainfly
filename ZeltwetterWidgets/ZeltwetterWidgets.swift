@@ -32,9 +32,10 @@ struct VerdictProvider: TimelineProvider {
     }
 
     private func entries(now: Date) -> [VerdictEntry] {
-        let settings = Settings()
+        let store = SettingsStore()
+        let settings = store.settings
         let cache = ForecastCache()
-        return ComplicationTimeline.entries(now: now, settings: settings) { date in
+        return ComplicationTimeline.entries(now: now, settings: settings, units: store.preferences.units) { date in
             cache.night(at: CampLocation.hereName, covering: date, packByMinutes: settings.packByMinutes)
         }
         .map { VerdictEntry(date: $0.date, face: $0.face) }

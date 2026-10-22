@@ -10,7 +10,7 @@ struct DetailView: View {
     var body: some View {
         List {
             if let night = model.night, let verdict = model.verdict, let window = model.window {
-                let text = VerdictText(night: night, verdict: verdict, settings: model.settings)
+                let text = VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units)
                 Section {
                     ForEach(Trigger.allCases, id: \.self) { trigger in
                         TriggerRow(trigger: trigger, firing: verdict.firing(trigger), text: text)

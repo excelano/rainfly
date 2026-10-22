@@ -15,13 +15,13 @@ private func plain(_ string: String) -> String {
 
 struct ComplicationTimelineTests {
     private func entries(_ night: NightForecast, now: Date, next: NightForecast? = nil) -> [(date: Date, face: ComplicationFace)] {
-        ComplicationTimeline.entries(now: now, settings: Settings()) { date in
+        ComplicationTimeline.entries(now: now, settings: Settings(), units: .locale) { date in
             date < F.at(1, 8) ? night : next
         }
     }
 
     @Test func noCachedNightShowsNoForecast() {
-        let timeline = ComplicationTimeline.entries(now: F.at(0, 18), settings: Settings()) { _ in nil }
+        let timeline = ComplicationTimeline.entries(now: F.at(0, 18), settings: Settings(), units: .locale) { _ in nil }
         #expect(timeline.count == 1)
         #expect(timeline[0].face == .noForecast)
     }
@@ -53,7 +53,7 @@ struct ComplicationTimelineTests {
 
         let morning = timeline.first { $0.date == F.sunrise }!.face
         let dryBy = F.at(1, 6, 45)
-        let text = VerdictText(night: F.night(), verdict: FlyEngine.evaluate(F.night(), settings: Settings()), settings: Settings())
+        let text = VerdictText(night: F.night(), verdict: FlyEngine.evaluate(F.night(), settings: Settings()), settings: Settings(), units: .locale)
         #expect(morning.dryTime == text.compactClock(dryBy))
         #expect(morning.inline == "Dry by \(text.compactClock(dryBy))")
         #expect(morning.detail == "Dry by ~\(text.clock(dryBy))")

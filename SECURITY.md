@@ -16,4 +16,4 @@ Only the latest version on the App Store receives fixes. Security fixes ship thr
 
 **It reads location only with permission, and sends it only to WeatherKit.** A coarse position is read while the app is on screen, after watchOS asks for permission, and goes to Apple's weather service as the place to forecast. It is not stored apart from the forecast fetched for it.
 
-**What it keeps stays on the watch.** Fetched forecasts are kept as files in an App Group container shared by the watch app and its complication, so verdicts work without a connection. Removing the app removes them.
+**What it keeps stays on the watch.** Fetched forecasts and the settings are kept in an App Group container shared by the watch app and its complication, so verdicts work without a connection. Removing the app removes them.

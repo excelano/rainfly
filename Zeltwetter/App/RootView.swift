@@ -13,7 +13,9 @@ struct RootView: View {
         NavigationStack {
             VerdictView()
                 #if DEBUG
-                .navigationDestination(isPresented: .constant(Demo.opensDetail)) { DetailView() }
+                .navigationDestination(isPresented: .constant(Demo.opens != nil)) {
+                    if Demo.opens == "settings" { SettingsView() } else { DetailView() }
+                }
                 #endif
         }
         .task(id: scenePhase) {

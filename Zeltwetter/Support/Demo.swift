@@ -9,13 +9,14 @@ import Foundation
 /// WeatherKit or a location:
 ///
 ///     --demo clear|rain|storm|dew|frost   a fixed camp and a night that gives that verdict
-///     --detail                            also opens the detail screen
+///     --open detail|settings              also opens that screen
 enum Demo {
-    static var opensDetail: Bool { CommandLine.arguments.contains("--detail") }
+    static var scene: String? { argument(after: "--demo") }
+    static var opens: String? { argument(after: "--open") }
 
-    static var scene: String? {
+    private static func argument(after flag: String) -> String? {
         let arguments = CommandLine.arguments
-        guard let index = arguments.firstIndex(of: "--demo"), index + 1 < arguments.count else { return nil }
+        guard let index = arguments.firstIndex(of: flag), index + 1 < arguments.count else { return nil }
         return arguments[index + 1]
     }
 
@@ -27,7 +28,12 @@ enum Demo {
     static func model(scene: String) -> ForecastModel {
         let url = FileManager.default.temporaryDirectory.appending(path: "demo-forecasts.json")
         try? FileManager.default.removeItem(at: url)
-        return ForecastModel(provider: Provider(scene: scene), cache: ForecastCache(store: Store(url: url))) { camp }
+        let defaults = UserDefaults(suiteName: "demo")!
+        defaults.removePersistentDomain(forName: "demo")
+        return ForecastModel(
+            provider: Provider(scene: scene), cache: ForecastCache(store: Store(url: url)),
+            store: SettingsStore(defaults: defaults)
+        ) { camp }
     }
 
     /// Hours from 19:00 on the evening to noon the next day; sunset 20:30, sunrise 06:10.

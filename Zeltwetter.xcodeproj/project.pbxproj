@@ -78,6 +78,7 @@
 			membershipExceptions = (
 				Complication/ComplicationTimeline.swift,
 				Data/ForecastCache.swift,
+				Data/SettingsStore.swift,
 				Data/Store.swift,
 				Engine/DryByModel.swift,
 				Engine/FlyEngine.swift,

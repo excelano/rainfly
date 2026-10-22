@@ -14,7 +14,7 @@ struct VerdictView: View {
                     DetailView()
                 } label: {
                     VerdictContent(
-                        text: VerdictText(night: night, verdict: verdict, settings: model.settings),
+                        text: VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units),
                         now: context.date
                     )
                 }
@@ -23,6 +23,16 @@ struct VerdictView: View {
                 ProgressView("Checking the sky")
             } else {
                 ProblemView(message: model.problem ?? "No forecast yet.")
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    SettingsView()
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+                .accessibilityLabel("Settings")
             }
         }
     }
