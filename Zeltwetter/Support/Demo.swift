@@ -77,7 +77,7 @@ enum Demo {
                 storm = hour == 23
                 chance = hour == 23 ? 0.3 : 0
             case "dew":
-                if !morning { temp = 11; dewPoint = 9; cloud = 0.1; wind = 1 }
+                if !morning && hour >= 27 { temp = 9; dewPoint = 7; cloud = 0.1; wind = 1 }
             case "frost":
                 if !morning { temp = -2; dewPoint = -4; cloud = 0.05; wind = 0.5 } else { temp = 4; dewPoint = -3 }
             default:
