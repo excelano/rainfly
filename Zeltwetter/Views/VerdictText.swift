@@ -44,6 +44,12 @@ struct VerdictText {
         }
     }
 
+    /// The firing in a few words, for the inline complication: "Dew 4 AM".
+    func brief(_ firing: Firing) -> String {
+        let name = firing.trigger == .windRain ? "Wind rain" : Self.name(firing.trigger)
+        return "\(name) \(clock(firing.at))"
+    }
+
     static func name(_ trigger: Trigger) -> String {
         switch trigger {
         case .storm: "Storms"
@@ -68,6 +74,22 @@ struct VerdictText {
         return date.formatted(style)
     }
 
+    /// "8:40" with no AM or PM for the smallest complications, or "08:40" where the
+    /// locale keeps a 24-hour clock. The format style's own omitted-AM/PM hour pads to
+    /// two digits even on a 12-hour clock.
+    func compactClock(_ date: Date) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = night.location.timeZone
+        let parts = calendar.dateComponents([.hour, .minute], from: date)
+        let hour = parts.hour ?? 0, minute = String(format: "%02d", parts.minute ?? 0)
+        switch locale.hourCycle {
+        case .oneToTwelve, .zeroToEleven:
+            return "\(hour % 12 == 0 ? 12 : hour % 12):\(minute)"
+        default:
+            return String(format: "%02d", hour) + ":" + minute
+        }
+    }
+
     func degrees(_ celsius: Double) -> String {
         let value = fahrenheit ? celsius * 9 / 5 + 32 : celsius
         return "\(Int(value.rounded()))°"
@@ -89,8 +111,8 @@ struct VerdictText {
 
     enum Staleness { case fresh, aging, stale }
 
-    static func age(of night: NightForecast, at now: Date) -> String {
-        let minutes = Int(now.timeIntervalSince(night.fetchedAt) / 60)
+    static func age(since fetchedAt: Date, at now: Date) -> String {
+        let minutes = Int(now.timeIntervalSince(fetchedAt) / 60)
         return switch minutes {
         case ..<1: "Forecast just now"
         case ..<60: "Forecast \(minutes) min old"
@@ -98,8 +120,8 @@ struct VerdictText {
         }
     }
 
-    static func staleness(of night: NightForecast, at now: Date) -> Staleness {
-        let hours = now.timeIntervalSince(night.fetchedAt) / 3600
+    static func staleness(since fetchedAt: Date, at now: Date) -> Staleness {
+        let hours = now.timeIntervalSince(fetchedAt) / 3600
         return hours > 24 ? .stale : hours > 12 ? .aging : .fresh
     }
 }

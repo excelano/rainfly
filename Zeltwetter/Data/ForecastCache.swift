@@ -18,6 +18,12 @@ struct ForecastCache {
         (store.load() ?? []).first { $0.location.name == campName && Self.begins($0, on: evening) }
     }
 
+    /// The night that matters at `now` for a camp in the watch's own zone: last night
+    /// until pack-by, tonight from then on.
+    func night(at campName: String, covering now: Date, packByMinutes: Int) -> NightForecast? {
+        night(at: campName, evening: NightWindow.evening(at: now, packByMinutes: packByMinutes, calendar: .current))
+    }
+
     func save(_ night: NightForecast, now: Date = .now) {
         let calendar = NightWindow.localCalendar(for: night.location)
         let evening = calendar.startOfDay(for: night.sunset)

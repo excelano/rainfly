@@ -86,6 +86,19 @@ struct VerdictTextTests {
         #expect(words.notes == ["Open the vents", "Won't dry by noon"])
     }
 
+    @Test func briefAndCompactTimes() {
+        let words = text(F.night { F.hour($0, temp: 12, dewPoint: 10, wind: 1) })
+        #expect(plain(words.brief(words.verdict.headline!)) == "Dew 8 PM")
+        #expect(words.compactClock(F.at(1, 6, 45)) == "6:45")
+        #expect(words.compactClock(F.at(0, 20, 5)) == "8:05")
+        #expect(words.compactClock(F.at(1, 0, 30)) == "12:30")
+
+        var german = words
+        german.locale = Locale(identifier: "de_DE")
+        #expect(german.compactClock(F.at(1, 6, 45)) == "06:45")
+        #expect(german.compactClock(F.at(0, 20, 5)) == "20:05")
+    }
+
     @Test func spreadConvertsWithoutTheOffset() {
         let words = text(F.night(), fahrenheit: true)
         #expect(words.degrees(0) == "32°")
@@ -95,12 +108,12 @@ struct VerdictTextTests {
     @Test func forecastAgeAndStaleness() {
         let night = F.night()
         let fetched = night.fetchedAt
-        #expect(VerdictText.age(of: night, at: fetched.addingTimeInterval(20)) == "Forecast just now")
-        #expect(VerdictText.age(of: night, at: fetched.addingTimeInterval(25 * 60)) == "Forecast 25 min old")
-        #expect(VerdictText.age(of: night, at: fetched.addingTimeInterval(6.5 * 3600)) == "Forecast 6 h old")
-        #expect(VerdictText.staleness(of: night, at: fetched.addingTimeInterval(12 * 3600)) == .fresh)
-        #expect(VerdictText.staleness(of: night, at: fetched.addingTimeInterval(13 * 3600)) == .aging)
-        #expect(VerdictText.staleness(of: night, at: fetched.addingTimeInterval(25 * 3600)) == .stale)
+        #expect(VerdictText.age(since: fetched, at: fetched.addingTimeInterval(20)) == "Forecast just now")
+        #expect(VerdictText.age(since: fetched, at: fetched.addingTimeInterval(25 * 60)) == "Forecast 25 min old")
+        #expect(VerdictText.age(since: fetched, at: fetched.addingTimeInterval(6.5 * 3600)) == "Forecast 6 h old")
+        #expect(VerdictText.staleness(since: fetched, at: fetched.addingTimeInterval(12 * 3600)) == .fresh)
+        #expect(VerdictText.staleness(since: fetched, at: fetched.addingTimeInterval(13 * 3600)) == .aging)
+        #expect(VerdictText.staleness(since: fetched, at: fetched.addingTimeInterval(25 * 3600)) == .stale)
     }
 }
 
@@ -168,7 +181,7 @@ private actor FakeProvider: ForecastProvider {
 
 @MainActor
 struct ForecastModelTests {
-    let here = CampLocation(name: ForecastModel.here, latitude: 39.6, longitude: -105.9, timeZoneID: TimeZone.current.identifier)
+    let here = CampLocation(name: CampLocation.hereName, latitude: 39.6, longitude: -105.9, timeZoneID: TimeZone.current.identifier)
     let afternoon = Calendar.current.date(bySettingHour: 15, minute: 0, second: 0, of: .now)!
 
     @Test func emptyCacheFetchesAndEvaluates() async {
@@ -179,7 +192,7 @@ struct ForecastModelTests {
         #expect(await provider.fetches == 1)
         #expect(model.verdict?.flyOn == false)
         #expect(model.attribution.legalURL.host() == "example.com")
-        #expect(cache.night(at: ForecastModel.here, evening: Calendar.current.startOfDay(for: afternoon)) != nil)
+        #expect(cache.night(at: CampLocation.hereName, evening: Calendar.current.startOfDay(for: afternoon)) != nil)
     }
 
     @Test func freshCacheIsNotRefetched() async {

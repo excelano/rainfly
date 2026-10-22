@@ -5,6 +5,9 @@
 import Foundation
 
 struct CampLocation: Codable, Equatable, Sendable {
+    /// The camp that follows the watch's own position.
+    static let hereName = "Here"
+
     let name: String
     let latitude: Double
     let longitude: Double

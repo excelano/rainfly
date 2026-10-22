@@ -49,7 +49,7 @@ private struct VerdictContent: View {
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
-                Text("\(text.night.location.name) · \(VerdictText.age(of: text.night, at: now))")
+                Text("\(text.night.location.name) · \(VerdictText.age(since: text.night.fetchedAt, at: now))")
                     .font(.caption2)
                     .foregroundStyle(ageColor)
                     .padding(.top, 4)
@@ -59,7 +59,7 @@ private struct VerdictContent: View {
     }
 
     private var ageColor: Color {
-        switch VerdictText.staleness(of: text.night, at: now) {
+        switch VerdictText.staleness(since: text.night.fetchedAt, at: now) {
         case .fresh: .secondary
         case .aging: .orange
         case .stale: .red

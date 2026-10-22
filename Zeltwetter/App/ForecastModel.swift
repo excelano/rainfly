@@ -4,6 +4,7 @@
 
 import Foundation
 import Observation
+import WidgetKit
 
 /// Tonight's forecast and verdict for the watch's own position. The cached night shows
 /// first; a fetch replaces it when the cache is missing or older than `refreshAge`.
@@ -11,7 +12,6 @@ import Observation
 @Observable
 final class ForecastModel {
     static let refreshAge: TimeInterval = 2 * 3600
-    static let here = "Here"
 
     private(set) var night: NightForecast?
     private(set) var verdict: Verdict?
@@ -37,7 +37,7 @@ final class ForecastModel {
         return ForecastModel(provider: WeatherKitProvider(), cache: ForecastCache()) {
             let location = try await fix.current()
             return CampLocation(
-                name: here,
+                name: CampLocation.hereName,
                 latitude: location.coordinate.latitude,
                 longitude: location.coordinate.longitude,
                 timeZoneID: TimeZone.current.identifier
@@ -50,7 +50,7 @@ final class ForecastModel {
     }
 
     func refreshIfStale(now: Date = .now) async {
-        night = cache.night(at: Self.here, evening: evening(at: now))
+        night = cache.night(at: CampLocation.hereName, covering: now, packByMinutes: settings.packByMinutes)
         evaluate()
         if let night, now.timeIntervalSince(night.fetchedAt) < Self.refreshAge { return }
         await refresh(now: now)
@@ -64,6 +64,7 @@ final class ForecastModel {
             let camp = try await locate()
             let fetched = try await provider.night(at: camp, evening: evening(at: now))
             cache.save(fetched, now: now)
+            WidgetCenter.shared.reloadAllTimelines()
             night = fetched
             problem = nil
             evaluate()

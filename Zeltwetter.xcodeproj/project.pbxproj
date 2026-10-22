@@ -72,9 +72,31 @@
 		A20000000000000000000009 /* Widgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Widgets.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AF0000000000000000000001 /* Exceptions for "Zeltwetter" folder in "ZeltwetterWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Complication/ComplicationTimeline.swift,
+				Data/ForecastCache.swift,
+				Data/Store.swift,
+				Engine/DryByModel.swift,
+				Engine/FlyEngine.swift,
+				Engine/Forecast.swift,
+				Engine/NightWindow.swift,
+				Engine/Settings.swift,
+				Engine/Verdict.swift,
+				Views/VerdictText.swift,
+			);
+			target = A80000000000000000000004 /* ZeltwetterWidgets */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A50000000000000000000001 /* Zeltwetter */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AF0000000000000000000001 /* Exceptions for "Zeltwetter" folder in "ZeltwetterWidgets" target */,
+			);
 			path = Zeltwetter;
 			sourceTree = "<group>";
 		};
