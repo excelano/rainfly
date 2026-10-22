@@ -77,7 +77,9 @@ final class ForecastModel {
         NightDate.covering(now, packByMinutes: settings.packByMinutes, calendar: .current)
     }
 
-    func refreshIfStale(now: Date = .now) async {
+    /// In the background the watch's position comes from the last fetch for Here, since
+    /// watchOS gives no fresh location to an app that is off screen.
+    func refreshIfStale(now: Date = .now, inBackground: Bool = false) async {
         let date = nightDate(at: now)
         dropPastNights(before: date)
         let name = camps.campName(on: date)
@@ -86,10 +88,10 @@ final class ForecastModel {
         night = cache.night(at: campName, on: date)
         evaluate()
         if let night, now.timeIntervalSince(night.fetchedAt) < Self.refreshAge { return }
-        await refresh(now: now)
+        await refresh(now: now, inBackground: inBackground)
     }
 
-    func refresh(now: Date = .now) async {
+    func refresh(now: Date = .now, inBackground: Bool = false) async {
         guard !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }
@@ -100,6 +102,8 @@ final class ForecastModel {
             let camp: CampLocation
             if let saved = camps.camp(named: name) {
                 camp = saved
+            } else if inBackground, let last = cache.latest(at: name)?.location {
+                camp = last
             } else {
                 camp = try await locate()
             }

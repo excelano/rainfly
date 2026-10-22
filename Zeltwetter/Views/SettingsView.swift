@@ -49,6 +49,9 @@ struct SettingsView: View {
             }
             Section {
                 Toggle("Pressure watch", isOn: $model.preferences.pressureWatch)
+                    .onChange(of: model.preferences.pressureWatch) {
+                        if model.preferences.pressureWatch { Task { await PressureWatch.requestPermission() } }
+                    }
             } footer: {
                 Text("Warns overnight when the pressure falls fast and the fly is off.")
             }

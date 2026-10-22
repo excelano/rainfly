@@ -16,4 +16,4 @@ Only the latest version on the App Store receives fixes. Security fixes ship thr
 
 **It reads location only with permission, and sends it only to Apple.** A coarse position is read while the app is on screen, after watchOS asks for permission, and goes to Apple's weather service as the place to forecast, or to Apple's map service when it becomes a saved camp. It is not stored apart from the forecast fetched for it and the camps you save.
 
-**What it keeps stays on the watch.** Fetched forecasts, saved camps, the trip and the settings are kept in an App Group container shared by the watch app and its complication, so verdicts work without a connection. Removing the app removes them.
+**What it keeps stays on the watch.** Fetched forecasts, saved camps, the trip, the settings and the last twelve hours of overnight barometer readings are kept in an App Group container shared by the watch app and its complication, so verdicts work without a connection. The pressure warning is a local notification raised on the watch itself. Removing the app removes all of it.

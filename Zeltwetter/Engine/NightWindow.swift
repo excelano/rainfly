@@ -9,6 +9,8 @@ import Foundation
 /// the morning when it starts between sunrise and pack-by.
 struct NightWindow: Sendable {
     let calendar: Calendar
+    let sunset: Date
+    let sunrise: Date
     let packBy: Date
     let nightHours: [HourSample]
     let morningHours: [HourSample]
@@ -16,6 +18,8 @@ struct NightWindow: Sendable {
     init(_ night: NightForecast, packByMinutes: Int) {
         let calendar = Self.localCalendar(for: night.location)
         self.calendar = calendar
+        sunset = night.sunset
+        sunrise = night.sunrise
         packBy = calendar.date(
             bySettingHour: packByMinutes / 60, minute: packByMinutes % 60, second: 0, of: night.sunrise
         ) ?? night.sunrise

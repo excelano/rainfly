@@ -18,6 +18,11 @@ struct ForecastCache {
         (store.load() ?? []).first { $0.location.name == campName && Self.date(of: $0) == date }
     }
 
+    /// The most recently fetched night at `campName`, whatever its date.
+    func latest(at campName: String) -> NightForecast? {
+        (store.load() ?? []).filter { $0.location.name == campName }.max { $0.fetchedAt < $1.fetchedAt }
+    }
+
     func save(_ night: NightForecast, now: Date = .now) {
         let date = Self.date(of: night)
         let kept = (store.load() ?? []).filter { old in
