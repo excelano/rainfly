@@ -50,6 +50,14 @@ struct VerdictTextTests {
         string.replacingOccurrences(of: "\u{202F}", with: " ")
     }
 
+    @Test func periodIsTheMorningFromSunriseToBreakCamp() {
+        let night = text(F.night())
+        #expect(night.period(at: F.at(0, 21)) == "Tonight")
+        #expect(night.period(at: F.at(1, 3)) == "Tonight")
+        #expect(night.period(at: F.at(1, 6)) == "This morning")
+        #expect(night.period(at: F.at(1, 8)) == "Tonight")
+    }
+
     @Test func clearNightReads() {
         let words = text(F.night())
         #expect(words.headline == "Fly off")

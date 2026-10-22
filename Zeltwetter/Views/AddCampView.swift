@@ -5,7 +5,7 @@
 import SwiftUI
 import WatchKit
 
-/// A new camp from the watch's position or from typed coordinates, then named.
+/// A new camp found by name, taken from the watch's position or typed as coordinates, then named.
 struct AddCampView: View {
     @Environment(ForecastModel.self) private var model
     let done: () -> Void
@@ -15,6 +15,11 @@ struct AddCampView: View {
 
     var body: some View {
         List {
+            NavigationLink {
+                SearchCampView(near: model.night == nil && model.camps.saved.isEmpty ? nil : start, done: done)
+            } label: {
+                Label("Search", systemImage: "magnifyingglass")
+            }
             Button {
                 Task { await locate() }
             } label: {
@@ -68,11 +73,6 @@ struct AddCampView: View {
     }
 }
 
-struct Point: Hashable {
-    let latitude: Double
-    let longitude: Double
-}
-
 /// Coordinate entry for gloves and one hand: the arrows pick a field, the Digital Crown
 /// changes it.
 private struct CoordinateEntryView: View {
@@ -96,6 +96,12 @@ private struct CoordinateEntryView: View {
                 row([.lonHemisphere, .lonDegrees, .lonMinutes, .lonHundredths, .lonTens, .lonOnes])
             }
             .crownInput($crown, focus: $isFocused) { entry.adjust(field, by: $0) }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Coordinates")
+            .accessibilityValue("\(entry.latitude.text), \(entry.longitude.text)")
+            .accessibilityAdjustableAction { direction in
+                entry.adjust(field, by: direction == .increment ? 1 : -1)
+            }
             HStack {
                 Button("Previous field", systemImage: "chevron.left") { move(by: -1) }
                 Button("Next field", systemImage: "chevron.right") { move(by: 1) }
@@ -144,13 +150,21 @@ private struct CoordinateEntryView: View {
     }
 }
 
-/// Names the camp, suggesting the place the map service knows it as, and finds its zone.
+/// Names the camp, suggesting the place the map service knows it as, and finds its zone
+/// unless a search already did.
 private struct NameCampView: View {
     @Environment(ForecastModel.self) private var model
     let point: Point
     let done: () -> Void
-    @State private var name = ""
+    @State private var name: String
     @State private var place: CampPlace?
+
+    init(point: Point, place: CampPlace? = nil, done: @escaping () -> Void) {
+        self.point = point
+        self.done = done
+        _name = State(initialValue: place?.name ?? "")
+        _place = State(initialValue: place)
+    }
 
     var body: some View {
         List {
@@ -167,9 +181,62 @@ private struct NameCampView: View {
         }
         .navigationTitle("Name camp")
         .task {
+            guard place == nil else { return }
             let found = await CampPlace.lookUp(latitude: point.latitude, longitude: point.longitude)
             if name.isEmpty, let suggested = found.name { name = suggested }
             place = found
+        }
+    }
+}
+
+/// Campgrounds, parks, towns and addresses by name, favouring those near the last position.
+private struct SearchCampView: View {
+    let near: Point?
+    let done: () -> Void
+    @State private var query = ""
+    @State private var results: [FoundPlace] = []
+    @State private var isSearching = false
+    @State private var problem: String?
+
+    var body: some View {
+        List {
+            TextField("Place or address", text: $query)
+                .onSubmit { Task { await search() } }
+            if isSearching {
+                ProgressView()
+            }
+            ForEach(results, id: \.self) { found in
+                NavigationLink {
+                    NameCampView(point: found.point, place: found.place, done: done)
+                } label: {
+                    VStack(alignment: .leading) {
+                        Text(found.place.name ?? "")
+                        Text(found.detail)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            if let problem {
+                Text(problem)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .navigationTitle("Search")
+    }
+
+    private func search() async {
+        let text = query.trimmingCharacters(in: .whitespaces)
+        guard !text.isEmpty else { return }
+        isSearching = true
+        defer { isSearching = false }
+        do {
+            results = try await CampPlace.search(text, near: near)
+            problem = results.isEmpty ? "Nothing found. Try a town or park nearby." : nil
+        } catch {
+            results = []
+            problem = "Search needs a connection."
         }
     }
 }

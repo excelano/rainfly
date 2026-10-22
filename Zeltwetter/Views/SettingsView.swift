@@ -11,17 +11,25 @@ struct SettingsView: View {
         @Bindable var model = model
         let units = model.preferences.units
         List {
-            Section("Morning") {
+            Section {
                 NavigationLink {
-                    DatePicker("Pack by", selection: packBy, displayedComponents: .hourAndMinute)
-                        .navigationTitle("Pack by")
+                    DatePicker("Break camp", selection: packBy, displayedComponents: .hourAndMinute)
+                        .navigationTitle("Break camp")
                 } label: {
-                    LabeledContent("Pack by", value: packBy.wrappedValue.formatted(date: .omitted, time: .shortened))
+                    LabeledContent("Break camp", value: packBy.wrappedValue.formatted(date: .omitted, time: .shortened))
                 }
+            } header: {
+                Text("Morning")
+            } footer: {
+                Text("When you plan to take the tent down. Morning rain is checked until then, and tonight's forecast shows after it.")
+            }
+            Section {
                 Toggle("Bag rating", isOn: hasBagRating)
                 if let rating = Binding($model.settings.bagRatingC) {
                     QuantityRow(quantity: .bagRating(units), value: rating)
                 }
+            } footer: {
+                Text("Your sleeping bag's comfort rating, to warn when the night will be colder.")
             }
             Section("Units") {
                 Picker("Temperature", selection: $model.preferences.units.fahrenheit) {
@@ -59,7 +67,7 @@ struct SettingsView: View {
         .navigationTitle("Settings")
     }
 
-    /// Pack-by as a time today, which the picker needs; only the hour and minute are kept.
+    /// Break-camp time (pack-by) as a time today, which the picker needs; only the hour and minute are kept.
     private var packBy: Binding<Date> {
         Binding {
             let minutes = model.settings.packByMinutes
@@ -183,10 +191,16 @@ private struct QuantityEditor: View {
                     $shown, from: quantity.range.lowerBound, through: quantity.range.upperBound, by: quantity.step,
                     sensitivity: .low, isContinuous: false, isHapticFeedbackEnabled: true
                 )
+                .accessibilityLabel(quantity.title)
+                .accessibilityValue(quantity.format(shown))
+                .accessibilityAdjustableAction { direction in
+                    move(direction == .increment ? 1 : -1)
+                }
             HStack {
-                Button { move(-1) } label: { Image(systemName: "minus") }
-                Button { move(1) } label: { Image(systemName: "plus") }
+                Button("Less", systemImage: "minus") { move(-1) }
+                Button("More", systemImage: "plus") { move(1) }
             }
+            .labelStyle(.iconOnly)
         }
         .navigationTitle(quantity.title)
         .onAppear {

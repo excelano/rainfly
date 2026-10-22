@@ -88,6 +88,7 @@
 				Engine/NightWindow.swift,
 				Engine/Settings.swift,
 				Engine/Verdict.swift,
+				Views/TentGlyph.swift,
 				Views/VerdictText.swift,
 			);
 			target = A80000000000000000000004 /* ZeltwetterWidgets */;

@@ -14,6 +14,13 @@ struct VerdictText {
 
     var headline: String { verdict.flyOn ? "Fly on" : "Fly off" }
 
+    /// Which part of the night `now` is looking at: the morning after it from sunrise until
+    /// break camp, the night itself before that.
+    func period(at now: Date) -> String {
+        let packBy = NightWindow(night, packByMinutes: settings.packByMinutes).packBy
+        return now >= night.sunrise && now < packBy ? "This morning" : "Tonight"
+    }
+
     var reason: String {
         verdict.headline.map(describe) ?? "Clear, dry, mild."
     }

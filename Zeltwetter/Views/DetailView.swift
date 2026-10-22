@@ -49,7 +49,14 @@ struct DetailView: View {
                 AttributionView(attribution: model.attribution)
             }
         }
-        .navigationTitle("Tonight")
+        .navigationTitle(title)
+    }
+}
+
+extension DetailView {
+    private var title: String {
+        guard let night = model.night, let verdict = model.verdict else { return "Tonight" }
+        return VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units).period(at: .now)
     }
 }
 
@@ -62,6 +69,7 @@ private struct TriggerRow: View {
         HStack {
             Image(systemName: firing == nil ? "checkmark.circle" : "xmark.circle.fill")
                 .foregroundStyle(firing == nil ? .green : .red)
+                .accessibilityHidden(true)
             Text(VerdictText.name(trigger))
             Spacer()
             if let firing {
@@ -70,6 +78,9 @@ private struct TriggerRow: View {
             }
         }
         .font(.footnote)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(VerdictText.name(trigger))
+        .accessibilityValue(firing.map { "Expected at \(text.clock($0.at))" } ?? "Clear")
     }
 }
 

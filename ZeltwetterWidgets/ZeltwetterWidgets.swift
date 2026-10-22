@@ -67,11 +67,13 @@ struct VerdictWidgetView: View {
         switch family {
         case .accessoryCorner:
             glyph
-                .font(.title2)
+                .frame(width: 26, height: 26)
                 .widgetLabel(face.dryTime.map { "Dry \($0)" } ?? face.headline)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(face.headline). \(face.detail)")
         case .accessoryRectangular:
             VStack(alignment: .leading, spacing: 1) {
-                Label { Text(face.headline) } icon: { glyph }
+                Label { Text(face.headline) } icon: { glyph.frame(width: 20, height: 20) }
                     .font(.headline)
                 Text(face.detail)
                     .font(.footnote)
@@ -93,18 +95,20 @@ struct VerdictWidgetView: View {
                         Text(dryTime).font(.system(.body, design: .rounded).weight(.semibold))
                     }
                 } else {
-                    glyph.font(.title2)
+                    glyph.frame(width: 30, height: 30)
                 }
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(face.headline). \(face.detail)")
         }
     }
 
     @ViewBuilder
     private var glyph: some View {
         switch face.flyOn {
-        case true?: Image(systemName: "tent.fill").foregroundStyle(Self.green)
-        case false?: Image(systemName: "tent")
-        case nil: Image(systemName: "tent").foregroundStyle(.secondary)
+        case true?: TentGlyph(flyOn: true).foregroundStyle(Self.green)
+        case false?: TentGlyph(flyOn: false)
+        case nil: TentGlyph(flyOn: false).foregroundStyle(.secondary)
         }
     }
 

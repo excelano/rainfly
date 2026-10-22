@@ -53,9 +53,12 @@ private struct VerdictContent: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 4) {
-                Image(systemName: text.verdict.flyOn ? "tent.fill" : "tent")
-                    .font(.system(size: 40))
+                TentGlyph(flyOn: text.verdict.flyOn)
+                    .frame(height: 52)
                     .foregroundStyle(text.verdict.flyOn ? Color.accentColor : .secondary)
+                Text(text.period(at: now).uppercased())
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
                 Text(text.headline)
                     .font(.title2.bold())
                 Text(text.reason)
@@ -73,6 +76,8 @@ private struct VerdictContent: View {
                     .padding(.top, 4)
             }
             .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .combine)
+            .accessibilityHint("Shows every check")
         }
     }
 
@@ -95,6 +100,7 @@ private struct ProblemView: View {
                 Image(systemName: "cloud.sun")
                     .font(.title)
                     .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
                 Text(message)
                     .font(.footnote)
                     .multilineTextAlignment(.center)
