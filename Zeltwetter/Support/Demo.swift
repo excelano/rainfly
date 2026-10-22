@@ -1,0 +1,75 @@
+// Demo.swift
+// Author: David M. Anderson
+// Built with AI assistance (Claude, Anthropic)
+
+#if DEBUG
+import Foundation
+
+/// Debug launch arguments for screenshots and simulator checks, which run without
+/// WeatherKit or a location:
+///
+///     --demo clear|rain|storm|dew|frost   a fixed camp and a night that gives that verdict
+///     --detail                            also opens the detail screen
+enum Demo {
+    static var opensDetail: Bool { CommandLine.arguments.contains("--detail") }
+
+    static var scene: String? {
+        let arguments = CommandLine.arguments
+        guard let index = arguments.firstIndex(of: "--demo"), index + 1 < arguments.count else { return nil }
+        return arguments[index + 1]
+    }
+
+    static let camp = CampLocation(
+        name: "Lost Lake", latitude: 39.9389, longitude: -105.6106, timeZoneID: TimeZone.current.identifier
+    )
+
+    @MainActor
+    static func model(scene: String) -> ForecastModel {
+        let url = FileManager.default.temporaryDirectory.appending(path: "demo-forecasts.json")
+        try? FileManager.default.removeItem(at: url)
+        return ForecastModel(provider: Provider(scene: scene), cache: ForecastCache(store: Store(url: url))) { camp }
+    }
+
+    /// Hours from 19:00 on the evening to noon the next day; sunset 20:30, sunrise 06:10.
+    private struct Provider: ForecastProvider {
+        let scene: String
+
+        func night(at camp: CampLocation, evening: Date) async throws -> NightForecast {
+            let calendar = NightWindow.localCalendar(for: camp)
+            let at = { (minutes: Int) in calendar.date(byAdding: .minute, value: minutes, to: evening)! }
+            return NightForecast(
+                location: camp,
+                fetchedAt: .now.addingTimeInterval(-3 * 3600),
+                sunset: at(20 * 60 + 30),
+                sunrise: at(30 * 60 + 10),
+                hours: (19...36).map { sample(at(60 * $0), hour: $0) }
+            )
+        }
+
+        func attribution() async throws -> Attribution { .fallback }
+
+        private func sample(_ date: Date, hour: Int) -> HourSample {
+            let morning = hour >= 30
+            var temp = 14.0, dewPoint = 6.0, cloud = 0.2, wind = 4.0, chance = 0.0, storm = false
+            switch scene {
+            case "rain":
+                chance = hour == 26 ? 0.35 : hour > 26 && !morning ? 0.25 : 0
+                cloud = 0.8
+            case "storm":
+                storm = hour == 23
+                chance = hour == 23 ? 0.3 : 0
+            case "dew":
+                if !morning { temp = 11; dewPoint = 9; cloud = 0.1; wind = 1 }
+            case "frost":
+                if !morning { temp = -2; dewPoint = -4; cloud = 0.05; wind = 0.5 } else { temp = 4; dewPoint = -3 }
+            default:
+                break
+            }
+            return HourSample(
+                date: date, tempC: temp, dewPointC: dewPoint, humidity: morning ? 0.6 : 0.88, cloudCover: cloud,
+                windMS: wind, gustMS: nil, precipChance: chance, precipAmountMM: 0, isThunderstorm: storm
+            )
+        }
+    }
+}
+#endif

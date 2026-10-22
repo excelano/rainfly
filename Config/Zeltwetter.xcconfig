@@ -1,0 +1,15 @@
+// Zeltwetter.xcconfig
+// Author: David M. Anderson
+// Built with AI assistance (Claude, Anthropic)
+//
+// The values a fork changes to build its own copy of the app.
+
+DEVELOPMENT_TEAM = 9K6W5PMFYP
+// The App Store record's bundle id, carried by the iOS stub that ships the watch app.
+ZELTWETTER_CONTAINER_BUNDLE_ID = com.excelano.zeltwetter
+ZELTWETTER_BUNDLE_ID = $(ZELTWETTER_CONTAINER_BUNDLE_ID).watchkitapp
+ZELTWETTER_DISPLAY_NAME = Zeltwetter
+// Shared by the watch app and the complication for settings and the forecast cache.
+ZELTWETTER_APP_GROUP = group.com.excelano.zeltwetter
+
+#include "Version.xcconfig"

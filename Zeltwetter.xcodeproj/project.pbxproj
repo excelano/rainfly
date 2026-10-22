@@ -1,0 +1,598 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* Zeltwetter Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* Zeltwetter Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A10000000000000000000002 /* ZeltwetterWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* ZeltwetterWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A30000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A90000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A80000000000000000000001;
+			remoteInfo = "Zeltwetter Watch App";
+		};
+		A30000000000000000000002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A90000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A80000000000000000000001;
+			remoteInfo = "Zeltwetter Watch App";
+		};
+		A30000000000000000000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A90000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A80000000000000000000004;
+			remoteInfo = ZeltwetterWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A40000000000000000000001 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				A10000000000000000000001 /* Zeltwetter Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A40000000000000000000002 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A10000000000000000000002 /* ZeltwetterWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		A20000000000000000000001 /* Zeltwetter Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Zeltwetter Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000002 /* ZeltwetterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ZeltwetterTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000003 /* Zeltwetter.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Zeltwetter.xcconfig; sourceTree = "<group>"; };
+		A20000000000000000000005 /* Zeltwetter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Zeltwetter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000004 /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Version.xcconfig; sourceTree = "<group>"; };
+		A20000000000000000000006 /* ZeltwetterWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ZeltwetterWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000007 /* Widgets-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Widgets-Info.plist"; sourceTree = "<group>"; };
+		A20000000000000000000008 /* Zeltwetter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Zeltwetter.entitlements; sourceTree = "<group>"; };
+		A20000000000000000000009 /* Widgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Widgets.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		A50000000000000000000001 /* Zeltwetter */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Zeltwetter;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000002 /* ZeltwetterTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ZeltwetterTests;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000003 /* Container */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Container;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000004 /* ZeltwetterWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ZeltwetterWidgets;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A60000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A60000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A60000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A70000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A50000000000000000000001 /* Zeltwetter */,
+				A50000000000000000000002 /* ZeltwetterTests */,
+				A50000000000000000000004 /* ZeltwetterWidgets */,
+				A50000000000000000000003 /* Container */,
+				A70000000000000000000003 /* Config */,
+				A70000000000000000000002 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A70000000000000000000002 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000001 /* Zeltwetter Watch App.app */,
+				A20000000000000000000002 /* ZeltwetterTests.xctest */,
+				A20000000000000000000005 /* Zeltwetter.app */,
+				A20000000000000000000006 /* ZeltwetterWidgets.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A70000000000000000000003 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000003 /* Zeltwetter.xcconfig */,
+				A20000000000000000000004 /* Version.xcconfig */,
+				A20000000000000000000007 /* Widgets-Info.plist */,
+				A20000000000000000000008 /* Zeltwetter.entitlements */,
+				A20000000000000000000009 /* Widgets.entitlements */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A80000000000000000000001 /* Zeltwetter Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AC0000000000000000000002 /* Build configuration list for PBXNativeTarget "Zeltwetter Watch App" */;
+			buildPhases = (
+				AA0000000000000000000001 /* Sources */,
+				A60000000000000000000001 /* Frameworks */,
+				AB0000000000000000000001 /* Resources */,
+				A40000000000000000000002 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AD0000000000000000000003 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A50000000000000000000001 /* Zeltwetter */,
+			);
+			name = "Zeltwetter Watch App";
+			productName = "Zeltwetter Watch App";
+			productReference = A20000000000000000000001 /* Zeltwetter Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A80000000000000000000002 /* ZeltwetterTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AC0000000000000000000003 /* Build configuration list for PBXNativeTarget "ZeltwetterTests" */;
+			buildPhases = (
+				AA0000000000000000000002 /* Sources */,
+				A60000000000000000000002 /* Frameworks */,
+				AB0000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AD0000000000000000000001 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A50000000000000000000002 /* ZeltwetterTests */,
+			);
+			name = "ZeltwetterTests";
+			productName = "ZeltwetterTests";
+			productReference = A20000000000000000000002 /* ZeltwetterTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		A80000000000000000000003 /* Zeltwetter */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AC0000000000000000000004 /* Build configuration list for PBXNativeTarget "Zeltwetter" */;
+			buildPhases = (
+				AB0000000000000000000003 /* Resources */,
+				A40000000000000000000001 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AD0000000000000000000002 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A50000000000000000000003 /* Container */,
+			);
+			name = Zeltwetter;
+			productName = Zeltwetter;
+			productReference = A20000000000000000000005 /* Zeltwetter.app */;
+			productType = "com.apple.product-type.application.watchapp2-container";
+		};
+		A80000000000000000000004 /* ZeltwetterWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AC0000000000000000000005 /* Build configuration list for PBXNativeTarget "ZeltwetterWidgets" */;
+			buildPhases = (
+				AA0000000000000000000003 /* Sources */,
+				A60000000000000000000003 /* Frameworks */,
+				AB0000000000000000000004 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A50000000000000000000004 /* ZeltwetterWidgets */,
+			);
+			name = ZeltwetterWidgets;
+			productName = ZeltwetterWidgets;
+			productReference = A20000000000000000000006 /* ZeltwetterWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A90000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2630;
+				LastUpgradeCheck = 2630;
+				TargetAttributes = {
+					A80000000000000000000001 = {
+						CreatedOnToolsVersion = 26.3;
+					};
+					A80000000000000000000002 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = A80000000000000000000001;
+					};
+					A80000000000000000000003 = {
+						CreatedOnToolsVersion = 26.3;
+					};
+					A80000000000000000000004 = {
+						CreatedOnToolsVersion = 26.3;
+					};
+				};
+			};
+			buildConfigurationList = AC0000000000000000000001 /* Build configuration list for PBXProject "Zeltwetter" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A70000000000000000000001;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A70000000000000000000002 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A80000000000000000000003 /* Zeltwetter */,
+				A80000000000000000000001 /* Zeltwetter Watch App */,
+				A80000000000000000000002 /* ZeltwetterTests */,
+				A80000000000000000000004 /* ZeltwetterWidgets */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AB0000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB0000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB0000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB0000000000000000000004 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AD0000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A80000000000000000000001 /* Zeltwetter Watch App */;
+			targetProxy = A30000000000000000000001 /* PBXContainerItemProxy */;
+		};
+		AD0000000000000000000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A80000000000000000000001 /* Zeltwetter Watch App */;
+			targetProxy = A30000000000000000000002 /* PBXContainerItemProxy */;
+		};
+		AD0000000000000000000003 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A80000000000000000000004 /* ZeltwetterWidgets */;
+			targetProxy = A30000000000000000000003 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AE0000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A20000000000000000000003 /* Zeltwetter.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = watchos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		AE0000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A20000000000000000000003 /* Zeltwetter.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				SDKROOT = watchos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		AE0000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Config/Zeltwetter.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "$(ZELTWETTER_DISPLAY_NAME)";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Zeltwetter uses your location to fetch tonight's forecast for your camp.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Zeltwetter samples air pressure overnight to warn you when the weather is turning.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ZELTWETTER_BUNDLE_ID)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		AE0000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Config/Zeltwetter.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "$(ZELTWETTER_DISPLAY_NAME)";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Zeltwetter uses your location to fetch tonight's forecast for your camp.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Zeltwetter samples air pressure overnight to warn you when the weather is turning.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ZELTWETTER_BUNDLE_ID)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		AE0000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ZELTWETTER_BUNDLE_ID).tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Zeltwetter Watch App.app/Zeltwetter Watch App";
+			};
+			name = Debug;
+		};
+		AE0000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ZELTWETTER_BUNDLE_ID).tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Zeltwetter Watch App.app/Zeltwetter Watch App";
+			};
+			name = Release;
+		};
+		AE0000000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "$(ZELTWETTER_DISPLAY_NAME)";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ZELTWETTER_CONTAINER_BUNDLE_ID)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AE0000000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "$(ZELTWETTER_DISPLAY_NAME)";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ZELTWETTER_CONTAINER_BUNDLE_ID)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AE0000000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/Widgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/Widgets-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = ZeltwetterWidgets;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ZELTWETTER_BUNDLE_ID).widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		AE0000000000000000000010 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/Widgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/Widgets-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = ZeltwetterWidgets;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ZELTWETTER_BUNDLE_ID).widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AC0000000000000000000001 /* Build configuration list for PBXProject "Zeltwetter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE0000000000000000000001 /* Debug */,
+				AE0000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AC0000000000000000000002 /* Build configuration list for PBXNativeTarget "Zeltwetter Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE0000000000000000000003 /* Debug */,
+				AE0000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AC0000000000000000000003 /* Build configuration list for PBXNativeTarget "ZeltwetterTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE0000000000000000000005 /* Debug */,
+				AE0000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AC0000000000000000000004 /* Build configuration list for PBXNativeTarget "Zeltwetter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE0000000000000000000007 /* Debug */,
+				AE0000000000000000000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AC0000000000000000000005 /* Build configuration list for PBXNativeTarget "ZeltwetterWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE0000000000000000000009 /* Debug */,
+				AE0000000000000000000010 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A90000000000000000000001 /* Project object */;
+}
