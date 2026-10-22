@@ -9,15 +9,15 @@ import Testing
 private typealias F = Fixture
 
 struct NightWindowTests {
-    @Test func eveningIsLastNightUntilPackBy() {
-        let evening = { (now: Date) in NightWindow.evening(at: now, packByMinutes: 8 * 60, calendar: F.calendar) }
-        let july1 = F.calendar.startOfDay(for: F.at(0, 12))
-        let july2 = F.calendar.startOfDay(for: F.at(1, 12))
-        #expect(evening(F.at(0, 21)) == july1)
-        #expect(evening(F.at(1, 3)) == july1)
-        #expect(evening(F.at(1, 7, 59)) == july1)
-        #expect(evening(F.at(1, 8)) == july2)
-        #expect(evening(F.at(1, 15)) == july2)
+    @Test func nightIsLastNightUntilPackBy() {
+        let night = { (now: Date) in NightDate.covering(now, packByMinutes: 8 * 60, calendar: F.calendar) }
+        let july1 = NightDate(year: 2026, month: 7, day: 1)
+        let july2 = NightDate(year: 2026, month: 7, day: 2)
+        #expect(night(F.at(0, 21)) == july1)
+        #expect(night(F.at(1, 3)) == july1)
+        #expect(night(F.at(1, 7, 59)) == july1)
+        #expect(night(F.at(1, 8)) == july2)
+        #expect(night(F.at(1, 15)) == july2)
     }
 
     @Test func summaryCoversTheNightAndMorningRain() {
@@ -123,21 +123,25 @@ func temporarySettings() -> SettingsStore {
     return SettingsStore(defaults: UserDefaults(suiteName: name)!)
 }
 
-private func temporaryCache() -> ForecastCache {
+func temporaryCamps() -> Store<Camps> {
+    Store(url: FileManager.default.temporaryDirectory.appending(path: "zeltwetter-camps-\(UUID().uuidString).json"))
+}
+
+func temporaryCache() -> ForecastCache {
     let url = FileManager.default.temporaryDirectory.appending(path: "zeltwetter-\(UUID().uuidString).json")
     return ForecastCache(store: Store(url: url))
 }
 
 struct ForecastCacheTests {
-    private let july1 = F.calendar.startOfDay(for: F.at(0, 12))
+    private let july1 = NightDate(year: 2026, month: 7, day: 1)
 
     @Test func savesAndFindsTheNightByCampAndEvening() {
         let cache = temporaryCache()
         let night = F.night()
         cache.save(night, now: F.at(0, 18))
-        #expect(cache.night(at: F.camp.name, evening: july1) == night)
-        #expect(cache.night(at: "Elsewhere", evening: july1) == nil)
-        #expect(cache.night(at: F.camp.name, evening: F.calendar.startOfDay(for: F.at(1, 12))) == nil)
+        #expect(cache.night(at: F.camp.name, on: july1) == night)
+        #expect(cache.night(at: "Elsewhere", on: july1) == nil)
+        #expect(cache.night(at: F.camp.name, on: july1.adding(days: 1)) == nil)
     }
 
     @Test func aNewFetchReplacesTheSameNight() {
@@ -145,7 +149,7 @@ struct ForecastCacheTests {
         cache.save(F.night(), now: F.at(0, 18))
         let rainy = F.night { F.hour($0, chance: 0.5) }
         cache.save(rainy, now: F.at(0, 19))
-        #expect(cache.night(at: F.camp.name, evening: july1) == rainy)
+        #expect(cache.night(at: F.camp.name, on: july1) == rainy)
         #expect(cache.store.load()?.count == 1)
     }
 
@@ -159,9 +163,10 @@ struct ForecastCacheTests {
     }
 }
 
-private actor FakeProvider: ForecastProvider {
+actor FakeProvider: ForecastProvider {
     let fetchedAt: Date
     private(set) var fetches = 0
+    private(set) var campsFetched: [String] = []
     var chance = 0.0
 
     init(fetchedAt: Date) {
@@ -170,6 +175,7 @@ private actor FakeProvider: ForecastProvider {
 
     func night(at camp: CampLocation, evening: Date) async throws -> NightForecast {
         fetches += 1
+        campsFetched.append(camp.name)
         let calendar = NightWindow.localCalendar(for: camp)
         let at = { (hours: Int) in calendar.date(byAdding: .hour, value: hours, to: evening)! }
         return NightForecast(
@@ -193,18 +199,18 @@ struct ForecastModelTests {
     @Test func emptyCacheFetchesAndEvaluates() async {
         let provider = FakeProvider(fetchedAt: afternoon)
         let cache = temporaryCache()
-        let model = ForecastModel(provider: provider, cache: cache, store: temporarySettings()) { [here] in here }
+        let model = ForecastModel(provider: provider, cache: cache, store: temporarySettings(), campStore: temporaryCamps()) { [here] in here }
         await model.refreshIfStale(now: afternoon)
         #expect(await provider.fetches == 1)
         #expect(model.verdict?.flyOn == false)
         #expect(model.attribution.legalURL.host() == "example.com")
-        #expect(cache.night(at: CampLocation.hereName, evening: Calendar.current.startOfDay(for: afternoon)) != nil)
+        #expect(cache.night(at: CampLocation.hereName, on: NightDate(afternoon, calendar: .current)) != nil)
     }
 
     @Test func freshCacheIsNotRefetched() async {
         let provider = FakeProvider(fetchedAt: afternoon)
         let cache = temporaryCache()
-        let model = ForecastModel(provider: provider, cache: cache, store: temporarySettings()) { [here] in here }
+        let model = ForecastModel(provider: provider, cache: cache, store: temporarySettings(), campStore: temporaryCamps()) { [here] in here }
         await model.refreshIfStale(now: afternoon)
         await model.refreshIfStale(now: afternoon.addingTimeInterval(ForecastModel.refreshAge - 60))
         #expect(await provider.fetches == 1)
@@ -213,7 +219,7 @@ struct ForecastModelTests {
     @Test func staleCacheIsRefetched() async {
         let provider = FakeProvider(fetchedAt: afternoon)
         let cache = temporaryCache()
-        let model = ForecastModel(provider: provider, cache: cache, store: temporarySettings()) { [here] in here }
+        let model = ForecastModel(provider: provider, cache: cache, store: temporarySettings(), campStore: temporaryCamps()) { [here] in here }
         await model.refreshIfStale(now: afternoon)
         await provider.setChance(0.5)
         await model.refreshIfStale(now: afternoon.addingTimeInterval(ForecastModel.refreshAge + 60))
@@ -224,9 +230,9 @@ struct ForecastModelTests {
     @Test func failedFetchKeepsTheCachedNight() async {
         let provider = FakeProvider(fetchedAt: afternoon)
         let cache = temporaryCache()
-        await ForecastModel(provider: provider, cache: cache, store: temporarySettings()) { [here] in here }.refreshIfStale(now: afternoon)
+        await ForecastModel(provider: provider, cache: cache, store: temporarySettings(), campStore: temporaryCamps()) { [here] in here }.refreshIfStale(now: afternoon)
 
-        let offline = ForecastModel(provider: provider, cache: cache, store: temporarySettings()) { throw ForecastError.noLocation }
+        let offline = ForecastModel(provider: provider, cache: cache, store: temporarySettings(), campStore: temporaryCamps()) { throw ForecastError.noLocation }
         await offline.refreshIfStale(now: afternoon.addingTimeInterval(ForecastModel.refreshAge + 60))
         #expect(offline.night != nil)
         #expect(offline.problem == ForecastError.noLocation.localizedDescription)
@@ -235,7 +241,7 @@ struct ForecastModelTests {
     @Test func settingsChangesReevaluate() async {
         let provider = FakeProvider(fetchedAt: afternoon)
         await provider.setChance(0.3)
-        let model = ForecastModel(provider: provider, cache: temporaryCache(), store: temporarySettings()) { [here] in here }
+        let model = ForecastModel(provider: provider, cache: temporaryCache(), store: temporarySettings(), campStore: temporaryCamps()) { [here] in here }
         await model.refreshIfStale(now: afternoon)
         #expect(model.verdict?.flyOn == true)
         model.settings.rainChance = 0.4

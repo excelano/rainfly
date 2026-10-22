@@ -12,8 +12,8 @@ Only the latest version on the App Store receives fixes. Security fixes ship thr
 
 ## Security model
 
-**Zeltwetter talks only to Apple's weather service.** Forecasts come from WeatherKit, which the watch reaches through the system with Apple's own authentication. The app opens no other connection and links no analytics or tracking code.
+**Zeltwetter talks only to Apple's services.** Forecasts come from WeatherKit, which the watch reaches through the system with Apple's own authentication. Adding a camp asks Apple's map service, through Core Location's geocoder, for a place name and time zone at the camp's coordinates. The app opens no other connection and links no analytics or tracking code.
 
-**It reads location only with permission, and sends it only to WeatherKit.** A coarse position is read while the app is on screen, after watchOS asks for permission, and goes to Apple's weather service as the place to forecast. It is not stored apart from the forecast fetched for it.
+**It reads location only with permission, and sends it only to Apple.** A coarse position is read while the app is on screen, after watchOS asks for permission, and goes to Apple's weather service as the place to forecast, or to Apple's map service when it becomes a saved camp. It is not stored apart from the forecast fetched for it and the camps you save.
 
-**What it keeps stays on the watch.** Fetched forecasts and the settings are kept in an App Group container shared by the watch app and its complication, so verdicts work without a connection. Removing the app removes them.
+**What it keeps stays on the watch.** Fetched forecasts, saved camps, the trip and the settings are kept in an App Group container shared by the watch app and its complication, so verdicts work without a connection. Removing the app removes them.

@@ -17,7 +17,8 @@ struct VerdictEntry: TimelineEntry {
     let face: ComplicationFace
 }
 
-/// Reads the night the app cached; the app reloads the timeline whenever it saves one.
+/// Reads the night the app cached for each night's camp; the app reloads the timeline
+/// whenever it saves a night or changes the trip.
 struct VerdictProvider: TimelineProvider {
     func placeholder(in context: Context) -> VerdictEntry {
         VerdictEntry(date: .now, face: .sample)
@@ -35,8 +36,10 @@ struct VerdictProvider: TimelineProvider {
         let store = SettingsStore()
         let settings = store.settings
         let cache = ForecastCache()
+        let camps = Store.camps.load() ?? Camps()
         return ComplicationTimeline.entries(now: now, settings: settings, units: store.preferences.units) { date in
-            cache.night(at: CampLocation.hereName, covering: date, packByMinutes: settings.packByMinutes)
+            let night = NightDate.covering(date, packByMinutes: settings.packByMinutes, calendar: .current)
+            return cache.night(at: camps.campName(on: night), on: night)
         }
         .map { VerdictEntry(date: $0.date, face: $0.face) }
     }

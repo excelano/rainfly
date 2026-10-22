@@ -14,7 +14,11 @@ struct RootView: View {
             VerdictView()
                 #if DEBUG
                 .navigationDestination(isPresented: .constant(Demo.opens != nil)) {
-                    if Demo.opens == "settings" { SettingsView() } else { DetailView() }
+                    switch Demo.opens {
+                    case "settings": SettingsView()
+                    case "camps": CampsView()
+                    default: DetailView()
+                    }
                 }
                 #endif
         }

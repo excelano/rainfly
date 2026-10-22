@@ -26,6 +26,14 @@ struct VerdictView: View {
             }
         }
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                NavigationLink {
+                    CampsView()
+                } label: {
+                    Image(systemName: "list.bullet")
+                }
+                .accessibilityLabel("Camps")
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink {
                     SettingsView()

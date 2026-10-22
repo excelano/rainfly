@@ -77,12 +77,14 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Complication/ComplicationTimeline.swift,
+				Data/Camps.swift,
 				Data/ForecastCache.swift,
 				Data/SettingsStore.swift,
 				Data/Store.swift,
 				Engine/DryByModel.swift,
 				Engine/FlyEngine.swift,
 				Engine/Forecast.swift,
+				Engine/NightDate.swift,
 				Engine/NightWindow.swift,
 				Engine/Settings.swift,
 				Engine/Verdict.swift,

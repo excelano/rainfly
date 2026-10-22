@@ -8,8 +8,9 @@ import Foundation
 /// Debug launch arguments for screenshots and simulator checks, which run without
 /// WeatherKit or a location:
 ///
-///     --demo clear|rain|storm|dew|frost   a fixed camp and a night that gives that verdict
-///     --open detail|settings              also opens that screen
+///     --demo clear|rain|storm|dew|frost   a two-night trip whose first camp has a night
+///                                         that gives that verdict
+///     --open detail|settings|camps        also opens that screen
 enum Demo {
     static var scene: String? { argument(after: "--demo") }
     static var opens: String? { argument(after: "--open") }
@@ -23,6 +24,9 @@ enum Demo {
     static let camp = CampLocation(
         name: "Lost Lake", latitude: 39.9389, longitude: -105.6106, timeZoneID: TimeZone.current.identifier
     )
+    static let nextCamp = CampLocation(
+        name: "Arapaho Pass", latitude: 39.9746, longitude: -105.6492, timeZoneID: TimeZone.current.identifier
+    )
 
     @MainActor
     static func model(scene: String) -> ForecastModel {
@@ -30,10 +34,18 @@ enum Demo {
         try? FileManager.default.removeItem(at: url)
         let defaults = UserDefaults(suiteName: "demo")!
         defaults.removePersistentDomain(forName: "demo")
+        let tonight = NightDate.covering(.now, packByMinutes: Settings().packByMinutes, calendar: .current)
+        var camps = Camps()
+        camps.add(camp)
+        camps.add(nextCamp)
+        camps.plan(camp.name, on: tonight)
+        camps.plan(nextCamp.name, on: tonight.adding(days: 1))
+        let campStore = Store<Camps>(url: FileManager.default.temporaryDirectory.appending(path: "demo-camps.json"))
+        campStore.save(camps)
         return ForecastModel(
             provider: Provider(scene: scene), cache: ForecastCache(store: Store(url: url)),
-            store: SettingsStore(defaults: defaults)
-        ) { camp }
+            store: SettingsStore(defaults: defaults), campStore: campStore
+        ) { CampLocation(name: CampLocation.hereName, latitude: camp.latitude, longitude: camp.longitude, timeZoneID: camp.timeZoneID) }
     }
 
     /// Hours from 19:00 on the evening to noon the next day; sunset 20:30, sunrise 06:10.

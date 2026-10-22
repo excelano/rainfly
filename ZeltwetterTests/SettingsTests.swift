@@ -93,7 +93,7 @@ struct SettingsTests {
 struct SettingsModelTests {
     @Test func changesAreSavedAndReloaded() {
         let store = temporarySettings()
-        let model = ForecastModel(provider: NoProvider(), cache: ForecastCache(store: Store(url: .temporaryDirectory.appending(path: UUID().uuidString))), store: store) {
+        let model = ForecastModel(provider: NoProvider(), cache: ForecastCache(store: Store(url: .temporaryDirectory.appending(path: UUID().uuidString))), store: store, campStore: temporaryCamps()) {
             throw ForecastError.noLocation
         }
         model.settings.coldC = 5

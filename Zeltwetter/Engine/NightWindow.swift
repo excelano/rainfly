@@ -34,12 +34,4 @@ struct NightWindow: Sendable {
         calendar.timeZone = camp.timeZone
         return calendar
     }
-
-    /// The start of the day whose evening begins the night that matters at `now`: last
-    /// night until pack-by, tonight from then on.
-    static func evening(at now: Date, packByMinutes: Int, calendar: Calendar) -> Date {
-        let today = calendar.startOfDay(for: now)
-        let packBy = calendar.date(bySettingHour: packByMinutes / 60, minute: packByMinutes % 60, second: 0, of: now) ?? today
-        return now < packBy ? calendar.date(byAdding: .day, value: -1, to: today) ?? today : today
-    }
 }
