@@ -1,0 +1,10 @@
+# What this release tells the App Store it changed. The version is checked
+# against the release being cut, so notes left from last time stop the release
+# rather than reaching the listing.
+
+version = "1.0.0"
+
+[locales."en-us"]
+whats-new = """
+The first release of Zeltwetter: whether the rain fly goes on tonight, on your Apple Watch.
+"""
