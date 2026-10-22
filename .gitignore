@@ -5,3 +5,4 @@ DerivedData/
 ship.toml
 SPEC.md
 /packaging/ios/screenshots/
+/target/
