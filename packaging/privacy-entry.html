@@ -1,26 +1,20 @@
 <h3 id="zeltwetter">Zeltwetter (Apple Watch) &mdash; Privacy</h3>
-<p>Zeltwetter is an open-source Apple Watch app that tells campers whether to put the rain fly on their tent tonight, from the night's forecast at their campsite. It runs on the watch alone. This section is the canonical statement of what Zeltwetter does and does not do with your data. The app is open source so that every claim here is independently verifiable. The repository is at <a href="https://github.com/excelano/zeltwetter" rel="noopener noreferrer">github.com/excelano/zeltwetter</a>.</p>
+<p>Zeltwetter tells you, on Apple Watch, whether the rain fly belongs on your tent tonight. To answer, it asks Apple for a forecast at your campsite. This section says what goes to Apple, what the app keeps, and how you can check both against the source code at <a href="https://github.com/excelano/zeltwetter" rel="noopener noreferrer">github.com/excelano/zeltwetter</a>.</p>
 
-<h4>The short version</h4>
-<p>Zeltwetter has no server of its own, no account to create, no advertising, no analytics, no telemetry, no crash reporting and no third-party code. It talks only to Apple: to Apple's WeatherKit for forecasts and to Apple's map service for place names. Its App Store privacy declaration is &ldquo;Data Not Collected,&rdquo; because the developer receives nothing and has nowhere to put it.</p>
+<h4>Forecasts come from Apple</h4>
+<p>Each forecast is a request from the watch to Apple's WeatherKit carrying one camp's coordinates: your own position for the camp called Here, or the coordinates of a camp you saved. When you add a camp, its coordinates or the text you searched for go to Apple's map service, to suggest a name, find the camp's time zone, or list matching places. The detail screen loads the Apple Weather mark from the address WeatherKit supplies, because Apple's terms require it to be shown. All three go through Apple's system frameworks under Apple's privacy terms. Excelano runs no server for Zeltwetter, and nothing about these requests reaches the developer. Zeltwetter contains no analytics, advertising, crash reporting or third-party code, and it has no account to create. Its App Store privacy declaration is &ldquo;Data Not Collected.&rdquo;</p>
 
-<h4>What it reads</h4>
-<p><strong>Location</strong>, with your permission and only while Zeltwetter is on screen, to fetch the forecast for where you are. <strong>Air pressure</strong> from the watch's barometer, with your Motion &amp; Fitness permission, for a few seconds at a time during background refreshes between sunset and sunrise, and only while the pressure watch is turned on in Settings.</p>
+<h4>Your position</h4>
+<p>Zeltwetter reads your location only while it is on screen and only with your permission, to forecast for where you stand. Without that permission, camps can still be added by search or coordinates.</p>
 
-<h4>What leaves your watch</h4>
-<p><strong>A camp's coordinates, sent to Apple's WeatherKit</strong> to fetch its forecast: your own position for the camp called Here, or the coordinates of a camp you saved. <strong>A camp's coordinates or your search text, sent to Apple's map service</strong> when you add a camp, to suggest a name and find its time zone, or to find places matching what you typed. <strong>A request for the Apple Weather mark</strong>, the logo the detail screen must show, from the address WeatherKit gives for it. These requests go from the watch to Apple through the system frameworks, under Apple's own privacy terms; the developer never sees them. Nothing else leaves the watch: there is no update check, no analytics service, no crash reporter and no remote logging.</p>
+<h4>The barometer at night</h4>
+<p>With your Motion &amp; Fitness permission and the pressure watch turned on in Settings, Zeltwetter reads the watch's barometer for a few seconds at a time during background refreshes between sunset and sunrise. A fast fall in pressure while the verdict is &ldquo;Fly off&rdquo; raises a notification that the watch itself posts; no push service is involved.</p>
 
-<h4>What stays on your watch</h4>
-<p>Zeltwetter keeps the forecasts it has fetched, the camps you save with their names and coordinates, the nights you plan at them, your settings, and the barometer readings of the last twelve hours with the time of the last pressure warning. These live in storage the app shares with its own complication on the watch, are never sent anywhere, and are removed when the app is removed. Forecasts are dropped a day after their night ends; deleting a camp removes it and its planned nights.</p>
+<h4>What the watch keeps</h4>
+<p>The fetched forecasts, the camps you save with their names and coordinates, the nights you plan at them, your settings, the last twelve hours of barometer readings and the time of the last pressure warning. They sit in storage the app shares with its own complication, never leave the watch, and go when the app is deleted. A forecast is dropped a day after its night ends, and deleting a camp removes its planned nights with it.</p>
 
-<h4>Notifications</h4>
-<p>The pressure warning is a local notification raised by the watch itself. No push service is involved.</p>
+<h4>Apple's figures for developers</h4>
+<p>Apple counts installs on its own, and when <strong>Share With App Developers</strong> is on, it passes the developer aggregate, anonymous crash logs. Zeltwetter has no code that touches either. The switch is on the paired iPhone at <strong>Settings &gt; Privacy &amp; Security &gt; Analytics &amp; Improvements</strong> and covers every app.</p>
 
-<h4>One thing outside the app's control</h4>
-<p>Apple collects its own figures about installs and, on devices where <strong>Share With App Developers</strong> is turned on, aggregate anonymous crash logs. Zeltwetter contains no code that touches that data, but Apple may still show the developer aggregate, anonymised numbers. On the paired iPhone the control is at <strong>Settings &gt; Privacy &amp; Security &gt; Analytics &amp; Improvements</strong>, and it applies to every app, not only this one.</p>
-
-<h4>How to verify the claims yourself</h4>
-<p>The full source is at <a href="https://github.com/excelano/zeltwetter" rel="noopener noreferrer">github.com/excelano/zeltwetter</a>. The only network requests are made by Apple's frameworks: <code>WeatherService</code> in <code>WeatherKitProvider.swift</code>, <code>CLGeocoder</code> and <code>MKLocalSearch</code> in <code>CampPlace.swift</code>, and the <code>AsyncImage</code> that loads the Apple Weather mark in <code>DetailView.swift</code>. There is no <code>URLSession</code> call in the code. What it stores is written through <code>Store.swift</code> and <code>SettingsStore.swift</code>.</p>
-
-<h4>Updates to this section</h4>
-<p>This section changes as the app changes. The change history is the git log of <code>packaging/privacy-entry.html</code> in the Zeltwetter source repository, which is where this text is maintained.</p>
+<h4>Checking the code</h4>
+<p>Every network request is made by an Apple framework: <code>WeatherService</code> in <code>WeatherKitProvider.swift</code>, <code>CLGeocoder</code> and <code>MKLocalSearch</code> in <code>CampPlace.swift</code>, and the <code>AsyncImage</code> for the Apple Weather mark in <code>DetailView.swift</code>. The code makes no <code>URLSession</code> call of its own. Everything stored is written through <code>Store.swift</code> and <code>SettingsStore.swift</code>. This section is maintained as <code>packaging/privacy-entry.html</code> in the repository, and its git log is the record of every change.</p>

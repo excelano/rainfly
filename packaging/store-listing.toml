@@ -8,24 +8,27 @@
 # description 4,000, apple-review-notes 4,000.
 
 apple-review-notes = """
-Zeltwetter tells campers whether to put the rain fly on their tent tonight, from the night's forecast at their campsite. It is watch-only; the iOS app in this package is an empty container that App Store Connect requires, and everything is reviewed on the watch. There is no sign-in and no account.
+Zeltwetter is for people sleeping in a tent. It reads the overnight forecast for the campsite and says whether the rain fly should go on tonight, "Fly on" or "Fly off", with the reason. All of it runs on Apple Watch, so please review it there. The iOS app in the upload has no screens; it exists so that the watch app can be delivered through the App Store. Nothing has to be signed into, and there is no account.
 
-PERMISSIONS
-When it first opens, Zeltwetter asks for Location (while using the app), to fetch the forecast for where the watch is. After the forecast loads it asks to send notifications and for Motion & Fitness, both for the optional overnight pressure watch, which reads the watch's barometer during background refreshes at night and notifies when the pressure falls fast while the verdict is "Fly off". With location denied, a camp can still be added by search or coordinates and its forecast shown.
+Forecasts come from WeatherKit, so the watch needs a connection, through Wi-Fi, cellular or its iPhone, before the first verdict appears. A camp's forecast is kept on the watch after that.
 
-WHAT TO TRY
-1. The main screen shows tonight's verdict, "Fly on" or "Fly off", with the reason and the forecast's age. Tap it to see every check with its time, the night's low and rain chance, and the Apple Weather attribution with its legal link.
-2. The gear at the top right opens Settings: units, the time you plan to break camp, a sleeping-bag rating, and every threshold, each turned with the Digital Crown.
-3. The list button at the top left opens Camps. Tap Add camp, then Search, and search for a campground or town such as "Yosemite Valley". Name it and save it, then tap it to see its verdict tonight.
-4. In Camps, Add night plans a camp for a later date, and Download trip fetches the forecast for every planned night within a week so the verdicts work offline.
-5. A complication shows the verdict on the watch face in the circular, corner, rectangular and inline slots.
+TONIGHT'S VERDICT
+Open Zeltwetter and allow Location while using the app. The main screen shows tonight's verdict for where the watch is, the reason for it, and how old the forecast is. Tap the verdict for the detail screen: each check (storms, overnight rain, wind-driven rain, dew or frost, morning rain, cold) with the time it fires, the night's low, the rain chance, and the Apple Weather mark with its legal link. With Location denied, a camp can still be added by search or coordinates and its verdict shown.
 
-The forecast comes from WeatherKit, so the first verdict needs a network connection.
+CAMPS AND TRIPS
+The list button at the top left opens Camps. Add camp, then Search, finds campgrounds and towns; "Yosemite Valley" is a good one to try. Save it under any name and tap it for its verdict tonight. Add night assigns a camp to a later date, and Download trip fetches every planned night in the coming week, so those verdicts are there without a signal.
 
-PRIVACY
-Zeltwetter collects nothing. It sends a camp's coordinates to Apple's WeatherKit for the forecast, and to Apple's map service when a camp is searched for or added. Forecasts, camps, settings and recent pressure readings stay on the watch. The privacy policy is at https://excelano.com/legal/#zeltwetter and the complete source is public at https://github.com/excelano/zeltwetter.
+SETTINGS
+The gear at the top right holds the units, the hour you plan to break camp, your sleeping bag's comfort rating, and every threshold the checks use. Each value turns with the Digital Crown.
 
-Contact for review questions: David M. Anderson, david.anderson@excelano.com.
+THE OVERNIGHT PRESSURE WATCH
+Once the first forecast has loaded, Zeltwetter asks to send notifications and for Motion & Fitness. Both serve one optional feature: during background refreshes at night it reads the watch's barometer for a few seconds, and when the pressure falls fast while the verdict is "Fly off", the watch raises a local notification. It needs a falling barometer at night, so it cannot be made to fire on demand. It can be turned off in Settings.
+
+ON THE WATCH FACE
+The complication shows tonight's verdict in the circular, corner, rectangular and inline families, and in the morning the time the tent should be dry.
+
+WHERE DATA GOES
+The coordinates of the camp being forecast go to WeatherKit, and to Apple's map service when a camp is searched for or named. Both requests go through Apple's frameworks; we run no server, and the app carries no analytics. Camps, forecasts, settings and the last twelve hours of pressure readings stay on the watch. Privacy policy: https://excelano.com/legal/#zeltwetter. Code: https://github.com/excelano/zeltwetter.
 """
 
 [locales."en-us"]
@@ -45,7 +48,7 @@ Put the complication on your watch face to see the verdict at a glance, and the 
 
 Every threshold can be changed, in °C or °F and m/s or mph.
 
-Zeltwetter runs on Apple Watch alone and needs no iPhone app. There are no ads, no accounts, no in-app purchases and no tracking. It is open source under the MIT license.
+There is no iPhone app to install: Zeltwetter lives on the watch. It asks for no account, shows no ads, sells nothing and tracks nothing, and its code is public under the MIT license.
 
 Weather data is provided by Apple Weather.
 """
