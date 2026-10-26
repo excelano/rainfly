@@ -16,11 +16,11 @@ A complication shows the verdict on the watch face in the circular, corner, rect
 
 ## Building
 
-Open `Zeltwetter.xcodeproj` in Xcode. The `Zeltwetter Watch App` scheme builds the watch app for a watch or the simulator and runs the tests. The App Store accepts a watch-only app inside an iOS stub with no code, so the `Zeltwetter` scheme archives that stub with the watch app embedded. The complication is its own extension target, `ZeltwetterWidgets`, which shares the forecast cache and settings with the app through an App Group.
+Open `Zeltwetter.xcodeproj` in Xcode. The `Zeltwetter Watch App` scheme builds the watch app for a watch or the simulator and runs the tests. The `Zeltwetter` scheme builds and archives the iPhone app, which embeds the watch app. Code both apps use lives in `Shared/`, the watch's own in `Watch/` and the phone's in `Phone/`. The complication is its own extension target, `ZeltwetterWidgets` in `WatchWidgets/`, which shares the forecast cache and settings with the watch app through an App Group.
 
 The identity a fork changes, meaning the team id, the bundle ids, the App Group and the display name, lives in `Config/Zeltwetter.xcconfig`, and the version in `Config/Version.xcconfig`. The App ID needs the WeatherKit capability and service and the App Group. The project has no dependencies beyond Apple's frameworks.
 
-The rule engine in `Zeltwetter/Engine` uses Foundation alone and is covered by the tests. A Debug build launched with `--demo` and one of `clear`, `rain`, `storm`, `dew` or `frost` replaces WeatherKit and the location with a fixed two-night trip whose first night gives that verdict, and `--open detail`, `--open settings` or `--open camps` also opens that screen; `Support/Demo.swift` has the details.
+The rule engine in `Shared/Engine` uses Foundation alone and is covered by the tests. A Debug build launched with `--demo` and one of `clear`, `rain`, `storm`, `dew` or `frost` replaces WeatherKit and the location with a fixed two-night trip whose first night gives that verdict, and `--open detail`, `--open settings` or `--open camps` also opens that screen; `Shared/Support/Demo.swift` has the details.
 
 ## Privacy
 

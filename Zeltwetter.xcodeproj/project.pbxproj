@@ -73,10 +73,9 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		AF0000000000000000000001 /* Exceptions for "Zeltwetter" folder in "ZeltwetterWidgets" target */ = {
+		AF0000000000000000000001 /* Exceptions for "Shared" folder in "ZeltwetterWidgets" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Complication/ComplicationTimeline.swift,
 				Data/Camps.swift,
 				Data/ForecastCache.swift,
 				Data/SettingsStore.swift,
@@ -88,20 +87,18 @@
 				Engine/NightWindow.swift,
 				Engine/Settings.swift,
 				Engine/Verdict.swift,
-				Views/TentGlyph.swift,
-				Views/VerdictText.swift,
+				Faces/ComplicationTimeline.swift,
+				Faces/TentGlyph.swift,
+				Faces/VerdictText.swift,
 			);
 			target = A80000000000000000000004 /* ZeltwetterWidgets */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A50000000000000000000001 /* Zeltwetter */ = {
+		A50000000000000000000001 /* Watch */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				AF0000000000000000000001 /* Exceptions for "Zeltwetter" folder in "ZeltwetterWidgets" target */,
-			);
-			path = Zeltwetter;
+			path = Watch;
 			sourceTree = "<group>";
 		};
 		A50000000000000000000002 /* ZeltwetterTests */ = {
@@ -109,14 +106,22 @@
 			path = ZeltwetterTests;
 			sourceTree = "<group>";
 		};
-		A50000000000000000000003 /* Container */ = {
+		A50000000000000000000003 /* Phone */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Container;
+			path = Phone;
 			sourceTree = "<group>";
 		};
-		A50000000000000000000004 /* ZeltwetterWidgets */ = {
+		A50000000000000000000004 /* WatchWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ZeltwetterWidgets;
+			path = WatchWidgets;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000005 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AF0000000000000000000001 /* Exceptions for "Shared" folder in "ZeltwetterWidgets" target */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -143,16 +148,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A60000000000000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		A70000000000000000000001 = {
 			isa = PBXGroup;
 			children = (
-				A50000000000000000000001 /* Zeltwetter */,
+				A50000000000000000000005 /* Shared */,
+				A50000000000000000000003 /* Phone */,
+				A50000000000000000000001 /* Watch */,
+				A50000000000000000000004 /* WatchWidgets */,
 				A50000000000000000000002 /* ZeltwetterTests */,
-				A50000000000000000000004 /* ZeltwetterWidgets */,
-				A50000000000000000000003 /* Container */,
 				A70000000000000000000003 /* Config */,
 				A70000000000000000000002 /* Products */,
 			);
@@ -199,7 +212,8 @@
 				AD0000000000000000000003 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				A50000000000000000000001 /* Zeltwetter */,
+				A50000000000000000000001 /* Watch */,
+				A50000000000000000000005 /* Shared */,
 			);
 			name = "Zeltwetter Watch App";
 			productName = "Zeltwetter Watch App";
@@ -231,6 +245,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = AC0000000000000000000004 /* Build configuration list for PBXNativeTarget "Zeltwetter" */;
 			buildPhases = (
+				AA0000000000000000000004 /* Sources */,
+				A60000000000000000000004 /* Frameworks */,
 				AB0000000000000000000003 /* Resources */,
 				A40000000000000000000001 /* Embed Watch Content */,
 			);
@@ -240,12 +256,13 @@
 				AD0000000000000000000002 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				A50000000000000000000003 /* Container */,
+				A50000000000000000000003 /* Phone */,
+				A50000000000000000000005 /* Shared */,
 			);
 			name = Zeltwetter;
 			productName = Zeltwetter;
 			productReference = A20000000000000000000005 /* Zeltwetter.app */;
-			productType = "com.apple.product-type.application.watchapp2-container";
+			productType = "com.apple.product-type.application";
 		};
 		A80000000000000000000004 /* ZeltwetterWidgets */ = {
 			isa = PBXNativeTarget;
@@ -260,7 +277,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				A50000000000000000000004 /* ZeltwetterWidgets */,
+				A50000000000000000000004 /* WatchWidgets */,
 			);
 			name = ZeltwetterWidgets;
 			productName = ZeltwetterWidgets;
@@ -367,6 +384,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA0000000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -437,7 +461,8 @@
 				INFOPLIST_KEY_NSMotionUsageDescription = "Zeltwetter samples air pressure overnight to warn you when the weather is turning.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKApplication = YES;
-				INFOPLIST_KEY_WKWatchOnly = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(ZELTWETTER_CONTAINER_BUNDLE_ID)";
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -462,7 +487,8 @@
 				INFOPLIST_KEY_NSMotionUsageDescription = "Zeltwetter samples air pressure overnight to warn you when the weather is turning.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKApplication = YES;
-				INFOPLIST_KEY_WKWatchOnly = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(ZELTWETTER_CONTAINER_BUNDLE_ID)";
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -501,11 +527,22 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Config/Zeltwetter.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "$(ZELTWETTER_DISPLAY_NAME)";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Zeltwetter uses your location to fetch tonight's forecast for your camp.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Zeltwetter samples air pressure overnight to warn you when the weather is turning.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(ZELTWETTER_CONTAINER_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -517,11 +554,22 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Config/Zeltwetter.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "$(ZELTWETTER_DISPLAY_NAME)";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Zeltwetter uses your location to fetch tonight's forecast for your camp.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Zeltwetter samples air pressure overnight to warn you when the weather is turning.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(ZELTWETTER_CONTAINER_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

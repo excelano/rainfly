@@ -31,6 +31,16 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "A80000000000000000000003"
+            BuildableName = "Zeltwetter.app"
+            BlueprintName = "Zeltwetter"
+            ReferencedContainer = "container:Zeltwetter.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
    </LaunchAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
