@@ -49,7 +49,11 @@ struct CloudKit {
         let (answer, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-            throw ToolError("CloudKit answered \(status): \(String(decoding: answer, as: UTF8.self))")
+            let said = String(decoding: answer, as: UTF8.self)
+            if status == 404, said.contains("Did not find record type") {
+                throw ToolError("no DiaryNight records in \(environment) yet; the first shared night creates the record type")
+            }
+            throw ToolError("CloudKit answered \(status): \(said)")
         }
         return try JSONDecoder().decode(Response.self, from: answer)
     }
