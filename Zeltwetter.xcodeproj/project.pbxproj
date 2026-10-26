@@ -581,8 +581,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "$(ZELTWETTER_DISPLAY_NAME)";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Zeltwetter uses your location to fetch tonight's forecast for your camp.";
-				INFOPLIST_KEY_NSMotionUsageDescription = "Zeltwetter samples air pressure overnight to warn you when the weather is turning.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Rainfly uses your location to fetch tonight's forecast for your camp.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Rainfly samples air pressure overnight to warn you when the weather is turning.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKApplication = YES;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(ZELTWETTER_CONTAINER_BUNDLE_ID)";
@@ -607,8 +607,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "$(ZELTWETTER_DISPLAY_NAME)";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Zeltwetter uses your location to fetch tonight's forecast for your camp.";
-				INFOPLIST_KEY_NSMotionUsageDescription = "Zeltwetter samples air pressure overnight to warn you when the weather is turning.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Rainfly uses your location to fetch tonight's forecast for your camp.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Rainfly samples air pressure overnight to warn you when the weather is turning.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKApplication = YES;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(ZELTWETTER_CONTAINER_BUNDLE_ID)";
@@ -658,8 +658,8 @@
 				INFOPLIST_FILE = "Config/Phone-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "$(ZELTWETTER_DISPLAY_NAME)";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Zeltwetter uses your location to fetch tonight's forecast for your camp.";
-				INFOPLIST_KEY_NSMotionUsageDescription = "Zeltwetter samples air pressure overnight to warn you when the weather is turning.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Rainfly uses your location to fetch tonight's forecast for your camp.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Rainfly samples air pressure overnight to warn you when the weather is turning.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -686,8 +686,8 @@
 				INFOPLIST_FILE = "Config/Phone-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "$(ZELTWETTER_DISPLAY_NAME)";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Zeltwetter uses your location to fetch tonight's forecast for your camp.";
-				INFOPLIST_KEY_NSMotionUsageDescription = "Zeltwetter samples air pressure overnight to warn you when the weather is turning.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Rainfly uses your location to fetch tonight's forecast for your camp.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Rainfly samples air pressure overnight to warn you when the weather is turning.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;

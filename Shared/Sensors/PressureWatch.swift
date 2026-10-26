@@ -48,7 +48,7 @@ struct PressureWatch {
 
     private static func post(_ message: String) async {
         let content = UNMutableNotificationContent()
-        content.title = "Zeltwetter"
+        content.title = "Rainfly"
         content.body = message
         content.sound = .default
         try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "pressure", content: content, trigger: nil))

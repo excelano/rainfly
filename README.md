@@ -1,6 +1,6 @@
 # Zeltwetter
 
-Zeltwetter answers one question at camp: should the rain fly go on tonight? It reads the night's forecast for your campsite and gives a yes or no with the reason, such as "Dew likely by 4 AM" or "Rain 35% after 2 AM", and in the morning it estimates when the tent will be dry enough to pack. It runs on iPhone and on Apple Watch, each a complete app without the other, with no account, no ads and no analytics.
+Zeltwetter, published on the App Store as Rainfly, answers one question at camp: should the rain fly go on tonight? It reads the night's forecast for your campsite and gives a yes or no with the reason, such as "Dew likely by 4 AM" or "Rain 35% after 2 AM", and in the morning it estimates when the tent will be dry enough to pack. It runs on iPhone and on Apple Watch, each a complete app without the other, with no account, no ads and no analytics.
 
 It is deliberately narrow. There is no radar, no weather map, no hourly chart and no week ahead, only what tonight means for your gear.
 
@@ -28,7 +28,7 @@ The rule engine in `Shared/Engine` uses Foundation alone and is covered by the t
 
 ## Privacy
 
-Zeltwetter sends a camp's position to Apple's WeatherKit for its forecast, and to Apple's map service when a camp is added or searched for. It reads your location while it is on screen, with permission, and the barometer during the night when the pressure watch is on. Forecasts, camps, the trip, settings, recent pressure readings and the dew diary stay on your devices, passing between your iPhone and your watch over WatchConnectivity when both apps are installed. The one exception is a dew diary you choose to share, whose answered nights go to Excelano's CloudKit database as described above. The privacy policy is at https://excelano.com/legal/#zeltwetter.
+Zeltwetter sends a camp's position to Apple's WeatherKit for its forecast, and to Apple's map service when a camp is added or searched for. It reads your location while it is on screen, with permission, and the barometer during the night when the pressure watch is on. Forecasts, camps, the trip, settings, recent pressure readings and the dew diary stay on your devices, passing between your iPhone and your watch over WatchConnectivity when both apps are installed. The one exception is a dew diary you choose to share, whose answered nights go to Excelano's CloudKit database as described above. The privacy policy is at https://excelano.com/legal/#rainfly.
 
 ## License
 

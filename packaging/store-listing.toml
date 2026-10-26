@@ -8,12 +8,12 @@
 # description 4,000, apple-review-notes 4,000.
 
 apple-review-notes = """
-Zeltwetter is for people sleeping in a tent. It reads the overnight forecast for the campsite and says whether the rain fly should go on tonight, "Fly on" or "Fly off", with the reason. It is a full app on iPhone and a full app on Apple Watch; either works without the other, and with both installed they keep the same camps, trip and settings. Nothing has to be signed into, and there is no account.
+Rainfly is for people sleeping in a tent. It reads the overnight forecast for the campsite and says whether the rain fly should go on tonight, "Fly on" or "Fly off", with the reason. It is a full app on iPhone and a full app on Apple Watch; either works without the other, and with both installed they keep the same camps, trip and settings. Nothing has to be signed into, and there is no account.
 
 Forecasts come from WeatherKit, so the device needs a connection before the first verdict appears. A camp's forecast is kept on the device after that.
 
 ON IPHONE
-Open Zeltwetter and allow Location while using the app. The main screen shows tonight's verdict for where the phone is, the reason, any advice such as opening the vents, and below it every check (storms, overnight rain, wind-driven rain, frost, dew, morning rain, cold) with the time it fires, the night's low and the rain chance. The Apple Weather mark and its legal link are at the bottom. Pull down to fetch again. With Location denied, a camp can still be added by search, on the map or by coordinates.
+Open Rainfly and allow Location while using the app. The main screen shows tonight's verdict for where the phone is, the reason, any advice such as opening the vents, and below it every check (storms, overnight rain, wind-driven rain, frost, dew, morning rain, cold) with the time it fires, the night's low and the rain chance. The Apple Weather mark and its legal link are at the bottom. Pull down to fetch again. With Location denied, a camp can still be added by search, on the map or by coordinates.
 
 The list button at the top left opens Camps. Add camp offers Search ("Yosemite Valley" is a good one to try), Use current location, Pick on map (pan the map under the pin) and Enter coordinates. Tap a saved camp to see its verdict tonight. Add night plans a camp for a later date, and Download trip fetches every planned night in the coming week; each downloaded night then shows its own verdict in the list and opens to its checks.
 
@@ -28,40 +28,40 @@ THE DEW DIARY (IPHONE)
 Settings has a Dew diary switch, off by default. With it on, each morning from sunrise the main screen asks what was found on something left outside overnight (Dry, Light dew, Wet, Frost, Rain or Didn't check). Settings > Nights and suggestions shows how the dew forecast did on the answered nights, and after enough nights a suggested dew spread with an Apply button. A new install starts with no nights. Share with Excelano (off by default, needs iCloud) sends each answered night to our CloudKit database to improve the dew forecast: position rounded to 0.1°, what was found, the forecast and history hours, the thresholds and a random diary ID; no camp names or personal details. The diary screen can reset the ID and delete every shared night.
 
 THE OVERNIGHT PRESSURE WATCH
-Once the first forecast has loaded, Zeltwetter asks to send notifications and for Motion & Fitness. Both serve one optional feature: during background refreshes at night it reads the device's barometer for a few seconds, and when the pressure falls fast while the verdict is "Fly off", the device raises a local notification. When the watch app is installed with its pressure watch on, the phone keeps quiet so one fall brings one notification. It needs a falling barometer at night, so it cannot be made to fire on demand.
+Once the first forecast has loaded, Rainfly asks to send notifications and for Motion & Fitness. Both serve one optional feature: during background refreshes at night it reads the device's barometer for a few seconds, and when the pressure falls fast while the verdict is "Fly off", the device raises a local notification. When the watch app is installed with its pressure watch on, the phone keeps quiet so one fall brings one notification. It needs a falling barometer at night, so it cannot be made to fire on demand.
 
 WHERE DATA GOES
-The coordinates of the camp being forecast go to WeatherKit, and to Apple's map service when a camp is searched for, named or placed on the map. Between the iPhone and its paired watch, camps, the trip, settings and the forecasts for saved camps travel over WatchConnectivity. Shared dew diary nights, only when the user turns sharing on, go to the public database of our CloudKit container. All of it goes through Apple's frameworks; we run no server of our own, and the app carries no analytics or third-party code. Privacy policy: https://excelano.com/legal/#zeltwetter. Code: https://github.com/excelano/zeltwetter.
+The coordinates of the camp being forecast go to WeatherKit, and to Apple's map service when a camp is searched for, named or placed on the map. Between the iPhone and its paired watch, camps, the trip, settings and the forecasts for saved camps travel over WatchConnectivity. Shared dew diary nights, only when the user turns sharing on, go to the public database of our CloudKit container. All of it goes through Apple's frameworks; we run no server of our own, and the app carries no analytics or third-party code. Privacy policy: https://excelano.com/legal/#rainfly. Code: https://github.com/excelano/zeltwetter.
 """
 
 [locales."en-us"]
 website = "https://github.com/excelano/zeltwetter"
 support = "https://github.com/excelano/zeltwetter"
-privacy = "https://excelano.com/legal/#zeltwetter"
+privacy = "https://excelano.com/legal/#rainfly"
 description = """
-Zeltwetter answers one question at camp: should the rain fly go on tonight?
+Rainfly answers one question at camp: should the rain fly go on tonight?
 
 It reads the night's forecast for your campsite and gives a plain yes or no with the reason: "Dew likely by 4 AM", "Rain 35% after 2 AM", "Storms possible at 11 PM", or "Clear, dry, mild." In the morning it estimates when the tent will be dry enough to pack.
 
-Every check stands on its own, and any one of them puts the fly on: thunderstorms, rain overnight, rain carried by strong wind, dew or frost on a clear and calm night, rain in the morning before you break camp, and a cold night. Each comes with the time it fires, alongside the night's low, the closest the air comes to its dew point, and the highest chance of rain. Zeltwetter also suggests opening the vents on a damp night with the fly on, and warns when the low falls below your sleeping bag's comfort rating.
+Every check stands on its own, and any one of them puts the fly on: thunderstorms, rain overnight, rain carried by strong wind, dew or frost on a clear and calm night, rain in the morning before you break camp, and a cold night. Each comes with the time it fires, alongside the night's low, the closest the air comes to its dew point, and the highest chance of rain. Rainfly also suggests opening the vents on a damp night with the fly on, and warns when the low falls below your sleeping bag's comfort rating.
 
-Plan a trip and it follows you. Add camps by searching for a campground, park or town, from where you stand, by dropping them on a map, or by typing coordinates. Plan which camp you sleep at each night, download the trip while you have signal, and each evening Zeltwetter shows that night's camp, with or without a connection. On iPhone, every downloaded night shows its verdict at a glance.
+Plan a trip and it follows you. Add camps by searching for a campground, park or town, from where you stand, by dropping them on a map, or by typing coordinates. Plan which camp you sleep at each night, download the trip while you have signal, and each evening Rainfly shows that night's camp, with or without a connection. On iPhone, every downloaded night shows its verdict at a glance.
 
-Zeltwetter runs on iPhone and on Apple Watch, and each works on its own. With both, your camps, trip and settings stay the same on phone and wrist, and a trip downloaded on the phone at home is waiting on the watch at the trailhead.
+Rainfly runs on iPhone and on Apple Watch, and each works on its own. With both, your camps, trip and settings stay the same on phone and wrist, and a trip downloaded on the phone at home is waiting on the watch at the trailhead.
 
-See the verdict without opening the app: a widget on the Home Screen or Lock Screen, and a complication on the watch face, showing the dry-by time in the morning. With the overnight pressure watch on, Zeltwetter reads the barometer through the night and alerts you when the pressure falls fast while the fly is off. It samples a few times an hour at most, as the system allows, so it is an early hint rather than a weather station.
+See the verdict without opening the app: a widget on the Home Screen or Lock Screen, and a complication on the watch face, showing the dry-by time in the morning. With the overnight pressure watch on, Rainfly reads the barometer through the night and alerts you when the pressure falls fast while the fly is off. It samples a few times an hour at most, as the system allows, so it is an early hint rather than a weather station.
 
-Keep a dew diary on iPhone to check the dew forecast against your own mornings. Each morning, note what you found outside; Zeltwetter shows how often it called the dew right, whether a miss was the forecast's or the settings', and suggests a dew spread that suits your campsites. If you like, share your diary to help improve the dew forecast for everyone; it is off unless you turn it on.
+Keep a dew diary on iPhone to check the dew forecast against your own mornings. Each morning, note what you found outside; Rainfly shows how often it called the dew right, whether a miss was the forecast's or the settings', and suggests a dew spread that suits your campsites. If you like, share your diary to help improve the dew forecast for everyone; it is off unless you turn it on.
 
 Every threshold can be changed, in °C or °F and m/s or mph.
 
-Zeltwetter asks for no account, shows no ads, sells nothing and tracks nothing, and its code is public under the MIT license.
+Rainfly asks for no account, shows no ads, sells nothing and tracks nothing, and its code is public under the MIT license.
 
 Weather data is provided by Apple Weather.
 """
 
 [locales."en-us".apple]
-name = "Zeltwetter"
+name = "Rainfly"
 subtitle = "Rain fly on or off tonight?"
 promotional-text = "Should the rain fly go on tonight? A yes or no for your campsite, with the reason and the time, plus when the tent will be dry in the morning. Plans a whole trip."
-keywords = "tent,camping,backpacking,fly,dew,frost,condensation,campsite,forecast,weather,hiking,trip,outdoor"
+keywords = "tent,camping,backpacking,overnight,dew,frost,condensation,campsite,forecast,weather,hiking,trip"

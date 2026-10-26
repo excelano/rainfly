@@ -8,7 +8,7 @@ DEVELOPMENT_TEAM = 9K6W5PMFYP
 // The App Store record's bundle id, carried by the iPhone app, which embeds the watch app.
 ZELTWETTER_CONTAINER_BUNDLE_ID = com.excelano.zeltwetter
 ZELTWETTER_BUNDLE_ID = $(ZELTWETTER_CONTAINER_BUNDLE_ID).watchkitapp
-ZELTWETTER_DISPLAY_NAME = Zeltwetter
+ZELTWETTER_DISPLAY_NAME = Rainfly
 // Shared by the watch app and the complication for settings and the forecast cache.
 ZELTWETTER_APP_GROUP = group.com.excelano.zeltwetter
 // The iPhone's CloudKit container, where shared dew diary nights go.
