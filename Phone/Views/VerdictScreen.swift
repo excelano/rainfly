@@ -19,7 +19,16 @@ struct VerdictScreen: View {
                     now: context.date,
                     attribution: model.attribution,
                     problem: model.problem
-                )
+                ) {
+                    #if DEBUG
+                    if let recorder {
+                        DewCheckSection(
+                            recorder: recorder,
+                            night: recorder.log.awaitingObservation(now: context.date, campName: model.camps.campName)
+                        )
+                    }
+                    #endif
+                }
             } else if model.isRefreshing {
                 ProgressView("Checking the sky")
             } else {
@@ -34,15 +43,6 @@ struct VerdictScreen: View {
                 }
             }
         }
-        #if DEBUG
-        .safeAreaInset(edge: .bottom) {
-            TimelineView(.everyMinute) { context in
-                if let recorder, let night = recorder.log.awaitingObservation(now: context.date, campName: model.camps.campName) {
-                    DewCheckCard(recorder: recorder, night: night)
-                }
-            }
-        }
-        #endif
         .refreshable { await model.refresh() }
         .navigationTitle(model.campName)
         .toolbar {

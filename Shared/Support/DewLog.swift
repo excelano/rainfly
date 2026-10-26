@@ -115,8 +115,9 @@ struct DewLogNight: Codable, Equatable {
 
 /// What the camper found in the morning on something left under the sky.
 struct DewObservation: Codable, Equatable {
+    /// Light dew is spots or edges; wet is damp all over or beaded, enough to pack a wet fly.
     enum Kind: String, Codable, CaseIterable {
-        case dry, dew, frost, rain
+        case dry, lightDew, wet, frost, rain
     }
 
     let kind: Kind

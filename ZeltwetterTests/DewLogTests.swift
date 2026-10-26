@@ -36,8 +36,8 @@ struct DewLogTests {
         #expect(log.awaitingObservation(now: night.sunrise.addingTimeInterval(3600)) { _ in "Elsewhere" } == nil)
         #expect(log.awaitingObservation(now: night.sunrise.addingTimeInterval(DewLog.answerWindow + 60), campName: camp) == nil)
 
-        log.observe(DewObservation(kind: .dew, openSky: true, at: night.sunrise), campName: night.location.name, on: asked!.date)
-        #expect(log.nights[0].observation?.kind == .dew)
+        log.observe(DewObservation(kind: .lightDew, openSky: true, at: night.sunrise), campName: night.location.name, on: asked!.date)
+        #expect(log.nights[0].observation?.kind == .lightDew)
         #expect(log.awaitingObservation(now: night.sunrise.addingTimeInterval(3600), campName: camp) == nil)
     }
 
@@ -66,12 +66,12 @@ struct DewLogTests {
         let dewy = F.dewyNight { F.hour($0) }
         let history = NightForecast(location: pitched.location, fetchedAt: pitched.sunrise.addingTimeInterval(DewLog.settledAfter), sunset: dewy.sunset, sunrise: dewy.sunrise, hours: dewy.hours)
         log.setActual(history, campName: pitched.location.name, on: date)
-        log.observe(DewObservation(kind: .dew, openSky: true, at: pitched.sunrise), campName: pitched.location.name, on: date)
+        log.observe(DewObservation(kind: .wet, openSky: true, at: pitched.sunrise), campName: pitched.location.name, on: date)
 
         let rows = log.report(settings: Settings()).split(separator: "\n").map { $0.split(separator: ",", omittingEmptySubsequences: false).map(String.init) }
         #expect(rows.count == 2)
         let row = Dictionary(uniqueKeysWithValues: zip(rows[0], rows[1]))
-        #expect(row["found"] == "dew")
+        #expect(row["found"] == "wet")
         #expect(row["open_sky"] == "yes")
         #expect(row["forecast_wet"] == "dry")
         #expect(row["history_wet"] == "dew")

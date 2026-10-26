@@ -4,14 +4,16 @@
 
 import SwiftUI
 
-/// One night's verdict with every check under it, for tonight or a night of the trip.
-struct NightView: View {
+/// One night's verdict with every check under it, for tonight or a night of the trip, and
+/// any `extra` section between the verdict and the checks.
+struct NightView<Extra: View>: View {
     let text: VerdictText
     let now: Date
     let attribution: Attribution
     var problem: String?
     /// Names the night in place of "Tonight", for a later night of the trip.
     var period: String?
+    @ViewBuilder var extra: Extra
 
     private var window: NightWindow { NightWindow(text.night, packByMinutes: text.settings.packByMinutes) }
 
@@ -27,6 +29,7 @@ struct NightView: View {
                         .foregroundStyle(.orange)
                 }
             }
+            extra
             Section("Checks") {
                 ForEach(Trigger.allCases, id: \.self) { trigger in
                     TriggerRow(trigger: trigger, firing: text.verdict.firing(trigger), text: text)
@@ -50,6 +53,12 @@ struct NightView: View {
                     .foregroundStyle(VerdictText.staleness(since: text.night.fetchedAt, at: now).color)
             }
         }
+    }
+}
+
+extension NightView where Extra == EmptyView {
+    init(text: VerdictText, now: Date, attribution: Attribution, problem: String? = nil, period: String? = nil) {
+        self.init(text: text, now: now, attribution: attribution, problem: problem, period: period) { EmptyView() }
     }
 }
 
