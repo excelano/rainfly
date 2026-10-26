@@ -15,6 +15,7 @@ struct RootView: View {
                 #if DEBUG
                 .navigationDestination(isPresented: .constant(Demo.opens != nil)) {
                     switch Demo.opens {
+                    case "settings": SettingsScreen()
                     default: CampsScreen()
                     }
                 }

@@ -41,6 +41,13 @@ struct VerdictScreen: View {
                     Label("Camps", systemImage: "list.bullet")
                 }
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    SettingsScreen()
+                } label: {
+                    Label("Settings", systemImage: "gearshape")
+                }
+            }
         }
     }
 }
