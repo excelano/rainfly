@@ -1,9 +1,9 @@
 #!/bin/sh
 # The App Store screenshots, as recipes. shots-appstore builds the app for the
-# simulator, boots each simulator ship.toml names, installs the embedded watch
-# app, and calls this with the simulator, the language and where the frames go;
-# this file is the half that is Zeltwetter's: which screens, from the nights and camps a
-# Debug build sets up when launched with --demo.
+# simulator, boots each simulator ship.toml names, installs the iPhone app or
+# the embedded watch app, and calls this with the simulator, the language and
+# where the frames go; this file is the half that is Zeltwetter's: which screens,
+# from the nights and camps a Debug build sets up when launched with --demo.
 #
 #     ./packaging/ios/shots.sh --app <Zeltwetter.app> --device <udid> --lang en-us --outdir <dir>
 #
@@ -26,10 +26,11 @@ case "$lang" in
     *) echo "shots.sh: no set is written for $lang" >&2; exit 2 ;;
 esac
 case "$(xcrun simctl list devices | grep -F "($device)" | head -1)" in
-    *Watch*) ;;
-    *) echo "shots.sh: Zeltwetter is watch-only; $device is not a watch" >&2; exit 2 ;;
+    *Watch*) kind=watch; plist=$(echo "$app"/Watch/*.app/Info.plist) ;;
+    *iPhone*) kind=phone; plist=$app/Info.plist ;;
+    *) echo "shots.sh: no set is written for $device" >&2; exit 2 ;;
 esac
-bundle=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$app"/Watch/*.app/Info.plist)
+bundle=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$plist")
 mkdir -p "$outdir"
 settle=12
 shot() {
@@ -41,10 +42,22 @@ shot() {
     xcrun simctl io "$device" screenshot --type=png "$outdir/$name.png" >/dev/null
     echo "$name"
 }
-shot 01-fly-on --demo dew
-shot 02-checks --demo rain --open detail
-shot 03-fly-off --demo clear
-shot 04-storm --demo storm
-shot 05-camps --demo clear --open camps
-shot 06-settings --demo clear --open settings
+case $kind in
+    watch)
+        shot 01-fly-on --demo dew
+        shot 02-checks --demo rain --open detail
+        shot 03-fly-off --demo clear
+        shot 04-storm --demo storm
+        shot 05-camps --demo clear --open camps
+        shot 06-settings --demo clear --open settings
+        ;;
+    phone)
+        shot 01-fly-on --demo dew
+        shot 02-rain --demo rain
+        shot 03-fly-off --demo clear
+        shot 04-storm --demo storm
+        shot 05-trip --demo rain --open camps
+        shot 06-settings --demo clear --open settings
+        ;;
+esac
 xcrun simctl terminate "$device" "$bundle" >/dev/null 2>&1 || true

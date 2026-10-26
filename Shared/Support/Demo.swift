@@ -9,7 +9,8 @@ import Foundation
 /// WeatherKit or a location:
 ///
 ///     --demo clear|rain|storm|dew|frost   a two-night trip whose first camp has a night
-///                                         that gives that verdict
+///                                         that gives that verdict; the second night is
+///                                         already downloaded
 ///     --open detail|settings|camps        also opens that screen; the iPhone shows the
 ///                                         detail on its main screen, so it opens only
 ///                                         settings and camps
@@ -44,8 +45,12 @@ enum Demo {
         camps.plan(nextCamp.name, on: tonight.adding(days: 1))
         let campStore = Store<Camps>(url: FileManager.default.temporaryDirectory.appending(path: "demo-camps.json"))
         campStore.save(camps)
+        let provider = Provider(scene: scene)
+        let cache = ForecastCache(store: Store(url: url))
+        let calendar = NightWindow.localCalendar(for: nextCamp)
+        cache.save(provider.makeNight(at: nextCamp, evening: tonight.adding(days: 1).start(in: calendar), scene: "clear"))
         return ForecastModel(
-            provider: Provider(scene: scene), cache: ForecastCache(store: Store(url: url)),
+            provider: provider, cache: cache,
             store: SettingsStore(defaults: defaults), campStore: campStore
         ) { CampLocation(name: CampLocation.hereName, latitude: camp.latitude, longitude: camp.longitude, timeZoneID: camp.timeZoneID) }
     }
@@ -55,6 +60,10 @@ enum Demo {
         let scene: String
 
         func night(at camp: CampLocation, evening: Date) async throws -> NightForecast {
+            makeNight(at: camp, evening: evening, scene: scene)
+        }
+
+        func makeNight(at camp: CampLocation, evening: Date, scene: String) -> NightForecast {
             let calendar = NightWindow.localCalendar(for: camp)
             let at = { (minutes: Int) in calendar.date(byAdding: .minute, value: minutes, to: evening)! }
             return NightForecast(
@@ -62,13 +71,13 @@ enum Demo {
                 fetchedAt: .now.addingTimeInterval(-3 * 3600),
                 sunset: at(20 * 60 + 30),
                 sunrise: at(30 * 60 + 10),
-                hours: (19...36).map { sample(at(60 * $0), hour: $0) }
+                hours: (19...36).map { sample(at(60 * $0), hour: $0, scene: scene) }
             )
         }
 
         func attribution() async throws -> Attribution { .fallback }
 
-        private func sample(_ date: Date, hour: Int) -> HourSample {
+        private func sample(_ date: Date, hour: Int, scene: String) -> HourSample {
             let morning = hour >= 30
             var temp = 14.0, dewPoint = 6.0, cloud = 0.2, wind = 4.0, chance = 0.0, storm = false
             switch scene {
