@@ -25,8 +25,8 @@ struct SettingsView: View {
             }
             Section {
                 Toggle("Bag rating", isOn: hasBagRating)
-                if let rating = Binding($model.settings.bagRatingC) {
-                    QuantityRow(quantity: .bagRating(units), value: rating)
+                if model.settings.bagRatingC != nil {
+                    QuantityRow(quantity: .bagRating(units), value: bagRating)
                 }
             } footer: {
                 Text("Your sleeping bag's comfort rating, to warn when the night will be colder.")
@@ -75,6 +75,16 @@ struct SettingsView: View {
         } set: { date in
             let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
             model.settings.packByMinutes = (parts.hour ?? 8) * 60 + (parts.minute ?? 0)
+        }
+    }
+
+    /// The rating as a plain value. A binding unwrapped from the optional crashes when the
+    /// switch turns off, because SwiftUI reads the row once more as it removes it.
+    private var bagRating: Binding<Double> {
+        Binding {
+            model.settings.bagRatingC ?? Self.defaultBagRatingC
+        } set: { rating in
+            model.settings.bagRatingC = rating
         }
     }
 
