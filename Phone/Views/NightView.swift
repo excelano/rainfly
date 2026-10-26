@@ -10,13 +10,15 @@ struct NightView: View {
     let now: Date
     let attribution: Attribution
     var problem: String?
+    /// Names the night in place of "Tonight", for a later night of the trip.
+    var period: String?
 
     private var window: NightWindow { NightWindow(text.night, packByMinutes: text.settings.packByMinutes) }
 
     var body: some View {
         List {
             Section {
-                VerdictHeader(text: text, now: now)
+                VerdictHeader(text: text, period: period ?? text.period(at: now))
             }
             .listRowBackground(Color.clear)
             if let problem {
@@ -53,14 +55,14 @@ struct NightView: View {
 
 private struct VerdictHeader: View {
     let text: VerdictText
-    let now: Date
+    let period: String
 
     var body: some View {
         VStack(spacing: 8) {
             TentGlyph(flyOn: text.verdict.flyOn)
                 .frame(height: 112)
                 .foregroundStyle(text.verdict.flyOn ? Color.accentColor : .secondary)
-            Text(text.period(at: now).uppercased())
+            Text(period.uppercased())
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.secondary)
             Text(text.headline)

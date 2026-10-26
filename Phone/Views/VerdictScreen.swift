@@ -33,5 +33,14 @@ struct VerdictScreen: View {
         }
         .refreshable { await model.refresh() }
         .navigationTitle(model.campName)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                NavigationLink {
+                    CampsScreen()
+                } label: {
+                    Label("Camps", systemImage: "list.bullet")
+                }
+            }
+        }
     }
 }

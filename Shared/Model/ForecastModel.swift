@@ -25,6 +25,8 @@ final class ForecastModel {
     private(set) var camps: Camps
     private(set) var isDownloading = false
     private(set) var downloadReport: String?
+    /// Counts the nights saved, so a view reading the cache redraws when it changes.
+    private var cacheRevision = 0
     var settings: Settings {
         didSet { changed { store.settings = settings } }
     }
@@ -152,7 +154,8 @@ final class ForecastModel {
 
     /// The night already on the watch for `tripNight`.
     func cachedNight(_ tripNight: TripNight) -> NightForecast? {
-        cache.night(at: tripNight.campName, on: tripNight.date)
+        _ = cacheRevision
+        return cache.night(at: tripNight.campName, on: tripNight.date)
     }
 
     /// Fetches every trip night within reach whose forecast is missing or old, so the
@@ -188,6 +191,7 @@ final class ForecastModel {
         let evening = date.start(in: NightWindow.localCalendar(for: camp))
         let fetched = try await provider.night(at: camp, evening: evening)
         cache.save(fetched, now: now)
+        cacheRevision += 1
         WidgetCenter.shared.reloadAllTimelines()
         return fetched
     }

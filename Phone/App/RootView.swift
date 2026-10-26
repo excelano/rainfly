@@ -12,6 +12,13 @@ struct RootView: View {
     var body: some View {
         NavigationStack {
             VerdictScreen()
+                #if DEBUG
+                .navigationDestination(isPresented: .constant(Demo.opens != nil)) {
+                    switch Demo.opens {
+                    default: CampsScreen()
+                    }
+                }
+                #endif
         }
         .task(id: scenePhase) {
             if scenePhase == .active {
