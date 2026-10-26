@@ -14,16 +14,19 @@ struct ComplicationFace: Equatable, Sendable {
     /// The dry-by time, set from sunrise to pack-by when there is one.
     let dryTime: String?
     let fetchedAt: Date?
+    /// The night's camp and the advice under the reason, for the phone's larger widgets.
+    var camp: String?
+    var notes: [String] = []
 
     static let noForecast = ComplicationFace(
         flyOn: nil, headline: "No forecast", detail: "Open Zeltwetter online", inline: "Zeltwetter: no forecast",
         dryTime: nil, fetchedAt: nil
     )
 
-    /// For the watch face gallery.
+    /// For the watch face and widget galleries.
     static let sample = ComplicationFace(
         flyOn: true, headline: "Fly on", detail: "Dew likely by 4 AM", inline: "Fly on · Dew 4 AM",
-        dryTime: nil, fetchedAt: nil
+        dryTime: nil, fetchedAt: nil, camp: "Lost Lake", notes: ["Open the vents", "Dry by ~8:40 AM"]
     )
 }
 
@@ -34,13 +37,13 @@ extension ComplicationFace {
             self.init(
                 flyOn: verdict.flyOn, headline: text.headline, detail: "Dry by ~\(text.clock(dryBy))",
                 inline: "Dry by \(text.compactClock(dryBy))", dryTime: text.compactClock(dryBy),
-                fetchedAt: text.night.fetchedAt
+                fetchedAt: text.night.fetchedAt, camp: text.night.location.name, notes: text.notes
             )
         } else {
             self.init(
                 flyOn: verdict.flyOn, headline: text.headline, detail: text.reason,
                 inline: verdict.headline.map { "Fly on · \(text.brief($0))" } ?? "Fly off", dryTime: nil,
-                fetchedAt: text.night.fetchedAt
+                fetchedAt: text.night.fetchedAt, camp: text.night.location.name, notes: text.notes
             )
         }
     }
