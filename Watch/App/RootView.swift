@@ -5,9 +5,12 @@
 import SwiftUI
 
 /// Checks the cache, and the sky when the cache is old, whenever the app comes forward,
-/// and books the next background refresh when it goes.
+/// and books the next background refresh when it goes. With the always-on display the app
+/// stays active when the wrist drops, so the display dimming counts as going and brightening
+/// as coming forward.
 struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.isLuminanceReduced) private var isLuminanceReduced
     @Environment(ForecastModel.self) private var model
 
     var body: some View {
@@ -32,6 +35,13 @@ struct RootView: View {
                 RefreshScheduler.schedule(model)
             default:
                 break
+            }
+        }
+        .onChange(of: isLuminanceReduced) {
+            if isLuminanceReduced {
+                RefreshScheduler.schedule(model)
+            } else {
+                Task { await model.refreshIfStale() }
             }
         }
     }
