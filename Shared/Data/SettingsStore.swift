@@ -77,6 +77,12 @@ struct SettingsStore {
         nonmutating set { save(newValue, "syncedAt") }
     }
 
+    /// The state last sent to the other device, so an unchanged one is not sent again.
+    var lastSentState: Data? {
+        get { defaults.data(forKey: "lastSentState") }
+        nonmutating set { defaults.set(newValue, forKey: "lastSentState") }
+    }
+
     /// Whether the paired watch is installed and watching the pressure, as it last said.
     var watchWatchesPressure: Bool {
         get { load("watchWatchesPressure") ?? false }

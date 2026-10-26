@@ -37,15 +37,28 @@ final class SyncSession: NSObject, WCSessionDelegate {
         #endif
     }
 
-    private func sendState() {
+    /// Sends the state unless it is what was sent last, which every background launch would
+    /// otherwise send again; `force` sends it anyway, for a counterpart that was reinstalled
+    /// and has lost it.
+    private func sendState(force: Bool = false) {
         guard counterpartInstalled else { return }
         let message = SyncMessage(state: model.sharedState, pressureWatch: model.preferences.pressureWatch)
         do {
-            try session.updateApplicationContext(["state": try JSONEncoder().encode(message)])
+            let data = try Self.encoder.encode(message)
+            guard force || data != store.lastSentState else { return }
+            try session.updateApplicationContext(["state": data])
+            store.lastSentState = data
         } catch {
             log.error("Sending the state failed: \(error, privacy: .public)")
         }
     }
+
+    /// Sorted keys, so the same state always encodes to the same bytes.
+    private static let encoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        return encoder
+    }()
 
     private func send(_ night: NightForecast) {
         guard counterpartInstalled, let data = try? JSONEncoder().encode(night) else { return }
@@ -103,8 +116,12 @@ final class SyncSession: NSObject, WCSessionDelegate {
         let installed = session.isPaired && session.isWatchAppInstalled
         Task { @MainActor in
             if !installed { store.watchWatchesPressure = false }
-            sendState()
+            sendState(force: true)
         }
+    }
+    #else
+    nonisolated func sessionCompanionAppInstalledDidChange(_ session: WCSession) {
+        Task { @MainActor in sendState(force: true) }
     }
     #endif
 }
