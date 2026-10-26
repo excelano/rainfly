@@ -6,6 +6,7 @@ import SwiftUI
 
 struct SettingsScreen: View {
     @Environment(ForecastModel.self) private var model
+    @Environment(\.diaryRecorder) private var recorder
 
     var body: some View {
         @Bindable var model = model
@@ -55,6 +56,16 @@ struct SettingsScreen: View {
                 Text("Triggers")
             } footer: {
                 Text("Any one check that fires puts the fly on. Dew needs the spread, a clear sky and calm air together.")
+            }
+            Section {
+                Toggle("Dew diary", isOn: $model.preferences.dewDiary)
+                if let recorder, model.preferences.dewDiary || !recorder.diary.nights.isEmpty {
+                    NavigationLink("Nights and suggestions") {
+                        DiaryScreen(recorder: recorder)
+                    }
+                }
+            } footer: {
+                Text("Each morning, note what you found on something left under the sky, and see how the dew forecast did and what dew spread would suit your campsites. The diary stays on this iPhone.")
             }
             Section {
                 Toggle("Pressure watch", isOn: $model.preferences.pressureWatch)

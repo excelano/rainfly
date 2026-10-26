@@ -8,34 +8,37 @@ import SwiftUI
 struct ZeltwetterPhoneApp: App {
     @State private var model: ForecastModel
     private let sync: SyncSession?
-    #if DEBUG
-    private let recorder: DewRecorder?
-    #endif
+    private let recorder: DiaryRecorder?
 
     init() {
         #if DEBUG
         if let scene = Demo.scene {
-            _model = State(initialValue: Demo.model(scene: scene))
+            let model = Demo.model(scene: scene)
+            _model = State(initialValue: model)
             sync = nil
-            recorder = nil
+            recorder = Demo.opens == "diary" ? Self.demoRecorder(model) : nil
             return
         }
         #endif
         let model = ForecastModel.live()
         _model = State(initialValue: model)
         sync = SyncSession(model: model)
-        #if DEBUG
-        recorder = DewRecorder(model: model)
-        #endif
+        recorder = DiaryRecorder(model: model)
     }
+
+    #if DEBUG
+    private static func demoRecorder(_ model: ForecastModel) -> DiaryRecorder {
+        let store = Store<DewDiary>(url: FileManager.default.temporaryDirectory.appending(path: "demo-diary.json"))
+        store.save(Demo.diary())
+        return DiaryRecorder(model: model, store: store)
+    }
+    #endif
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(model)
-                #if DEBUG
-                .environment(\.dewRecorder, recorder)
-                #endif
+                .environment(\.diaryRecorder, recorder)
         }
         .backgroundTask(.appRefresh(RefreshTiming.identifier)) { [model] in
             await PhoneRefreshScheduler.run(model, pressure: .live())

@@ -16,6 +16,8 @@ With both apps installed, the iPhone and the watch keep the same camps, trip and
 
 The verdict also sits on the watch face as a complication in the circular, corner, rectangular and inline slots, and on the iPhone as a Home Screen widget and on the Lock Screen; in the morning they switch to the dry-by time. With the pressure watch on, the device reads its barometer on background refreshes through the night and sends a notification when the pressure falls fast while the fly is off. watchOS grants an app a few background refreshes an hour, more when its complication is on the active face, and iOS grants the phone fewer and less regular ones, so this is coarse sampling rather than continuous monitoring. While the watch runs its own pressure watch, the phone samples without warning, so one fall brings one notification.
 
+The dew check is the forecast other weather apps do not make, so the iPhone can keep a dew diary to check it against your own mornings. Turned on in Settings, it keeps each night's forecasts, and from sunrise the main screen asks what you found on something left under the sky: dry, light dew, wet, frost or rain, and whether it stood under open sky. Once the night is over, the phone fetches it again from WeatherKit's history. The diary screen counts the nights the dew check caught, cleared, missed or raised a false alarm on, says for each miss whether the forecast was wrong about the night or the settings called a correctly forecast night wrong, and, once it holds enough open-sky nights of both kinds, suggests the dew spread that would have done best, which one tap applies. The diary stays on the phone.
+
 ## Building
 
 Open `Zeltwetter.xcodeproj` in Xcode. The `Zeltwetter` scheme builds and archives the iPhone app, which embeds the watch app. The `Zeltwetter Watch App` scheme builds the watch app for a watch or the simulator and runs the tests. Code both apps use lives in `Shared/`, the iPhone's own in `Phone/` and the watch's in `Watch/`. The widgets are extensions of their own, `ZeltwetterPhoneWidgets` in `PhoneWidgets/` and `ZeltwetterWidgets` in `WatchWidgets/`, each sharing the forecast cache and settings with its app through an App Group.
@@ -26,7 +28,7 @@ The rule engine in `Shared/Engine` uses Foundation alone and is covered by the t
 
 ## Privacy
 
-Zeltwetter sends a camp's position to Apple's WeatherKit for its forecast, and to Apple's map service when a camp is added or searched for. It reads your location while it is on screen, with permission, and the barometer during the night when the pressure watch is on. Forecasts, camps, the trip, settings and recent pressure readings stay on your devices, passing between your iPhone and your watch over WatchConnectivity when both apps are installed. The privacy policy is at https://excelano.com/legal/#zeltwetter.
+Zeltwetter sends a camp's position to Apple's WeatherKit for its forecast, and to Apple's map service when a camp is added or searched for. It reads your location while it is on screen, with permission, and the barometer during the night when the pressure watch is on. Forecasts, camps, the trip, settings, recent pressure readings and the dew diary stay on your devices, passing between your iPhone and your watch over WatchConnectivity when both apps are installed. The privacy policy is at https://excelano.com/legal/#zeltwetter.
 
 ## License
 

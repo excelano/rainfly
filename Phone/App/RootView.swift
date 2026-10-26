@@ -9,16 +9,18 @@ import SwiftUI
 struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(ForecastModel.self) private var model
-    #if DEBUG
-    @Environment(\.dewRecorder) private var recorder
-    #endif
+    @Environment(\.diaryRecorder) private var recorder
 
     var body: some View {
         NavigationStack {
             VerdictScreen()
                 #if DEBUG
-                .navigationDestination(isPresented: .constant(Demo.opens == "camps" || Demo.opens == "settings")) {
-                    if Demo.opens == "settings" { SettingsScreen() } else { CampsScreen() }
+                .navigationDestination(isPresented: .constant(["camps", "settings", "diary"].contains(Demo.opens))) {
+                    switch Demo.opens {
+                    case "settings": SettingsScreen()
+                    case "diary": if let recorder { DiaryScreen(recorder: recorder) }
+                    default: CampsScreen()
+                    }
                 }
                 #endif
         }
@@ -26,9 +28,7 @@ struct RootView: View {
             switch scenePhase {
             case .active:
                 await model.refreshIfStale()
-                #if DEBUG
-                await recorder?.fillActuals()
-                #endif
+                if !isDemo { await recorder?.fillHistory() }
                 if model.preferences.pressureWatch, !isDemo { await PressureWatch.requestPermission() }
             case .background:
                 PhoneRefreshScheduler.schedule(model)

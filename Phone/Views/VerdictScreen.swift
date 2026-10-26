@@ -7,9 +7,7 @@ import SwiftUI
 /// The night that matters now, at the trip's camp or the phone's own position.
 struct VerdictScreen: View {
     @Environment(ForecastModel.self) private var model
-    #if DEBUG
-    @Environment(\.dewRecorder) private var recorder
-    #endif
+    @Environment(\.diaryRecorder) private var recorder
 
     var body: some View {
         TimelineView(.everyMinute) { context in
@@ -20,14 +18,10 @@ struct VerdictScreen: View {
                     attribution: model.attribution,
                     problem: model.problem
                 ) {
-                    #if DEBUG
-                    if let recorder {
-                        DewCheckSection(
-                            recorder: recorder,
-                            night: recorder.log.awaitingObservation(now: context.date, campName: model.camps.campName)
-                        )
+                    if model.preferences.dewDiary, let recorder,
+                       let night = recorder.diary.awaitingObservation(now: context.date, campName: model.camps.campName) {
+                        MorningCheckSection(recorder: recorder, night: night)
                     }
-                    #endif
                 }
             } else if model.isRefreshing {
                 ProgressView("Checking the sky")

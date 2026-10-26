@@ -49,10 +49,8 @@ final class ForecastModel {
     /// Called after a saved camp's night is fetched, so the other device can cache it too.
     @ObservationIgnored var nightFetched: ((NightForecast) -> Void)?
     @ObservationIgnored private var isApplying = false
-    #if DEBUG
-    /// Called after every fetch, Here included, for the dew log.
+    /// Called after every fetch, Here included, for the dew diary.
     @ObservationIgnored var anyNightFetched: ((NightForecast) -> Void)?
-    #endif
 
     @ObservationIgnored private let provider: ForecastProvider
     @ObservationIgnored private let cache: ForecastCache
@@ -246,19 +244,15 @@ final class ForecastModel {
         cacheRevision += 1
         WidgetCenter.shared.reloadAllTimelines()
         if SyncRules.sends(fetched) { nightFetched?(fetched) }
-        #if DEBUG
         anyNightFetched?(fetched)
-        #endif
         return fetched
     }
 
-    #if DEBUG
     /// The night of `date` at `camp` as WeatherKit has it now, without caching it; after the
     /// night is over, its hours come from WeatherKit's history.
     func history(at camp: CampLocation, on date: NightDate) async throws -> NightForecast {
         try await provider.night(at: camp, evening: date.start(in: NightWindow.localCalendar(for: camp)))
     }
-    #endif
 
     private static func describe(_ error: Error) -> String {
         (error as? ForecastError)?.localizedDescription ?? "Couldn't reach the weather service."

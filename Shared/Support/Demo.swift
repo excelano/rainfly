@@ -14,6 +14,8 @@ import Foundation
 ///     --open detail|settings|camps        also opens that screen; the iPhone shows the
 ///                                         detail on its main screen, so it opens only
 ///                                         settings and camps
+///     --open diary                        on the iPhone, a week of answered dew diary
+///                                         nights at the first camp, and its diary screen
 enum Demo {
     static var scene: String? { argument(after: "--demo") }
     static var opens: String? { argument(after: "--open") }
@@ -37,6 +39,11 @@ enum Demo {
         try? FileManager.default.removeItem(at: url)
         let defaults = UserDefaults(suiteName: "demo")!
         defaults.removePersistentDomain(forName: "demo")
+        if opens == "diary" {
+            var preferences = Preferences()
+            preferences.dewDiary = true
+            SettingsStore(defaults: defaults).preferences = preferences
+        }
         let tonight = NightDate.covering(.now, packByMinutes: Settings().packByMinutes, calendar: .current)
         var camps = Camps()
         camps.add(camp)
@@ -53,6 +60,26 @@ enum Demo {
             provider: provider, cache: cache,
             store: SettingsStore(defaults: defaults), campStore: campStore
         ) { CampLocation(name: CampLocation.hereName, latitude: camp.latitude, longitude: camp.longitude, timeZoneID: camp.timeZoneID) }
+    }
+
+    /// The answered nights before tonight, newest last, for the dew diary: each night's
+    /// forecast in the given scene, and what was found.
+    static let diaryNights: [(daysAgo: Int, scene: String, found: DewObservation.Kind, openSky: Bool)] = [
+        (7, "clear", .dry, true), (6, "dew", .wet, true), (5, "clear", .lightDew, true),
+        (4, "damp", .wet, true), (3, "clear", .dry, true), (2, "damp", .wet, true), (1, "rain", .rain, true),
+    ]
+
+    static func diary() -> DewDiary {
+        let tonight = NightDate.covering(.now, packByMinutes: Settings().packByMinutes, calendar: .current)
+        let calendar = NightWindow.localCalendar(for: camp)
+        var diary = DewDiary()
+        for night in diaryNights {
+            let date = tonight.adding(days: -night.daysAgo)
+            let forecast = Provider(scene: night.scene).makeNight(at: camp, evening: date.start(in: calendar), scene: night.scene)
+            diary.record(forecast)
+            diary.observe(DewObservation(kind: night.found, openSky: night.openSky, at: forecast.sunrise), campName: camp.name, on: date)
+        }
+        return diary
     }
 
     /// Hours from 19:00 on the evening to noon the next day; sunset 20:30, sunrise 06:10.
@@ -89,6 +116,8 @@ enum Demo {
                 chance = hour == 23 ? 0.3 : 0
             case "dew":
                 if !morning && hour >= 27 { temp = 9; dewPoint = 7; cloud = 0.1; wind = 1 }
+            case "damp":
+                if !morning && hour >= 27 { temp = 10; dewPoint = 6; cloud = 0.1; wind = 1 }
             case "frost":
                 if !morning { temp = -2; dewPoint = -4; cloud = 0.05; wind = 0.5 } else { temp = 4; dewPoint = -3 }
             default:

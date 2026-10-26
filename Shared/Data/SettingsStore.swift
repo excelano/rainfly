@@ -33,6 +33,8 @@ struct DisplayUnits: Codable, Equatable, Sendable {
 struct Preferences: Codable, Equatable, Sendable {
     var units = DisplayUnits.locale
     var pressureWatch = true
+    /// The iPhone's dew diary; it stays on the device and is not synced.
+    var dewDiary = false
 
     init() {}
 
@@ -41,6 +43,7 @@ struct Preferences: Codable, Equatable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         units = try c.decodeIfPresent(DisplayUnits.self, forKey: .units) ?? .locale
         pressureWatch = try c.decodeIfPresent(Bool.self, forKey: .pressureWatch) ?? true
+        dewDiary = try c.decodeIfPresent(Bool.self, forKey: .dewDiary) ?? false
     }
 }
 
