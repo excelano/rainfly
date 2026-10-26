@@ -95,7 +95,7 @@ struct DewDiary: Codable, Equatable {
             var trial = settings
             trial.dewSpreadC = quantity.stored(shown)
             var score = SpreadScore(spreadC: trial.dewSpreadC, caught: 0, falseAlarms: 0)
-            for night in judged where DiaryNight.predictsMoisture(night.forecast, settings: trial) {
+            for night in judged where DiaryJudging.predictsMoisture(night.forecast, settings: trial) {
                 if night.wet { score.caught += 1 } else { score.falseAlarms += 1 }
             }
             return score
@@ -139,66 +139,8 @@ struct DiaryNight: Codable, Equatable {
     }
 
     func judge(settings: Settings) -> DiaryJudgement? {
-        guard let pitched else { return nil }
-        let verdict = FlyEngine.evaluate(pitched, settings: settings)
-        let firing = verdict.firing(.frost) ?? verdict.firing(.dew)
-        let predicted = firing != nil
-        var judgement = DiaryJudgement(
-            predicted: predicted, firing: firing,
-            closestSpread: NightWindow(pitched, packByMinutes: settings.packByMinutes).closestSpread
-        )
-        guard let found = observation?.kind.foundMoisture else { return judgement }
-        judgement.outcome = switch (predicted, found) {
-        case (true, true): .caught
-        case (false, false): .clear
-        case (false, true): .missed
-        case (true, false): .falseAlarm
-        }
-        if predicted != found, let history {
-            judgement.cause = Self.predictsMoisture(history, settings: settings) == found ? .forecast : .settings
-        }
-        return judgement
+        pitched.map { DiaryJudging.judge($0, history: history, found: observation?.kind, settings: settings) }
     }
-
-    static func predictsMoisture(_ night: NightForecast, settings: Settings) -> Bool {
-        let verdict = FlyEngine.evaluate(night, settings: settings)
-        return verdict.firing(.dew) != nil || verdict.firing(.frost) != nil
-    }
-}
-
-/// What was found in the morning on something left under the sky.
-struct DewObservation: Codable, Equatable {
-    /// Light dew is spots or edges; wet is damp all over or beaded, enough to pack a wet fly.
-    enum Kind: String, Codable, CaseIterable {
-        case dry, lightDew, wet, frost, rain, notChecked
-
-        /// Whether the night counts as wet, dry, or neither when it is judged.
-        var foundMoisture: Bool? {
-            switch self {
-            case .wet, .frost: true
-            case .dry: false
-            case .lightDew, .rain, .notChecked: nil
-            }
-        }
-    }
-
-    let kind: Kind
-    /// False when what was checked stood under trees, which block most of the cooling.
-    let openSky: Bool
-    let at: Date
-}
-
-struct DiaryJudgement: Equatable {
-    enum Outcome { case caught, clear, missed, falseAlarm }
-    /// For a miss or a false alarm: whether WeatherKit's night was not the real one, or the
-    /// thresholds called a correctly forecast night wrong.
-    enum Cause { case forecast, settings }
-
-    let predicted: Bool
-    let firing: Firing?
-    let closestSpread: Double?
-    var outcome: Outcome?
-    var cause: Cause?
 }
 
 struct DiaryTally: Equatable {

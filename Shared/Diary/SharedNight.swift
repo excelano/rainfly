@@ -53,21 +53,6 @@ struct SharedNight: Equatable {
     }()
 }
 
-/// A night's forecast or history without its camp.
-struct SharedHours: Codable, Equatable {
-    let fetchedAt: Date
-    let sunset: Date
-    let sunrise: Date
-    let hours: [HourSample]
-
-    init(_ night: NightForecast) {
-        fetchedAt = night.fetchedAt
-        sunset = night.sunset
-        sunrise = night.sunrise
-        hours = night.hours
-    }
-}
-
 /// Where a night was last shared, so a resend under a new diary ID can remove the old copy.
 struct SharedMark: Codable, Equatable {
     let recordName: String

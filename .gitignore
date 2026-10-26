@@ -6,3 +6,4 @@ ship.toml
 SPEC.md
 /packaging/ios/screenshots/
 /target/
+/tools/dewdiary/.build/
