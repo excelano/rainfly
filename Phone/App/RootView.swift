@@ -28,7 +28,10 @@ struct RootView: View {
             switch scenePhase {
             case .active:
                 await model.refreshIfStale()
-                if !isDemo { await recorder?.fillHistory() }
+                if !isDemo {
+                    await recorder?.fillHistory()
+                    await recorder?.share()
+                }
                 if model.preferences.pressureWatch, !isDemo { await PressureWatch.requestPermission() }
             case .background:
                 PhoneRefreshScheduler.schedule(model)

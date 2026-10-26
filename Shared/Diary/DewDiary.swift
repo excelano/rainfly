@@ -129,6 +129,8 @@ struct DiaryNight: Codable, Equatable {
     var forecasts: [NightForecast]
     var history: NightForecast?
     var observation: DewObservation?
+    /// Set once the night has been shared with Excelano.
+    var shared: SharedMark?
 
     /// The forecast that decided the fly: the last one fetched before sunset, or else the first.
     var pitched: NightForecast? {

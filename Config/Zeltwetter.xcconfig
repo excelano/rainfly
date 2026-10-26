@@ -11,5 +11,7 @@ ZELTWETTER_BUNDLE_ID = $(ZELTWETTER_CONTAINER_BUNDLE_ID).watchkitapp
 ZELTWETTER_DISPLAY_NAME = Zeltwetter
 // Shared by the watch app and the complication for settings and the forecast cache.
 ZELTWETTER_APP_GROUP = group.com.excelano.zeltwetter
+// The iPhone's CloudKit container, where shared dew diary nights go.
+ZELTWETTER_CLOUD_CONTAINER = iCloud.com.excelano.zeltwetter
 
 #include "Version.xcconfig"

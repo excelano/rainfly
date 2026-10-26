@@ -89,6 +89,7 @@
 		A20000000000000000000007 /* Widgets-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Widgets-Info.plist"; sourceTree = "<group>"; };
 		A20000000000000000000008 /* Zeltwetter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Zeltwetter.entitlements; sourceTree = "<group>"; };
 		A20000000000000000000009 /* Widgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Widgets.entitlements; sourceTree = "<group>"; };
+		A20000000000000000000012 /* Phone.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Phone.entitlements; sourceTree = "<group>"; };
 		A20000000000000000000011 /* Phone-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Phone-Info.plist"; sourceTree = "<group>"; };
 		A20000000000000000000010 /* ZeltwetterPhoneWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ZeltwetterPhoneWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -265,6 +266,7 @@
 				A20000000000000000000004 /* Version.xcconfig */,
 				A20000000000000000000007 /* Widgets-Info.plist */,
 				A20000000000000000000011 /* Phone-Info.plist */,
+				A20000000000000000000012 /* Phone.entitlements */,
 				A20000000000000000000008 /* Zeltwetter.entitlements */,
 				A20000000000000000000009 /* Widgets.entitlements */,
 			);
@@ -650,7 +652,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Config/Zeltwetter.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Config/Phone.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/Phone-Info.plist";
@@ -678,7 +680,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Config/Zeltwetter.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Config/Phone.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/Phone-Info.plist";

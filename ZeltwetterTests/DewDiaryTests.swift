@@ -178,3 +178,50 @@ struct DewDiaryReportTests {
     }
 }
 #endif
+
+struct SharedNightTests {
+    private let id = UUID(uuidString: "6F1A2B3C-0000-4000-8000-000000000001")!
+
+    private func answered(_ kind: DewObservation.Kind, at: Date = F.at(1, 7)) -> DiaryNight {
+        let base = night("Mom's place", spread: 2)
+        let precise = CampLocation(name: base.location.name, latitude: 39.93891, longitude: -105.61063, timeZoneID: base.location.timeZoneID)
+        let forecast = NightForecast(location: precise, fetchedAt: base.fetchedAt, sunset: base.sunset, sunrise: base.sunrise, hours: base.hours)
+        var diary = DewDiary()
+        diary.record(forecast)
+        diary.observe(DewObservation(kind: kind, openSky: true, at: at), campName: precise.name, on: diary.nights[0].date)
+        return diary.nights[0]
+    }
+
+    @Test func aSharedNightIsRoundedAndCarriesNoName() throws {
+        let shared = try #require(SharedNight(answered(.wet), diaryID: id, settings: Settings(), appVersion: "1.0.1"))
+        #expect(shared.latitude == 39.9)
+        #expect(shared.longitude == -105.6)
+        let payload = String(decoding: try SharedNight.encoder.encode(shared.forecast), as: UTF8.self)
+        #expect(!payload.contains("Mom"))
+        #expect(!payload.contains("39.93"))
+        #expect(shared.recordName == "6f1a2b3c-0000-4000-8000-000000000001_2026-07-01_39.9_-105.6")
+        #expect(SharedNight(answered(.wet), diaryID: id, settings: Settings(), appVersion: "1.0.2")?.recordName == shared.recordName)
+    }
+
+    @Test func nightsWithoutAnAnswerAreNotShared() {
+        #expect(SharedNight(answered(.notChecked), diaryID: id, settings: Settings(), appVersion: "1") == nil)
+        var unanswered = answered(.wet)
+        unanswered.observation = nil
+        #expect(SharedNight(unanswered, diaryID: id, settings: Settings(), appVersion: "1") == nil)
+    }
+
+    @Test func aNightIsResentOnlyWhenItChanges() {
+        var diary = DewDiary(nights: [answered(.wet, at: F.at(1, 7))])
+        let date = diary.nights[0].date
+        #expect(diary.needingShare().count == 1)
+        diary.markShared(SharedMark(recordName: "r", at: F.at(1, 8)), campName: diary.nights[0].campName, on: date)
+        #expect(diary.needingShare().isEmpty)
+        diary.setHistory(NightForecast(location: F.camp, fetchedAt: F.at(1, 20), sunset: F.sunset, sunrise: F.sunrise, hours: []), campName: diary.nights[0].campName, on: date)
+        #expect(diary.needingShare().count == 1)
+        diary.markShared(SharedMark(recordName: "r", at: F.at(1, 21)), campName: diary.nights[0].campName, on: date)
+        diary.observe(DewObservation(kind: .dry, openSky: true, at: F.at(1, 22)), campName: diary.nights[0].campName, on: date)
+        #expect(diary.needingShare().count == 1)
+        diary.observe(DewObservation(kind: .notChecked, openSky: true, at: F.at(1, 23)), campName: diary.nights[0].campName, on: date)
+        #expect(diary.needingShare().isEmpty)
+    }
+}

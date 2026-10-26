@@ -59,13 +59,16 @@ struct SettingsScreen: View {
             }
             Section {
                 Toggle("Dew diary", isOn: $model.preferences.dewDiary)
+                if model.preferences.dewDiary, let recorder {
+                    ShareToggle(recorder: recorder)
+                }
                 if let recorder, model.preferences.dewDiary || !recorder.diary.nights.isEmpty {
                     NavigationLink("Nights and suggestions") {
                         DiaryScreen(recorder: recorder)
                     }
                 }
             } footer: {
-                Text("Each morning, note what you found on something left under the sky, and see how the dew forecast did and what dew spread would suit your campsites. The diary stays on this iPhone.")
+                Text("Each morning, note what you found on something left under the sky, and see how the dew forecast did and what dew spread would suit your campsites. The diary stays on this iPhone unless you share it, which sends answered nights, with the camp's position rounded to about 11 km and no camp names, to help improve the dew check.")
             }
             Section {
                 Toggle("Pressure watch", isOn: $model.preferences.pressureWatch)

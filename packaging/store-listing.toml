@@ -25,13 +25,13 @@ ON APPLE WATCH
 The watch app has the same verdict, checks, camps, trip and settings, with the Digital Crown for entering coordinates and values, and a complication for the circular, corner, rectangular and inline families.
 
 THE DEW DIARY (IPHONE)
-Settings has a Dew diary switch, off by default. With it on, each morning from sunrise the main screen asks what was found on something left outside overnight (Dry, Light dew, Wet, Frost, Rain or Didn't check). Settings > Nights and suggestions shows how the dew forecast did on the answered nights, and after enough nights a suggested dew spread with an Apply button. A new install has no nights yet, so the screen starts empty; it fills over a few mornings.
+Settings has a Dew diary switch, off by default. With it on, each morning from sunrise the main screen asks what was found on something left outside overnight (Dry, Light dew, Wet, Frost, Rain or Didn't check). Settings > Nights and suggestions shows how the dew forecast did on the answered nights, and after enough nights a suggested dew spread with an Apply button. A new install starts with no nights. Share with Excelano (off by default, needs iCloud) sends each answered night to our CloudKit database to improve the dew forecast: position rounded to 0.1°, what was found, the forecast and history hours, the thresholds and a random diary ID; no camp names or personal details. The diary screen can reset the ID and delete every shared night.
 
 THE OVERNIGHT PRESSURE WATCH
-Once the first forecast has loaded, Zeltwetter asks to send notifications and for Motion & Fitness. Both serve one optional feature: during background refreshes at night it reads the device's barometer for a few seconds, and when the pressure falls fast while the verdict is "Fly off", the device raises a local notification. When the watch app is installed with its pressure watch on, the phone keeps quiet so one fall brings one notification. It needs a falling barometer at night, so it cannot be made to fire on demand. It can be turned off in Settings.
+Once the first forecast has loaded, Zeltwetter asks to send notifications and for Motion & Fitness. Both serve one optional feature: during background refreshes at night it reads the device's barometer for a few seconds, and when the pressure falls fast while the verdict is "Fly off", the device raises a local notification. When the watch app is installed with its pressure watch on, the phone keeps quiet so one fall brings one notification. It needs a falling barometer at night, so it cannot be made to fire on demand.
 
 WHERE DATA GOES
-The coordinates of the camp being forecast go to WeatherKit, and to Apple's map service when a camp is searched for, named or placed on the map. Between the iPhone and its paired watch, camps, the trip, settings and the forecasts for saved camps travel over WatchConnectivity. All of it goes through Apple's frameworks; we run no server, and the app carries no analytics. Privacy policy: https://excelano.com/legal/#zeltwetter. Code: https://github.com/excelano/zeltwetter.
+The coordinates of the camp being forecast go to WeatherKit, and to Apple's map service when a camp is searched for, named or placed on the map. Between the iPhone and its paired watch, camps, the trip, settings and the forecasts for saved camps travel over WatchConnectivity. Shared dew diary nights, only when the user turns sharing on, go to the public database of our CloudKit container. All of it goes through Apple's frameworks; we run no server of our own, and the app carries no analytics or third-party code. Privacy policy: https://excelano.com/legal/#zeltwetter. Code: https://github.com/excelano/zeltwetter.
 """
 
 [locales."en-us"]
@@ -51,7 +51,7 @@ Zeltwetter runs on iPhone and on Apple Watch, and each works on its own. With bo
 
 See the verdict without opening the app: a widget on the Home Screen or Lock Screen, and a complication on the watch face, showing the dry-by time in the morning. With the overnight pressure watch on, Zeltwetter reads the barometer through the night and alerts you when the pressure falls fast while the fly is off. It samples a few times an hour at most, as the system allows, so it is an early hint rather than a weather station.
 
-Keep a dew diary on iPhone to check the dew forecast against your own mornings. Each morning, note what you found outside; Zeltwetter shows how often it called the dew right, whether a miss was the forecast's or the settings', and suggests a dew spread that suits your campsites.
+Keep a dew diary on iPhone to check the dew forecast against your own mornings. Each morning, note what you found outside; Zeltwetter shows how often it called the dew right, whether a miss was the forecast's or the settings', and suggests a dew spread that suits your campsites. If you like, share your diary to help improve the dew forecast for everyone; it is off unless you turn it on.
 
 Every threshold can be changed, in °C or °F and m/s or mph.
 
