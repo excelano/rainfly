@@ -9,6 +9,9 @@ import SwiftUI
 struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(ForecastModel.self) private var model
+    #if DEBUG
+    @Environment(\.dewRecorder) private var recorder
+    #endif
 
     var body: some View {
         NavigationStack {
@@ -23,6 +26,9 @@ struct RootView: View {
             switch scenePhase {
             case .active:
                 await model.refreshIfStale()
+                #if DEBUG
+                await recorder?.fillActuals()
+                #endif
                 if model.preferences.pressureWatch, !isDemo { await PressureWatch.requestPermission() }
             case .background:
                 PhoneRefreshScheduler.schedule(model)

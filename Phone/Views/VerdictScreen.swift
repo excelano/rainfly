@@ -7,6 +7,9 @@ import SwiftUI
 /// The night that matters now, at the trip's camp or the phone's own position.
 struct VerdictScreen: View {
     @Environment(ForecastModel.self) private var model
+    #if DEBUG
+    @Environment(\.dewRecorder) private var recorder
+    #endif
 
     var body: some View {
         TimelineView(.everyMinute) { context in
@@ -31,6 +34,15 @@ struct VerdictScreen: View {
                 }
             }
         }
+        #if DEBUG
+        .safeAreaInset(edge: .bottom) {
+            TimelineView(.everyMinute) { context in
+                if let recorder, let night = recorder.log.awaitingObservation(now: context.date, campName: model.camps.campName) {
+                    DewCheckCard(recorder: recorder, night: night)
+                }
+            }
+        }
+        #endif
         .refreshable { await model.refresh() }
         .navigationTitle(model.campName)
         .toolbar {
