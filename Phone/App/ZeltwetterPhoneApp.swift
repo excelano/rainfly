@@ -7,15 +7,19 @@ import SwiftUI
 @main
 struct ZeltwetterPhoneApp: App {
     @State private var model: ForecastModel
+    private let sync: SyncSession?
 
     init() {
         #if DEBUG
         if let scene = Demo.scene {
             _model = State(initialValue: Demo.model(scene: scene))
+            sync = nil
             return
         }
         #endif
-        _model = State(initialValue: ForecastModel.live())
+        let model = ForecastModel.live()
+        _model = State(initialValue: model)
+        sync = SyncSession(model: model)
     }
 
     var body: some Scene {

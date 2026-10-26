@@ -28,11 +28,27 @@ final class ForecastModel {
     /// Counts the nights saved, so a view reading the cache redraws when it changes.
     private var cacheRevision = 0
     var settings: Settings {
-        didSet { changed { store.settings = settings } }
+        didSet {
+            changed { store.settings = settings }
+            sharedChanged()
+        }
     }
     var preferences: Preferences {
-        didSet { changed { store.preferences = preferences } }
+        didSet {
+            changed { store.preferences = preferences }
+            if preferences.units != oldValue.units {
+                sharedChanged()
+            } else if !isApplying {
+                sharedStateChanged?()
+            }
+        }
     }
+
+    /// Called after a change the other device should hear of, the pressure toggle included.
+    @ObservationIgnored var sharedStateChanged: (() -> Void)?
+    /// Called after a saved camp's night is fetched, so the other device can cache it too.
+    @ObservationIgnored var nightFetched: ((NightForecast) -> Void)?
+    @ObservationIgnored private var isApplying = false
 
     @ObservationIgnored private let provider: ForecastProvider
     @ObservationIgnored private let cache: ForecastCache
@@ -158,6 +174,38 @@ final class ForecastModel {
         return cache.night(at: tripNight.campName, on: tripNight.date)
     }
 
+    var sharedState: SyncedState {
+        SyncedState(camps: camps, settings: settings, units: preferences.units, modifiedAt: store.syncedAt)
+    }
+
+    /// Takes the other device's state when it is newer than this one's.
+    @discardableResult
+    func apply(_ received: SyncedState) async -> Bool {
+        guard SyncRules.adopts(received, over: sharedState) else { return false }
+        isApplying = true
+        camps = received.camps
+        campStore.save(camps)
+        settings = received.settings
+        preferences.units = received.units
+        store.syncedAt = received.modifiedAt
+        isApplying = false
+        await refreshIfStale()
+        return true
+    }
+
+    /// Caches a night the other device fetched, and shows it if it is the one that matters now.
+    func receive(_ received: NightForecast) {
+        let date = ForecastCache.date(of: received)
+        guard SyncRules.keeps(received, over: cache.night(at: received.location.name, on: date)) else { return }
+        cache.save(received)
+        cacheRevision += 1
+        WidgetCenter.shared.reloadAllTimelines()
+        if received.location.name == campName, date == nightDate() {
+            night = received
+            evaluate()
+        }
+    }
+
     /// Fetches every trip night within reach whose forecast is missing or old, so the
     /// trip holds offline.
     func downloadTrip(now: Date = .now) async {
@@ -193,6 +241,7 @@ final class ForecastModel {
         cache.save(fetched, now: now)
         cacheRevision += 1
         WidgetCenter.shared.reloadAllTimelines()
+        if SyncRules.sends(fetched) { nightFetched?(fetched) }
         return fetched
     }
 
@@ -202,14 +251,22 @@ final class ForecastModel {
 
     private func dropPastNights(before date: NightDate) {
         if camps.trip.contains(where: { $0.date < date }) {
-            updateCamps { $0.removeNights(before: date) }
+            updateCamps(shared: false) { $0.removeNights(before: date) }
         }
     }
 
-    private func updateCamps(_ change: (inout Camps) -> Void) {
+    /// Dropping past nights is not shared, since both devices do it on their own.
+    private func updateCamps(shared: Bool = true, _ change: (inout Camps) -> Void) {
         change(&camps)
         campStore.save(camps)
         WidgetCenter.shared.reloadAllTimelines()
+        if shared { sharedChanged() }
+    }
+
+    private func sharedChanged() {
+        guard !isApplying else { return }
+        store.syncedAt = .now
+        sharedStateChanged?()
     }
 
     /// Saves a change, re-decides and redraws the complication, which reads the same store.

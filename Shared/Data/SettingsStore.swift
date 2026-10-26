@@ -62,6 +62,18 @@ struct SettingsStore {
         nonmutating set { save(newValue, "preferences") }
     }
 
+    /// When the state shared with the other device last changed.
+    var syncedAt: Date {
+        get { load("syncedAt") ?? .distantPast }
+        nonmutating set { save(newValue, "syncedAt") }
+    }
+
+    /// Whether the paired watch is installed and watching the pressure, as it last said.
+    var watchWatchesPressure: Bool {
+        get { load("watchWatchesPressure") ?? false }
+        nonmutating set { save(newValue, "watchWatchesPressure") }
+    }
+
     private func load<Value: Decodable>(_ key: String) -> Value? {
         defaults.data(forKey: key).flatMap { try? JSONDecoder().decode(Value.self, from: $0) }
     }

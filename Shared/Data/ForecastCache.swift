@@ -32,7 +32,7 @@ struct ForecastCache {
         store.save(kept + [night])
     }
 
-    private static func date(of night: NightForecast) -> NightDate {
+    static func date(of night: NightForecast) -> NightDate {
         NightDate(night.sunset, calendar: NightWindow.localCalendar(for: night.location))
     }
 }
