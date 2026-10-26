@@ -6,11 +6,22 @@ import SwiftUI
 
 @main
 struct ZeltwetterPhoneApp: App {
+    @State private var model: ForecastModel
+
+    init() {
+        #if DEBUG
+        if let scene = Demo.scene {
+            _model = State(initialValue: Demo.model(scene: scene))
+            return
+        }
+        #endif
+        _model = State(initialValue: ForecastModel.live())
+    }
+
     var body: some Scene {
         WindowGroup {
-            TentGlyph(flyOn: true)
-                .frame(width: 120, height: 120)
-                .foregroundStyle(.tint)
+            RootView()
+                .environment(model)
         }
     }
 }

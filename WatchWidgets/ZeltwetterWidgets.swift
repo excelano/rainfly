@@ -80,7 +80,7 @@ struct VerdictWidgetView: View {
                 if let fetchedAt = face.fetchedAt {
                     Text(VerdictText.age(since: fetchedAt, at: entry.date))
                         .font(.caption2)
-                        .foregroundStyle(ageColor(fetchedAt))
+                        .foregroundStyle(VerdictText.staleness(since: fetchedAt, at: entry.date).color)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -109,14 +109,6 @@ struct VerdictWidgetView: View {
         case true?: TentGlyph(flyOn: true).foregroundStyle(Self.green)
         case false?: TentGlyph(flyOn: false)
         case nil: TentGlyph(flyOn: false).foregroundStyle(.secondary)
-        }
-    }
-
-    private func ageColor(_ fetchedAt: Date) -> Color {
-        switch VerdictText.staleness(since: fetchedAt, at: entry.date) {
-        case .fresh: .secondary
-        case .aging: .orange
-        case .stale: .red
         }
     }
 

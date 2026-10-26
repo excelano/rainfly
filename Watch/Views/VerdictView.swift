@@ -72,20 +72,12 @@ private struct VerdictContent: View {
                 }
                 Text("\(text.night.location.name) · \(VerdictText.age(since: text.night.fetchedAt, at: now))")
                     .font(.caption2)
-                    .foregroundStyle(ageColor)
+                    .foregroundStyle(VerdictText.staleness(since: text.night.fetchedAt, at: now).color)
                     .padding(.top, 4)
             }
             .frame(maxWidth: .infinity)
             .accessibilityElement(children: .combine)
             .accessibilityHint("Shows every check")
-        }
-    }
-
-    private var ageColor: Color {
-        switch VerdictText.staleness(since: text.night.fetchedAt, at: now) {
-        case .fresh: .secondary
-        case .aging: .orange
-        case .stale: .red
         }
     }
 }

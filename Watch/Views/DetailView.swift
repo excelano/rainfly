@@ -83,21 +83,3 @@ private struct TriggerRow: View {
         .accessibilityValue(firing.map { "Expected at \(text.clock($0.at))" } ?? "Clear")
     }
 }
-
-/// The Apple Weather mark and the legal link WeatherKit requires. Offline, the mark falls
-/// back to text.
-private struct AttributionView: View {
-    let attribution: Attribution
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            AsyncImage(url: attribution.markURL) { image in
-                image.resizable().scaledToFit().frame(height: 14)
-            } placeholder: {
-                Text("\u{F8FF} Weather").font(.footnote)
-            }
-            Link("Data sources", destination: attribution.legalURL)
-                .font(.footnote)
-        }
-    }
-}

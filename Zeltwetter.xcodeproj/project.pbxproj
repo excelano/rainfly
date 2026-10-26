@@ -87,6 +87,7 @@
 				Engine/NightWindow.swift,
 				Engine/Settings.swift,
 				Engine/Verdict.swift,
+				Faces/AgeColor.swift,
 				Faces/ComplicationTimeline.swift,
 				Faces/TentGlyph.swift,
 				Faces/VerdictText.swift,
