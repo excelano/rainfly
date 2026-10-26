@@ -11,9 +11,11 @@ enum RefreshScheduler {
     @MainActor
     static func run(_ model: ForecastModel, pressure: PressureWatch, now: Date = .now) async {
         await model.refreshIfStale(now: now, inBackground: true)
+        var outcome: PressureWatch.Outcome?
         if model.preferences.pressureWatch {
-            await pressure.check(night: model.night, verdict: model.verdict, now: now)
+            outcome = await pressure.check(night: model.night, verdict: model.verdict, now: now)
         }
+        RefreshLog.record(pressureWatch: model.preferences.pressureWatch, pressure: outcome, fetchedAt: model.night?.fetchedAt, now: now)
         schedule(model)
     }
 

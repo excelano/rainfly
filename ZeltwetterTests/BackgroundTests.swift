@@ -85,6 +85,15 @@ struct PressureWatchTests {
         #expect(recorder.warnings.isEmpty)
     }
 
+    @Test func eachCheckSaysWhatItDid() async {
+        let watch = watch(Recorder([1012]))
+        #expect(await watch.check(night: nil, verdict: nil, now: F.at(0, 22)) == .noForecast)
+        #expect(await watch.check(night: F.night(), verdict: flyOff, now: F.at(0, 19)) == .outsideNight)
+        #expect(await watch.check(night: F.night(), verdict: flyOff, now: F.at(0, 22)) == .recorded)
+        #expect(await watch.check(night: F.night(), verdict: flyOff, now: F.at(0, 23)) == .noReading)
+        #expect(watch.lastReading == F.at(0, 22))
+    }
+
     @Test func aQuietWatchKeepsSamplingWithoutWarning() async {
         let recorder = Recorder([1012, 1011, 1010, 1009])
         let watch = watch(recorder)

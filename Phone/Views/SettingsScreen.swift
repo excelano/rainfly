@@ -76,7 +76,7 @@ struct SettingsScreen: View {
                         if model.preferences.pressureWatch { Task { await PressureWatch.requestPermission() } }
                     }
             } footer: {
-                Text("Warns overnight when the pressure falls fast and the fly is off. iOS gives the phone only occasional time in the background, so this is a rough check. While your watch runs its own pressure watch, the phone stays quiet and the watch warns.")
+                Text("Warns overnight when the pressure falls fast and the fly is off. iOS gives the phone only occasional time in the background, so this is a rough check. While your watch runs its own pressure watch, the phone stays quiet and the watch warns. \(PressureWatch.status)")
             }
         }
         .navigationTitle("Settings")

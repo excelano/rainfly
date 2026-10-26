@@ -61,7 +61,7 @@ struct SettingsView: View {
                         if model.preferences.pressureWatch { Task { await PressureWatch.requestPermission() } }
                     }
             } footer: {
-                Text("Warns overnight when the pressure falls fast and the fly is off.")
+                Text("Warns overnight when the pressure falls fast and the fly is off. \(PressureWatch.status)")
             }
         }
         .navigationTitle("Settings")

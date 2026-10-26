@@ -22,19 +22,43 @@ struct PressureWatch {
         PressureWatch(store: Store(name: "pressure"), sample: { await Barometer().read() }, warn: post)
     }
 
+    enum Outcome: String, Codable, Sendable {
+        case noForecast, outsideNight, noReading, recorded, warned
+    }
+
     /// Takes a reading while `now` is inside the night, and warns when it shows a fast fall
     /// unless `quiet`, which keeps the log filling while another device does the warning.
-    func check(night: NightForecast?, verdict: Verdict?, quiet: Bool = false, now: Date = .now) async {
-        guard let night, let verdict, now >= night.sunset, now < night.sunrise,
-              let hPa = await sample()
-        else { return }
+    @discardableResult
+    func check(night: NightForecast?, verdict: Verdict?, quiet: Bool = false, now: Date = .now) async -> Outcome {
+        guard let night, let verdict else { return .noForecast }
+        guard now >= night.sunset, now < night.sunrise else { return .outsideNight }
+        guard let hPa = await sample() else { return .noReading }
         var log = store.load() ?? PressureLog()
         log.record(PressureSample(date: now, hPa: hPa))
+        var outcome = Outcome.recorded
         if !quiet, log.shouldWarn(verdict: verdict, nightStart: night.sunset) {
             await warn(Self.message)
             log.warnedAt = now
+            outcome = .warned
         }
         store.save(log)
+        return outcome
+    }
+
+    /// The newest reading kept, for the Settings screen.
+    var lastReading: Date? {
+        store.load()?.samples.last?.date
+    }
+
+    /// A line for the Settings screen: why the barometer cannot be read, or when it last was.
+    static var status: String {
+        if !CMAltimeter.isRelativeAltitudeAvailable() { return "This device has no barometer." }
+        switch CMAltimeter.authorizationStatus() {
+        case .denied, .restricted:
+            return "Motion & Fitness is off for Rainfly, so the barometer cannot be read. Turn it on in Settings, Privacy & Security."
+        default:
+            return live().lastReading.map { "Last reading \($0.formatted(date: .abbreviated, time: .shortened))." } ?? "No overnight reading yet."
+        }
     }
 
     /// Asks for notifications, and reads the barometer once so the system asks for motion
