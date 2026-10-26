@@ -10,7 +10,9 @@ import Foundation
 ///
 ///     --demo clear|rain|storm|dew|frost   a two-night trip whose first camp has a night
 ///                                         that gives that verdict
-///     --open detail|settings|camps        also opens that screen
+///     --open detail|settings|camps        also opens that screen; the iPhone shows the
+///                                         detail on its main screen, so it opens only
+///                                         settings and camps
 enum Demo {
     static var scene: String? { argument(after: "--demo") }
     static var opens: String? { argument(after: "--open") }

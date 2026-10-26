@@ -27,7 +27,7 @@ struct ZeltwetterApp: App {
             RootView()
                 .environment(model)
         }
-        .backgroundTask(.appRefresh(RefreshScheduler.identifier)) { [model] in
+        .backgroundTask(.appRefresh(RefreshTiming.identifier)) { [model] in
             await RefreshScheduler.run(model, pressure: .live())
         }
     }

@@ -84,25 +84,34 @@ struct PressureWatchTests {
         await watch.check(night: F.night(), verdict: flyOn, now: F.at(1, 0))
         #expect(recorder.warnings.isEmpty)
     }
+
+    @Test func aQuietWatchKeepsSamplingWithoutWarning() async {
+        let recorder = Recorder([1012, 1011, 1010, 1009])
+        let watch = watch(recorder)
+        for hour in [22, 23] { await watch.check(night: F.night(), verdict: flyOff, quiet: true, now: F.at(0, hour)) }
+        for hour in [0, 1] { await watch.check(night: F.night(), verdict: flyOff, quiet: true, now: F.at(1, hour)) }
+        #expect(recorder.warnings.isEmpty)
+        #expect(watch.store.load()?.samples.count == 4)
+    }
 }
 
 struct RefreshScheduleTests {
     private let window = NightWindow(F.night(), packByMinutes: 8 * 60)
 
     @Test func quarterHourlyThroughTheWatchedNight() {
-        #expect(RefreshScheduler.nextDate(after: F.at(0, 23), window: window, pressureWatch: true) == F.at(0, 23, 15))
-        #expect(RefreshScheduler.nextDate(after: F.at(0, 23), window: window, pressureWatch: false) == F.at(1, 0))
+        #expect(RefreshTiming.nextDate(after: F.at(0, 23), window: window, pressureWatch: true) == F.at(0, 23, 15))
+        #expect(RefreshTiming.nextDate(after: F.at(0, 23), window: window, pressureWatch: false) == F.at(1, 0))
     }
 
     @Test func soonAfterSunsetAndPackBy() {
-        #expect(RefreshScheduler.nextDate(after: F.at(0, 20), window: window, pressureWatch: true) == F.sunset)
-        #expect(RefreshScheduler.nextDate(after: F.at(0, 20, 25), window: window, pressureWatch: true) == F.at(0, 20, 40))
-        #expect(RefreshScheduler.nextDate(after: F.at(1, 7, 30), window: window, pressureWatch: true) == F.at(1, 8, 1))
+        #expect(RefreshTiming.nextDate(after: F.at(0, 20), window: window, pressureWatch: true) == F.sunset)
+        #expect(RefreshTiming.nextDate(after: F.at(0, 20, 25), window: window, pressureWatch: true) == F.at(0, 20, 40))
+        #expect(RefreshTiming.nextDate(after: F.at(1, 7, 30), window: window, pressureWatch: true) == F.at(1, 8, 1))
     }
 
     @Test func hourlyOtherwise() {
-        #expect(RefreshScheduler.nextDate(after: F.at(1, 10), window: window, pressureWatch: true) == F.at(1, 11))
-        #expect(RefreshScheduler.nextDate(after: F.at(1, 10), window: nil, pressureWatch: true) == F.at(1, 11))
+        #expect(RefreshTiming.nextDate(after: F.at(1, 10), window: window, pressureWatch: true) == F.at(1, 11))
+        #expect(RefreshTiming.nextDate(after: F.at(1, 10), window: nil, pressureWatch: true) == F.at(1, 11))
     }
 }
 

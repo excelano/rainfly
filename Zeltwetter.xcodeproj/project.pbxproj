@@ -89,6 +89,7 @@
 		A20000000000000000000007 /* Widgets-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Widgets-Info.plist"; sourceTree = "<group>"; };
 		A20000000000000000000008 /* Zeltwetter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Zeltwetter.entitlements; sourceTree = "<group>"; };
 		A20000000000000000000009 /* Widgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Widgets.entitlements; sourceTree = "<group>"; };
+		A20000000000000000000011 /* Phone-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Phone-Info.plist"; sourceTree = "<group>"; };
 		A20000000000000000000010 /* ZeltwetterPhoneWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ZeltwetterPhoneWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -263,6 +264,7 @@
 				A20000000000000000000003 /* Zeltwetter.xcconfig */,
 				A20000000000000000000004 /* Version.xcconfig */,
 				A20000000000000000000007 /* Widgets-Info.plist */,
+				A20000000000000000000011 /* Phone-Info.plist */,
 				A20000000000000000000008 /* Zeltwetter.entitlements */,
 				A20000000000000000000009 /* Widgets.entitlements */,
 			);
@@ -651,6 +653,7 @@
 				CODE_SIGN_ENTITLEMENTS = Config/Zeltwetter.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/Phone-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "$(ZELTWETTER_DISPLAY_NAME)";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Zeltwetter uses your location to fetch tonight's forecast for your camp.";
@@ -678,6 +681,7 @@
 				CODE_SIGN_ENTITLEMENTS = Config/Zeltwetter.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/Phone-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "$(ZELTWETTER_DISPLAY_NAME)";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Zeltwetter uses your location to fetch tonight's forecast for your camp.";

@@ -22,21 +22,22 @@ struct PressureWatch {
         PressureWatch(store: Store(name: "pressure"), sample: { await Barometer().read() }, warn: post)
     }
 
-    /// Takes a reading while `now` is inside the night, and warns when it shows a fast fall.
-    func check(night: NightForecast?, verdict: Verdict?, now: Date = .now) async {
+    /// Takes a reading while `now` is inside the night, and warns when it shows a fast fall
+    /// unless `quiet`, which keeps the log filling while another device does the warning.
+    func check(night: NightForecast?, verdict: Verdict?, quiet: Bool = false, now: Date = .now) async {
         guard let night, let verdict, now >= night.sunset, now < night.sunrise,
               let hPa = await sample()
         else { return }
         var log = store.load() ?? PressureLog()
         log.record(PressureSample(date: now, hPa: hPa))
-        if log.shouldWarn(verdict: verdict, nightStart: night.sunset) {
+        if !quiet, log.shouldWarn(verdict: verdict, nightStart: night.sunset) {
             await warn(Self.message)
             log.warnedAt = now
         }
         store.save(log)
     }
 
-    /// Asks for notifications, and reads the barometer once so watchOS asks for motion
+    /// Asks for notifications, and reads the barometer once so the system asks for motion
     /// access while the app is on screen rather than in a background refresh, where it cannot.
     static func requestPermission() async {
         _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
