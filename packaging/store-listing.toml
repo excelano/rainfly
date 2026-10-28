@@ -31,12 +31,12 @@ THE OVERNIGHT PRESSURE WATCH
 Once the first forecast has loaded, Rainfly asks to send notifications and for Motion & Fitness. Both serve one optional feature: during background refreshes at night it reads the device's barometer for a few seconds, and when the pressure falls fast while the verdict is "Fly off", the device raises a local notification. When the watch app is installed with its pressure watch on, the phone keeps quiet so one fall brings one notification. It needs a falling barometer at night, so it cannot be made to fire on demand.
 
 WHERE DATA GOES
-The coordinates of the camp being forecast go to WeatherKit, and to Apple's map service when a camp is searched for, named or placed on the map. Between the iPhone and its paired watch, camps, the trip, settings and the forecasts for saved camps travel over WatchConnectivity. Shared dew diary nights, only when the user turns sharing on, go to the public database of our CloudKit container. All of it goes through Apple's frameworks; we run no server of our own, and the app carries no analytics or third-party code. Privacy policy: https://excelano.com/legal/#rainfly. Code: https://github.com/excelano/zeltwetter.
+The coordinates of the camp being forecast go to WeatherKit, and to Apple's map service when a camp is searched for, named or placed on the map. Between the iPhone and its paired watch, camps, the trip, settings and the forecasts for saved camps travel over WatchConnectivity. Shared dew diary nights, only when the user turns sharing on, go to the public database of our CloudKit container. All of it goes through Apple's frameworks; we run no server of our own, and the app carries no analytics or third-party code. Privacy policy: https://excelano.com/legal/#rainfly. Code: https://github.com/excelano/rainfly.
 """
 
 [locales."en-us"]
-website = "https://github.com/excelano/zeltwetter"
-support = "https://github.com/excelano/zeltwetter"
+website = "https://github.com/excelano/rainfly"
+support = "https://github.com/excelano/rainfly"
 privacy = "https://excelano.com/legal/#rainfly"
 description = """
 Rainfly answers one question at camp: should the rain fly go on tonight?

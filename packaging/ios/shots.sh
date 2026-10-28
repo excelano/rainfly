@@ -2,7 +2,7 @@
 # The App Store screenshots, as recipes. shots-appstore builds the app for the
 # simulator, boots each simulator ship.toml names, installs the iPhone app or
 # the embedded watch app, and calls this with the simulator, the language and
-# where the frames go; this file is the half that is Zeltwetter's: which screens,
+# where the frames go; this file is the half that is Rainfly's: which screens,
 # from the nights and camps a Debug build sets up when launched with --demo.
 #
 #     ./packaging/ios/shots.sh --app <Zeltwetter.app> --device <udid> --lang en-us --outdir <dir>
