@@ -71,10 +71,13 @@ struct SettingsStore {
         nonmutating set { save(newValue, "preferences") }
     }
 
-    /// When the state shared with the other device last changed.
-    var syncedAt: Date {
-        get { load("syncedAt") ?? .distantPast }
-        nonmutating set { save(newValue, "syncedAt") }
+    var changedAt: [String: Date]? {
+        get { load("changedAt") }
+        nonmutating set { save(newValue, "changedAt") }
+    }
+
+    var syncedAt: Date? {
+        load("syncedAt")
     }
 
     /// The state last sent to the other device, so an unchanged one is not sent again.

@@ -90,7 +90,10 @@ final class SyncSession: NSObject, WCSessionDelegate {
 
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext context: [String: Any]) {
         let message = Self.message(in: context)
-        Task { @MainActor in await received(message) }
+        Task { @MainActor in
+            await received(message)
+            if let message, model.sharedState != message.state { sendState(force: true) }
+        }
     }
 
     nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {

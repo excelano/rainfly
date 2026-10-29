@@ -30,14 +30,18 @@ final class ForecastModel {
     var settings: Settings {
         didSet {
             changed { store.settings = settings }
-            sharedChanged()
+            var old = sharedState
+            old.settings = oldValue
+            sharedChanged(from: old)
         }
     }
     var preferences: Preferences {
         didSet {
             changed { store.preferences = preferences }
             if preferences.units != oldValue.units {
-                sharedChanged()
+                var old = sharedState
+                old.units = oldValue.units
+                sharedChanged(from: old)
             } else if !isApplying {
                 sharedStateChanged?()
             }
@@ -73,6 +77,10 @@ final class ForecastModel {
         settings = store.settings
         preferences = store.preferences
         camps = campStore.load() ?? Camps()
+        if store.changedAt == nil {
+            let items = SyncRules.items(sharedState)
+            store.changedAt = store.syncedAt.map { at in items.mapValues { _ in at } } ?? [:]
+        }
     }
 
     static func live() -> ForecastModel {
@@ -177,19 +185,19 @@ final class ForecastModel {
     }
 
     var sharedState: SyncedState {
-        SyncedState(camps: camps, settings: settings, units: preferences.units, modifiedAt: store.syncedAt)
+        SyncedState(camps: camps, settings: settings, units: preferences.units, changedAt: store.changedAt ?? [:])
     }
 
-    /// Takes the other device's state when it is newer than this one's.
     @discardableResult
     func apply(_ received: SyncedState) async -> Bool {
-        guard SyncRules.adopts(received, over: sharedState) else { return false }
+        let merged = SyncRules.merge(received, into: sharedState)
+        guard merged != sharedState else { return false }
         isApplying = true
-        camps = received.camps
+        camps = merged.camps
         campStore.save(camps)
-        settings = received.settings
-        preferences.units = received.units
-        store.syncedAt = received.modifiedAt
+        settings = merged.settings
+        preferences.units = merged.units
+        store.changedAt = merged.changedAt
         isApplying = false
         await refreshIfStale()
         return true
@@ -260,21 +268,25 @@ final class ForecastModel {
 
     private func dropPastNights(before date: NightDate) {
         if camps.trip.contains(where: { $0.date < date }) {
-            updateCamps(shared: false) { $0.removeNights(before: date) }
+            updateCamps { $0.removeNights(before: date) }
+            let forgotten = SyncRules.key(date.adding(days: -Self.forgetDays))
+            store.changedAt = store.changedAt?.filter { !$0.key.hasPrefix("night/") || $0.key >= forgotten }
         }
     }
 
-    /// Dropping past nights is not shared, since both devices do it on their own.
-    private func updateCamps(shared: Bool = true, _ change: (inout Camps) -> Void) {
+    private static let forgetDays = 30
+
+    private func updateCamps(_ change: (inout Camps) -> Void) {
+        let old = sharedState
         change(&camps)
         campStore.save(camps)
         WidgetCenter.shared.reloadAllTimelines()
-        if shared { sharedChanged() }
+        sharedChanged(from: old)
     }
 
-    private func sharedChanged() {
+    private func sharedChanged(from old: SyncedState) {
         guard !isApplying else { return }
-        store.syncedAt = .now
+        store.changedAt = SyncRules.stamping(sharedState, changedFrom: old, at: .now).changedAt
         sharedStateChanged?()
     }
 

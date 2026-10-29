@@ -16,6 +16,14 @@ struct Camps: Codable, Equatable, Sendable {
     private(set) var saved: [CampLocation] = []
     private(set) var trip: [TripNight] = []
 
+    init() {}
+
+    init(saved: [CampLocation], trip: [TripNight]) {
+        self.saved = saved
+        let names = Set(saved.map(\.name))
+        self.trip = trip.filter { names.contains($0.campName) }.sorted { $0.date < $1.date }
+    }
+
     /// The camp for the evening of `date`: the trip's, or the watch's own position.
     func campName(on date: NightDate) -> String {
         trip.first { $0.date == date }?.campName ?? CampLocation.hereName

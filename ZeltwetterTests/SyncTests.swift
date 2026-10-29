@@ -9,17 +9,80 @@ import Testing
 private typealias F = Fixture
 
 struct SyncRulesTests {
-    private func state(at modifiedAt: Date, rain: Double = 0.2) -> SyncedState {
-        var settings = Settings()
-        settings.rainChance = rain
-        return SyncedState(camps: Camps(), settings: settings, units: DisplayUnits(fahrenheit: false, mph: false), modifiedAt: modifiedAt)
+    private let lake = CampLocation(name: "Lost Lake", latitude: 39.9, longitude: -105.6, timeZoneID: "America/Denver")
+    private let ridge = CampLocation(name: "Ridge", latitude: 40.1, longitude: -105.7, timeZoneID: "America/Denver")
+    private let night = NightDate(year: 2026, month: 7, day: 1)
+
+    private var start: SyncedState {
+        SyncedState(camps: Camps(), settings: Settings(), units: DisplayUnits(fahrenheit: false, mph: false), changedAt: [:])
     }
 
-    @Test func theNewerStateWinsInEitherOrder() {
-        let older = state(at: F.at(0, 18)), newer = state(at: F.at(0, 19), rain: 0.4)
-        #expect(SyncRules.adopts(newer, over: older))
-        #expect(!SyncRules.adopts(older, over: newer))
-        #expect(!SyncRules.adopts(state(at: F.at(0, 18), rain: 0.4), over: older))
+    private func changing(_ state: SyncedState, at hour: Int, _ change: (inout SyncedState) -> Void) -> SyncedState {
+        var changed = state
+        change(&changed)
+        return SyncRules.stamping(changed, changedFrom: state, at: F.at(0, hour))
+    }
+
+    @Test func editsMadeApartOnBothDevicesAllSurvive() {
+        let phone = changing(start, at: 18) { $0.camps.add(lake) }
+        let watch = changing(start, at: 19) {
+            $0.settings.rainChance = 0.4
+            $0.units.mph = true
+        }
+        let merged = SyncRules.merge(watch, into: phone)
+        #expect(merged.camps.saved == [lake])
+        #expect(merged.settings.rainChance == 0.4)
+        #expect(merged.units.mph)
+        #expect(SyncRules.merge(phone, into: watch) == merged)
+    }
+
+    @Test func theLaterChangeToAnItemWins() {
+        let phone = changing(start, at: 18) { $0.settings.rainChance = 0.3 }
+        let watch = changing(start, at: 19) { $0.settings.rainChance = 0.5 }
+        #expect(SyncRules.merge(watch, into: phone).settings.rainChance == 0.5)
+        #expect(SyncRules.merge(phone, into: watch).settings.rainChance == 0.5)
+    }
+
+    @Test func aRemovalStaysRemoved() {
+        let both = changing(start, at: 17) { $0.camps.add(lake) }
+        let phone = changing(both, at: 18) { $0.camps.remove(named: lake.name) }
+        let watch = changing(both, at: 19) { $0.camps.add(ridge) }
+        #expect(SyncRules.merge(watch, into: phone).camps.saved == [ridge])
+        #expect(SyncRules.merge(phone, into: watch).camps.saved == [ridge])
+    }
+
+    @Test func aTurnedOffBagRatingSyncs() {
+        let both = changing(start, at: 17) { $0.settings.bagRatingC = 5 }
+        let phone = changing(both, at: 18) { $0.settings.bagRatingC = nil }
+        #expect(SyncRules.merge(phone, into: both).settings.bagRatingC == nil)
+    }
+
+    @Test func aNightWhoseCampWasRemovedIsDropped() {
+        let both = changing(start, at: 17) { $0.camps.add(lake) }
+        let phone = changing(both, at: 18) { $0.camps.remove(named: lake.name) }
+        let watch = changing(both, at: 19) { $0.camps.plan(lake.name, on: night) }
+        let merged = SyncRules.merge(watch, into: phone)
+        #expect(merged.camps.saved.isEmpty)
+        #expect(merged.camps.trip.isEmpty)
+    }
+
+    @Test func undatedItemsSettleTheSameOnBothSides() {
+        var phone = start, watch = start
+        phone.camps.add(lake)
+        phone.settings.rainChance = 0.3
+        watch.camps.add(ridge)
+        watch.settings.rainChance = 0.5
+        let merged = SyncRules.merge(watch, into: phone)
+        #expect(Set(merged.camps.saved.map(\.name)) == [lake.name, ridge.name])
+        #expect(SyncRules.merge(phone, into: watch).settings == merged.settings)
+    }
+
+    @Test func mergingAgainChangesNothing() {
+        let phone = changing(start, at: 18) { $0.camps.add(lake) }
+        let watch = changing(start, at: 19) { $0.camps.add(ridge) }
+        let merged = SyncRules.merge(watch, into: phone)
+        #expect(SyncRules.merge(watch, into: merged) == merged)
+        #expect(SyncRules.merge(merged, into: merged) == merged)
     }
 
     @Test func aNightIsKeptUnlessANewerFetchIsCached() {
@@ -64,7 +127,7 @@ struct SyncModelTests {
         model.sharedStateChanged = { announced += 1 }
         model.addCamp(lake)
         #expect(announced == 1)
-        #expect(model.sharedState.modifiedAt > .distantPast)
+        #expect(model.sharedState.changedAt.keys.sorted() == ["camp/" + lake.name])
         model.preferences.pressureWatch.toggle()
         #expect(announced == 2)
     }
@@ -78,7 +141,11 @@ struct SyncModelTests {
         camps.add(lake)
         var settings = Settings()
         settings.rainChance = 0.5
-        let received = SyncedState(camps: camps, settings: settings, units: DisplayUnits(fahrenheit: true, mph: true), modifiedAt: .now.addingTimeInterval(60))
+        var changed = model.sharedState
+        changed.camps = camps
+        changed.settings = settings
+        changed.units = DisplayUnits(fahrenheit: true, mph: true)
+        let received = SyncRules.stamping(changed, changedFrom: model.sharedState, at: .now.addingTimeInterval(60))
 
         #expect(await model.apply(received))
         #expect(model.camps == camps)
