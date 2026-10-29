@@ -89,7 +89,7 @@ private struct SuggestionSection: View {
     var body: some View {
         let quantity = Quantity.dewSpread(units)
         Section {
-            Text("A dew spread of \(quantity.text(suggestion.suggested.spreadC)) would have caught \(suggestion.suggested.caught) of \(suggestion.wetNights) wet nights with \(Self.alarms(suggestion.suggested.falseAlarms)). The current \(quantity.text(suggestion.current.spreadC)) catches \(suggestion.current.caught) with \(Self.alarms(suggestion.current.falseAlarms)).")
+            Text("A dew-point gap of \(quantity.text(suggestion.suggested.spreadC)) would have caught \(suggestion.suggested.caught) of \(suggestion.wetNights) wet nights with \(Self.alarms(suggestion.suggested.falseAlarms)). The current \(quantity.text(suggestion.current.spreadC)) catches \(suggestion.current.caught) with \(Self.alarms(suggestion.current.falseAlarms)).")
             Button("Apply \(quantity.text(suggestion.suggested.spreadC))", action: apply)
         } header: {
             Text("Suggested setting")
@@ -114,7 +114,7 @@ private struct NightRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text("\(Self.title(night)) · \(night.campName)")
+            Text("\(Self.title(night)) · \(CampLocation.title(night.campName))")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
             Text(found)
@@ -145,7 +145,7 @@ private struct NightRow: View {
 
     private var forecast: String {
         guard let judgement else { return "No forecast kept" }
-        let spread = judgement.closestSpread.map { ", closest spread \(Quantity.dewSpread(units).format(units.temperatureSpan($0)))" } ?? ""
+        let spread = judgement.closestSpread.map { ", closest gap \(Quantity.dewSpread(units).format(units.temperatureSpan($0)))" } ?? ""
         let call = judgement.firing.map { "\($0.trigger == .frost ? "frost" : "dew") by \(Self.clock($0.at, in: night))" } ?? "dry"
         return "Forecast: \(call)\(spread)"
     }

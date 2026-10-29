@@ -12,8 +12,12 @@ struct DetailView: View {
             if let night = model.night, let verdict = model.verdict, let window = model.window {
                 let text = VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units)
                 Section {
-                    ForEach(Trigger.allCases, id: \.self) { trigger in
-                        TriggerRow(trigger: trigger, firing: verdict.firing(trigger), text: text)
+                    ForEach(text.checks, id: \.self) { trigger in
+                        NavigationLink {
+                            CheckDetail(trigger: trigger, text: text) { ChecksSettingsView() }
+                        } label: {
+                            CheckRow(trigger: trigger, text: text)
+                        }
                     }
                 }
                 Section {
@@ -21,10 +25,10 @@ struct DetailView: View {
                         LabeledContent("Night low", value: text.degrees(low))
                     }
                     if let spread = window.closestSpread {
-                        LabeledContent("Closest spread", value: text.degreeSpan(spread))
+                        LabeledContent("Closest dew-point gap", value: text.degreeSpan(spread))
                     }
                     if let chance = window.maxPrecipChance {
-                        LabeledContent("Rain chance", value: text.percent(chance))
+                        LabeledContent("Highest rain chance", value: text.percent(chance))
                     }
                 }
             }
@@ -57,29 +61,5 @@ extension DetailView {
     private var title: String {
         guard let night = model.night, let verdict = model.verdict else { return "Tonight" }
         return VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units).period(at: .now)
-    }
-}
-
-private struct TriggerRow: View {
-    let trigger: Trigger
-    let firing: Firing?
-    let text: VerdictText
-
-    var body: some View {
-        HStack {
-            Image(systemName: firing == nil ? "checkmark.circle" : "xmark.circle.fill")
-                .foregroundStyle(firing == nil ? .green : .red)
-                .accessibilityHidden(true)
-            Text(VerdictText.name(trigger))
-            Spacer()
-            if let firing {
-                Text(text.clock(firing.at))
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .font(.footnote)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(VerdictText.name(trigger))
-        .accessibilityValue(firing.map { "Expected at \(text.clock($0.at))" } ?? "Clear")
     }
 }

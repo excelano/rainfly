@@ -149,9 +149,8 @@ final class ForecastModel {
         }
     }
 
-    /// Shows `name` tonight by planning it for the current night; "Here" clears the plan.
     func show(_ name: String, now: Date = .now) async {
-        updateCamps { $0.plan(name, on: nightDate(at: now)) }
+        updateCamps { $0.show(name, on: nightDate(at: now)) }
         await refreshIfStale(now: now)
     }
 
@@ -159,8 +158,11 @@ final class ForecastModel {
         try await locate()
     }
 
-    func addCamp(_ camp: CampLocation) {
-        updateCamps { $0.add(camp) }
+    @discardableResult
+    func addCamp(_ camp: CampLocation) -> CampLocation {
+        var added = camp
+        updateCamps { added = $0.add(camp) }
+        return added
     }
 
     func removeCamp(named name: String) async {

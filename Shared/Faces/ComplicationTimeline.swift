@@ -25,7 +25,7 @@ struct ComplicationFace: Equatable, Sendable {
 
     /// For the watch face and widget galleries.
     static let sample = ComplicationFace(
-        flyOn: true, headline: "Fly on", detail: "Dew likely by 4 AM", inline: "Fly on · Dew 4 AM",
+        flyOn: true, headline: "Rainfly on", detail: "Dew likely by 4 AM", inline: "Rainfly on · Dew 4 AM",
         dryTime: nil, fetchedAt: nil, camp: "Lost Lake", notes: ["Open the vents", "Dry by ~8:40 AM"]
     )
 }
@@ -42,7 +42,7 @@ extension ComplicationFace {
         } else {
             self.init(
                 flyOn: verdict.flyOn, headline: text.headline, detail: text.reason,
-                inline: verdict.headline.map { "Fly on · \(text.brief($0))" } ?? "Fly off", dryTime: nil,
+                inline: verdict.headline.map { "Rainfly on · \(text.brief($0))" } ?? "Rainfly off", dryTime: nil,
                 fetchedAt: text.night.fetchedAt, camp: text.night.location.name, notes: text.notes
             )
         }

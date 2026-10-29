@@ -7,6 +7,13 @@ import Foundation
 struct CampLocation: Codable, Equatable, Sendable {
     /// The camp that follows the watch's own position.
     static let hereName = "Here"
+    static let hereTitle = "My Location"
+
+    static func title(_ name: String) -> String {
+        name == hereName ? hereTitle : name
+    }
+
+    var title: String { Self.title(name) }
 
     let name: String
     let latitude: Double

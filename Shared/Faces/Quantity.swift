@@ -46,28 +46,28 @@ struct Quantity: Sendable {
         )
     }
 
-    static let rainChance = percent("Rain chance", 5...100)
-    static let morningRainChance = percent("Morning rain chance", 5...100)
-    static let clearSky = percent("Clear sky below", 5...80)
-    static let ventHumidity = percent("Vent humidity", 50...100)
+    static let rainChance = percent("Chance of rain", 5...100)
+    static let morningRainChance = percent("Chance of rain", 5...100)
+    static let clearSky = percent("Cloud cover under", 5...80)
+    static let ventHumidity = percent("Humidity from", 50...100)
 
     static func windRain(_ units: DisplayUnits) -> Quantity {
-        speed("Wind-driven rain over", units, ms: 3...20, mph: 5...45)
+        speed("Wind over", units, ms: 3...20, mph: 5...45)
     }
 
     static func calmWind(_ units: DisplayUnits) -> Quantity {
-        speed("Calm below", units, ms: 0.5...8, mph: 1...18)
+        speed("Wind under", units, ms: 0.5...8, mph: 1...18)
     }
 
     static func dewSpread(_ units: DisplayUnits) -> Quantity {
         Quantity(
-            title: "Dew spread", range: units.fahrenheit ? 1...11 : 0.5...6, step: units.fahrenheit ? 1 : 0.5,
+            title: "Dew-point gap", range: units.fahrenheit ? 1...11 : 0.5...6, step: units.fahrenheit ? 1 : 0.5,
             shown: units.temperatureSpan, stored: units.celsiusSpan, suffix: "°"
         )
     }
 
     static func cold(_ units: DisplayUnits) -> Quantity {
-        temperature("Cold below", units, c: -10...20, f: 15...68)
+        temperature("Colder than", units, c: -10...20, f: 15...68)
     }
 
     static func bagRating(_ units: DisplayUnits) -> Quantity {

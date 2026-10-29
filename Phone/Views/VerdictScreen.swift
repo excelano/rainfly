@@ -8,6 +8,7 @@ import SwiftUI
 struct VerdictScreen: View {
     @Environment(ForecastModel.self) private var model
     @Environment(\.diaryRecorder) private var recorder
+    @State private var isAddingCamp = false
 
     var body: some View {
         TimelineView(.everyMinute) { context in
@@ -34,17 +35,18 @@ struct VerdictScreen: View {
                     Button("Try again") {
                         Task { await model.refresh() }
                     }
+                    Button("Add a camp") { isAddingCamp = true }
                 }
             }
         }
         .refreshable { await model.refresh() }
-        .navigationTitle(model.campName)
+        .navigationTitle(CampLocation.title(model.campName))
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 NavigationLink {
                     CampsScreen()
                 } label: {
-                    Label("Camps", systemImage: "list.bullet")
+                    Label("Camps", systemImage: "tent")
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
@@ -52,6 +54,14 @@ struct VerdictScreen: View {
                     SettingsScreen()
                 } label: {
                     Label("Settings", systemImage: "gearshape")
+                }
+            }
+        }
+        .sheet(isPresented: $isAddingCamp) {
+            NavigationStack {
+                AddCampScreen { camp in
+                    isAddingCamp = false
+                    if let camp { Task { await model.show(camp.name) } }
                 }
             }
         }

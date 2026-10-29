@@ -15,12 +15,14 @@ struct NightView<Extra: View>: View {
     var period: String?
     @ViewBuilder var extra: Extra
 
+    private var shownPeriod: String { period ?? text.period(at: now) }
+
     private var window: NightWindow { NightWindow(text.night, packByMinutes: text.settings.packByMinutes) }
 
     var body: some View {
         List {
             Section {
-                VerdictHeader(text: text, period: period ?? text.period(at: now))
+                VerdictHeader(text: text, period: shownPeriod)
             }
             .listRowBackground(Color.clear)
             if let problem {
@@ -31,16 +33,20 @@ struct NightView<Extra: View>: View {
             }
             extra
             Section("Checks") {
-                ForEach(Trigger.allCases, id: \.self) { trigger in
-                    TriggerRow(trigger: trigger, firing: text.verdict.firing(trigger), text: text)
+                ForEach(text.checks, id: \.self) { trigger in
+                    NavigationLink {
+                        CheckDetail(trigger: trigger, text: text) { ChecksSettingsScreen() }
+                    } label: {
+                        CheckRow(trigger: trigger, text: text)
+                    }
                 }
             }
-            Section("The night") {
+            Section(shownPeriod == "Tonight" ? "Overnight tonight" : "Overnight") {
                 if let low = window.low {
                     LabeledContent("Night low", value: text.degrees(low))
                 }
                 if let spread = window.closestSpread {
-                    LabeledContent("Closest dew-point spread", value: text.degreeSpan(spread))
+                    LabeledContent("Closest dew-point gap", value: text.degreeSpan(spread))
                 }
                 if let chance = window.maxPrecipChance {
                     LabeledContent("Highest rain chance", value: text.percent(chance))
@@ -49,7 +55,7 @@ struct NightView<Extra: View>: View {
             Section {
                 AttributionView(attribution: attribution, markHeight: 18)
             } footer: {
-                Text("\(text.night.location.name) · \(VerdictText.age(since: text.night.fetchedAt, at: now))")
+                Text("\(text.night.location.title) · \(VerdictText.age(since: text.night.fetchedAt, at: now))")
                     .foregroundStyle(VerdictText.staleness(since: text.night.fetchedAt, at: now).color)
             }
         }
@@ -87,29 +93,5 @@ private struct VerdictHeader: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .accessibilityElement(children: .combine)
-    }
-}
-
-private struct TriggerRow: View {
-    let trigger: Trigger
-    let firing: Firing?
-    let text: VerdictText
-
-    var body: some View {
-        LabeledContent {
-            if let firing {
-                Text(text.clock(firing.at))
-            }
-        } label: {
-            Label {
-                Text(VerdictText.name(trigger))
-            } icon: {
-                Image(systemName: firing == nil ? "checkmark.circle" : "xmark.circle.fill")
-                    .foregroundStyle(firing == nil ? .green : .red)
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(VerdictText.name(trigger))
-        .accessibilityValue(firing.map { "Expected at \(text.clock($0.at))" } ?? "Clear")
     }
 }

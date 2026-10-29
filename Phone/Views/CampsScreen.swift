@@ -14,8 +14,8 @@ struct CampsScreen: View {
 
     var body: some View {
         List {
-            Section("Tonight") {
-                CampRow(name: CampLocation.hereName, detail: "Your position", isShown: model.campName == CampLocation.hereName) {
+            Section("Show tonight") {
+                CampRow(name: CampLocation.hereTitle, detail: "Your position", isShown: model.campName == CampLocation.hereName) {
                     show(CampLocation.hereName)
                 }
                 ForEach(model.camps.saved, id: \.name) { camp in
@@ -34,7 +34,7 @@ struct CampsScreen: View {
         .navigationTitle("Camps")
         .sheet(isPresented: $isAddingCamp) {
             NavigationStack {
-                AddCampScreen { isAddingCamp = false }
+                AddCampScreen { _ in isAddingCamp = false }
             }
         }
         .sheet(isPresented: $isAddingNight) {

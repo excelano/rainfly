@@ -15,18 +15,24 @@ struct TripNight: Codable, Hashable, Sendable {
 struct Camps: Codable, Equatable, Sendable {
     private(set) var saved: [CampLocation] = []
     private(set) var trip: [TripNight] = []
+    private(set) var shown: TripNight?
 
     init() {}
 
-    init(saved: [CampLocation], trip: [TripNight]) {
+    init(saved: [CampLocation], trip: [TripNight], shown: TripNight?) {
         self.saved = saved
         let names = Set(saved.map(\.name))
         self.trip = trip.filter { names.contains($0.campName) }.sorted { $0.date < $1.date }
+        self.shown = shown.flatMap { $0.campName == CampLocation.hereName || names.contains($0.campName) ? $0 : nil }
     }
 
-    /// The camp for the evening of `date`: the trip's, or the watch's own position.
     func campName(on date: NightDate) -> String {
-        trip.first { $0.date == date }?.campName ?? CampLocation.hereName
+        if let shown, shown.date == date { return shown.campName }
+        return trip.first { $0.date == date }?.campName ?? shown?.campName ?? CampLocation.hereName
+    }
+
+    mutating func show(_ campName: String, on date: NightDate) {
+        shown = TripNight(date: date, campName: campName)
     }
 
     func camp(named name: String) -> CampLocation? {
@@ -38,7 +44,7 @@ struct Camps: Codable, Equatable, Sendable {
     mutating func add(_ camp: CampLocation) -> CampLocation {
         let trimmed = camp.name.trimmingCharacters(in: .whitespaces)
         let base = trimmed.isEmpty ? "Camp" : trimmed
-        let taken = Set(saved.map(\.name) + [CampLocation.hereName])
+        let taken = Set(saved.map(\.name) + [CampLocation.hereName, CampLocation.hereTitle])
         let name = taken.contains(base) ? (2...).lazy.map { "\(base) \($0)" }.first { !taken.contains($0) }! : base
         let named = CampLocation(name: name, latitude: camp.latitude, longitude: camp.longitude, timeZoneID: camp.timeZoneID)
         saved.append(named)
@@ -49,6 +55,7 @@ struct Camps: Codable, Equatable, Sendable {
     mutating func remove(named name: String) {
         saved.removeAll { $0.name == name }
         trip.removeAll { $0.campName == name }
+        if shown?.campName == name { shown = nil }
     }
 
     /// Plans `campName` for the night of `date`, replacing that night's camp; "Here" clears it.

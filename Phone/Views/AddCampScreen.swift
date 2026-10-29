@@ -9,7 +9,7 @@ import SwiftUI
 /// coordinates, then named.
 struct AddCampScreen: View {
     @Environment(ForecastModel.self) private var model
-    let done: () -> Void
+    let done: (CampLocation?) -> Void
     @State private var located: Point?
     @State private var isLocating = false
     @State private var problem: String?
@@ -54,7 +54,7 @@ struct AddCampScreen: View {
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", action: done)
+                Button("Cancel") { done(nil) }
             }
         }
     }
@@ -81,7 +81,7 @@ struct AddCampScreen: View {
 /// Campgrounds, parks, towns and addresses by name, favouring those near the last position.
 private struct SearchCampScreen: View {
     let near: Point?
-    let done: () -> Void
+    let done: (CampLocation?) -> Void
     @State private var query = ""
     @State private var results: [FoundPlace] = []
     @State private var isSearching = false
@@ -132,11 +132,11 @@ private struct SearchCampScreen: View {
 
 /// A map to pan under a fixed pin. It only places the camp; it shows no weather.
 private struct MapPickScreen: View {
-    let done: () -> Void
+    let done: (CampLocation?) -> Void
     @State private var position: MapCameraPosition
     @State private var center: CLLocationCoordinate2D?
 
-    init(start: Point?, done: @escaping () -> Void) {
+    init(start: Point?, done: @escaping (CampLocation?) -> Void) {
         self.done = done
         let initial: MapCameraPosition = start.map {
             .region(MKCoordinateRegion(
@@ -193,7 +193,7 @@ private struct MapPickScreen: View {
 
 /// Latitude and longitude typed in, as decimal degrees or degrees and decimal minutes.
 private struct CoordinateFieldsScreen: View {
-    let done: () -> Void
+    let done: (CampLocation?) -> Void
     @State private var latitude = ""
     @State private var longitude = ""
 
@@ -245,11 +245,11 @@ private struct CoordinateFieldsScreen: View {
 private struct NameCampScreen: View {
     @Environment(ForecastModel.self) private var model
     let point: Point
-    let done: () -> Void
+    let done: (CampLocation?) -> Void
     @State private var name: String
     @State private var place: CampPlace?
 
-    init(point: Point, place: CampPlace? = nil, done: @escaping () -> Void) {
+    init(point: Point, place: CampPlace? = nil, done: @escaping (CampLocation?) -> Void) {
         self.point = point
         self.done = done
         _name = State(initialValue: place?.name ?? "")
@@ -274,8 +274,7 @@ private struct NameCampScreen: View {
                 } else {
                     Button("Save") {
                         let zone = place?.timeZone ?? CampPlace.estimatedZone(longitude: point.longitude)
-                        model.addCamp(CampLocation(name: name, latitude: point.latitude, longitude: point.longitude, timeZoneID: zone.identifier))
-                        done()
+                        done(model.addCamp(CampLocation(name: name, latitude: point.latitude, longitude: point.longitude, timeZoneID: zone.identifier)))
                     }
                 }
             }

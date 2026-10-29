@@ -8,7 +8,7 @@ import WatchKit
 /// A new camp found by name, taken from the watch's position or typed as coordinates, then named.
 struct AddCampView: View {
     @Environment(ForecastModel.self) private var model
-    let done: () -> Void
+    let done: (CampLocation?) -> Void
     @State private var located: Point?
     @State private var isLocating = false
     @State private var problem: String?
@@ -47,7 +47,7 @@ struct AddCampView: View {
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", systemImage: "xmark", action: done)
+                Button("Cancel", systemImage: "xmark") { done(nil) }
             }
         }
     }
@@ -78,13 +78,13 @@ struct AddCampView: View {
 private struct CoordinateEntryView: View {
     typealias Field = CoordinateEntry.Field
 
-    let done: () -> Void
+    let done: (CampLocation?) -> Void
     @State private var entry: CoordinateEntry
     @State private var field = Field.latDegrees
     @State private var crown = 0.0
     @FocusState private var isFocused: Bool
 
-    init(start: Point, done: @escaping () -> Void) {
+    init(start: Point, done: @escaping (CampLocation?) -> Void) {
         self.done = done
         _entry = State(initialValue: CoordinateEntry(latitude: start.latitude, longitude: start.longitude))
     }
@@ -155,11 +155,11 @@ private struct CoordinateEntryView: View {
 private struct NameCampView: View {
     @Environment(ForecastModel.self) private var model
     let point: Point
-    let done: () -> Void
+    let done: (CampLocation?) -> Void
     @State private var name: String
     @State private var place: CampPlace?
 
-    init(point: Point, place: CampPlace? = nil, done: @escaping () -> Void) {
+    init(point: Point, place: CampPlace? = nil, done: @escaping (CampLocation?) -> Void) {
         self.point = point
         self.done = done
         _name = State(initialValue: place?.name ?? "")
@@ -174,8 +174,7 @@ private struct NameCampView: View {
                 .foregroundStyle(.secondary)
             Button("Save") {
                 let zone = place?.timeZone ?? CampPlace.estimatedZone(longitude: point.longitude)
-                model.addCamp(CampLocation(name: name, latitude: point.latitude, longitude: point.longitude, timeZoneID: zone.identifier))
-                done()
+                done(model.addCamp(CampLocation(name: name, latitude: point.latitude, longitude: point.longitude, timeZoneID: zone.identifier)))
             }
             .disabled(place == nil)
         }
@@ -192,7 +191,7 @@ private struct NameCampView: View {
 /// Campgrounds, parks, towns and addresses by name, favouring those near the last position.
 private struct SearchCampView: View {
     let near: Point?
-    let done: () -> Void
+    let done: (CampLocation?) -> Void
     @State private var query = ""
     @State private var results: [FoundPlace] = []
     @State private var isSearching = false

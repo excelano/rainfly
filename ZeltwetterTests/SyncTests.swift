@@ -77,6 +77,12 @@ struct SyncRulesTests {
         #expect(SyncRules.merge(phone, into: watch).settings == merged.settings)
     }
 
+    @Test func theShownCampSyncs() {
+        let both = changing(start, at: 17) { $0.camps.add(lake) }
+        let phone = changing(both, at: 18) { $0.camps.show(lake.name, on: night) }
+        #expect(SyncRules.merge(phone, into: both).camps.campName(on: night) == lake.name)
+    }
+
     @Test func mergingAgainChangesNothing() {
         let phone = changing(start, at: 18) { $0.camps.add(lake) }
         let watch = changing(start, at: 19) { $0.camps.add(ridge) }

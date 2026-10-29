@@ -30,11 +30,15 @@ struct RootView: View {
             switch scenePhase {
             case .active:
                 await model.refreshIfStale()
-                if model.preferences.pressureWatch, !isDemo { await PressureWatch.requestPermission() }
             case .background:
                 RefreshScheduler.schedule(model)
             default:
                 break
+            }
+        }
+        .onChange(of: model.verdict?.flyOn, initial: true) {
+            if model.verdict?.flyOn == false, model.preferences.pressureWatch, !isDemo {
+                Task { await PressureWatch.requestPermission() }
             }
         }
         .onChange(of: isLuminanceReduced) {

@@ -26,6 +26,7 @@ enum SyncRules {
         var items: [String: Data] = [:]
         for camp in state.camps.saved { items["camp/" + camp.name] = encode(camp) }
         for night in state.camps.trip { items[key(night.date)] = encode(night) }
+        if let shown = state.camps.shown { items["shown"] = encode(shown) }
         for (field, value) in fields(state.settings) { items["settings/" + field] = value }
         for (field, value) in fields(state.units) { items["units/" + field] = value }
         return items
@@ -63,7 +64,7 @@ enum SyncRules {
         let saved = names.compactMap { merged["camp/" + $0].flatMap { decode(CampLocation.self, $0) } }
         let trip = merged.filter { $0.key.hasPrefix("night/") }.values.compactMap { decode(TripNight.self, $0) }
         return SyncedState(
-            camps: Camps(saved: saved, trip: trip),
+            camps: Camps(saved: saved, trip: trip, shown: merged["shown"].flatMap { decode(TripNight.self, $0) }),
             settings: rebuild(Settings.self, "settings/", from: merged) ?? local.settings,
             units: rebuild(DisplayUnits.self, "units/", from: merged) ?? local.units,
             changedAt: local.changedAt.merging(received.changedAt, uniquingKeysWith: max)

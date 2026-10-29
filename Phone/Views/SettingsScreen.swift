@@ -3,6 +3,7 @@
 // Built with AI assistance (Claude, Anthropic)
 
 import SwiftUI
+import WatchConnectivity
 
 struct SettingsScreen: View {
     @Environment(ForecastModel.self) private var model
@@ -27,7 +28,7 @@ struct SettingsScreen: View {
             } footer: {
                 Text("Your sleeping bag's comfort rating, to warn when the night will be colder.")
             }
-            Section("Units") {
+            Section {
                 Picker("Temperature", selection: $model.preferences.units.fahrenheit) {
                     Text("°C").tag(false)
                     Text("°F").tag(true)
@@ -38,24 +39,15 @@ struct SettingsScreen: View {
                     Text("mph").tag(true)
                 }
                 .pickerStyle(.segmented)
+            } header: {
+                Text("Units")
             }
             Section {
-                QuantityStepper(quantity: .rainChance, value: $model.settings.rainChance)
-                QuantityStepper(quantity: .morningRainChance, value: $model.settings.morningRainChance)
-                QuantityStepper(quantity: .windRain(units), value: $model.settings.windRainMS)
-                QuantityStepper(quantity: .dewSpread(units), value: $model.settings.dewSpreadC)
-                QuantityStepper(quantity: .clearSky, value: $model.settings.clearSky)
-                QuantityStepper(quantity: .calmWind(units), value: $model.settings.calmWindMS)
-                QuantityStepper(quantity: .cold(units), value: $model.settings.coldC)
-                QuantityStepper(quantity: .ventHumidity, value: $model.settings.ventHumidity)
-                Button("Reset to defaults") {
-                    model.settings = model.settings.resettingThresholds()
+                NavigationLink("Checks") {
+                    ChecksSettingsScreen()
                 }
-                .disabled(model.settings == model.settings.resettingThresholds())
-            } header: {
-                Text("Triggers")
             } footer: {
-                Text("Any one check that fires puts the fly on. Dew needs the spread, a clear sky and calm air together.")
+                Text("When each check puts the fly on.")
             }
             Section {
                 Toggle("Dew diary", isOn: $model.preferences.dewDiary)
@@ -68,15 +60,21 @@ struct SettingsScreen: View {
                     }
                 }
             } footer: {
-                Text("Each morning, note what you found on something left under the sky, and see how the dew forecast did and what dew spread would suit your campsites. The diary stays on this iPhone unless you share it, which sends answered nights, with the camp's position rounded to about 11 km and no camp names, to help improve the dew check.")
+                Text("Each morning, note what you found on something left under the sky, and see how the dew forecast did at your campsites.")
             }
             Section {
-                Toggle("Pressure watch", isOn: $model.preferences.pressureWatch)
+                Toggle("Pressure alert", isOn: $model.preferences.pressureWatch)
                     .onChange(of: model.preferences.pressureWatch) {
                         if model.preferences.pressureWatch { Task { await PressureWatch.requestPermission() } }
                     }
             } footer: {
-                Text("Warns overnight when the pressure falls fast and the fly is off. iOS gives the phone only occasional time in the background, so this is a rough check. While your watch runs its own pressure watch, the phone stays quiet and the watch warns. \(PressureWatch.status)")
+                Text("Warns overnight when the pressure falls fast and the fly is off. iOS gives the phone only occasional time in the background, so this is a rough check. While your watch has its own pressure alert on, the phone stays quiet and the watch warns. \(PressureWatch.status)")
+            }
+            if WCSession.isSupported(), WCSession.default.isWatchAppInstalled {
+                Section {
+                } footer: {
+                    Text("Camps, the trip, checks and units are shared with Rainfly on your Apple Watch.")
+                }
             }
         }
         .navigationTitle("Settings")
@@ -112,6 +110,70 @@ struct SettingsScreen: View {
     }
 
     private static let defaultBagRatingC = 5.0
+}
+
+struct ChecksSettingsScreen: View {
+    @Environment(ForecastModel.self) private var model
+
+    var body: some View {
+        @Bindable var model = model
+        let units = model.preferences.units
+        Form {
+            Section {
+                QuantityStepper(quantity: .rainChance, value: $model.settings.rainChance)
+            } header: {
+                Text("Rain")
+            } footer: {
+                Text("Rainfly on when any hour of the night reaches this chance of rain, or rain is forecast to fall.")
+            }
+            Section {
+                QuantityStepper(quantity: .morningRainChance, value: $model.settings.morningRainChance)
+            } header: {
+                Text("Morning rain")
+            } footer: {
+                Text("The same, for the hours between sunrise and breaking camp.")
+            }
+            Section {
+                QuantityStepper(quantity: .windRain(units), value: $model.settings.windRainMS)
+            } header: {
+                Text("Wind-driven rain")
+            } footer: {
+                Text("Rainfly on when the wind or its gusts pass this in an hour with any chance of rain.")
+            }
+            Section {
+                QuantityStepper(quantity: .dewSpread(units), value: $model.settings.dewSpreadC)
+                QuantityStepper(quantity: .clearSky, value: $model.settings.clearSky)
+                QuantityStepper(quantity: .calmWind(units), value: $model.settings.calmWindMS)
+            } header: {
+                Text("Dew and frost")
+            } footer: {
+                Text("Rainfly on when the air comes this close to its dew point under a clear sky and calm air, all three in the same hour. Below freezing it is frost.")
+            }
+            Section {
+                QuantityStepper(quantity: .cold(units), value: $model.settings.coldC)
+            } header: {
+                Text("Cold")
+            } footer: {
+                Text("Rainfly on when the night drops below this, since the fly keeps the tent warmer.")
+            }
+            Section {
+                QuantityStepper(quantity: .ventHumidity, value: $model.settings.ventHumidity)
+            } header: {
+                Text("Vents")
+            } footer: {
+                Text("With the fly on, suggests opening the vents when the humidity reaches this or the air is calm.")
+            }
+            Section {
+                Button("Reset to defaults") {
+                    model.settings = model.settings.resettingThresholds()
+                }
+                .disabled(model.settings == model.settings.resettingThresholds())
+            } footer: {
+                Text("Storms always put the fly on and have no setting.")
+            }
+        }
+        .navigationTitle("Checks")
+    }
 }
 
 /// One setting, stepped in its shown unit and stored in °C, m/s or a fraction.

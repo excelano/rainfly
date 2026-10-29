@@ -60,14 +60,14 @@ struct VerdictTextTests {
 
     @Test func clearNightReads() {
         let words = text(F.night())
-        #expect(words.headline == "Fly off")
+        #expect(words.headline == "Rainfly off")
         #expect(words.reason == "Clear, dry, mild.")
         #expect(words.notes.isEmpty)
     }
 
     @Test func reasonsNameTheHeadlineAndItsTime() {
         let rain = text(F.night { d in F.hour(d, chance: d == F.at(1, 2) ? 0.35 : 0) })
-        #expect(rain.headline == "Fly on")
+        #expect(rain.headline == "Rainfly on")
         #expect(plain(rain.reason) == "Rain 35% after 2 AM")
 
         let storm = text(F.night { d in F.hour(d, storm: d == F.at(0, 23)) })
@@ -77,9 +77,9 @@ struct VerdictTextTests {
         #expect(plain(morning.reason) == "Morning rain 40% at 7 AM")
 
         let cold = text(F.night { F.hour($0, temp: 8, dewPoint: 0) })
-        #expect(plain(cold.reason) == "Below 10° by 8 PM")
+        #expect(plain(cold.reason) == "Below 10° by 8 PM: the fly holds warmth")
         let coldF = text(F.night { F.hour($0, temp: 8, dewPoint: 0) }, fahrenheit: true)
-        #expect(plain(coldF.reason) == "Below 50° by 8 PM")
+        #expect(plain(coldF.reason) == "Below 50° by 8 PM: the fly holds warmth")
     }
 
     @Test func notesForDewThatDries() {

@@ -3,6 +3,7 @@
 // Built with AI assistance (Claude, Anthropic)
 
 import SwiftUI
+import WatchConnectivity
 
 struct SettingsView: View {
     @Environment(ForecastModel.self) private var model
@@ -41,27 +42,26 @@ struct SettingsView: View {
                     Text("mph").tag(true)
                 }
             }
-            Section("Triggers") {
-                QuantityRow(quantity: .rainChance, value: $model.settings.rainChance)
-                QuantityRow(quantity: .morningRainChance, value: $model.settings.morningRainChance)
-                QuantityRow(quantity: .windRain(units), value: $model.settings.windRainMS)
-                QuantityRow(quantity: .dewSpread(units), value: $model.settings.dewSpreadC)
-                QuantityRow(quantity: .clearSky, value: $model.settings.clearSky)
-                QuantityRow(quantity: .calmWind(units), value: $model.settings.calmWindMS)
-                QuantityRow(quantity: .cold(units), value: $model.settings.coldC)
-                QuantityRow(quantity: .ventHumidity, value: $model.settings.ventHumidity)
-                Button("Reset to defaults") {
-                    model.settings = model.settings.resettingThresholds()
+            Section {
+                NavigationLink("Checks") {
+                    ChecksSettingsView()
                 }
-                .disabled(model.settings == model.settings.resettingThresholds())
+            } footer: {
+                Text("When each check puts the fly on.")
             }
             Section {
-                Toggle("Pressure watch", isOn: $model.preferences.pressureWatch)
+                Toggle("Pressure alert", isOn: $model.preferences.pressureWatch)
                     .onChange(of: model.preferences.pressureWatch) {
                         if model.preferences.pressureWatch { Task { await PressureWatch.requestPermission() } }
                     }
             } footer: {
                 Text("Warns overnight when the pressure falls fast and the fly is off. \(PressureWatch.status)")
+            }
+            if WCSession.isSupported(), WCSession.default.isCompanionAppInstalled {
+                Section {
+                } footer: {
+                    Text("Camps, the trip, checks and units are shared with Rainfly on your iPhone.")
+                }
             }
         }
         .navigationTitle("Settings")
@@ -97,6 +97,62 @@ struct SettingsView: View {
     }
 
     private static let defaultBagRatingC = 5.0
+}
+
+struct ChecksSettingsView: View {
+    @Environment(ForecastModel.self) private var model
+
+    var body: some View {
+        @Bindable var model = model
+        let units = model.preferences.units
+        List {
+            Section {
+                QuantityRow(quantity: .rainChance, value: $model.settings.rainChance)
+            } header: {
+                Text("Rain")
+            }
+            Section {
+                QuantityRow(quantity: .morningRainChance, value: $model.settings.morningRainChance)
+            } header: {
+                Text("Morning rain")
+            } footer: {
+                Text("From sunrise until you break camp.")
+            }
+            Section {
+                QuantityRow(quantity: .windRain(units), value: $model.settings.windRainMS)
+            } header: {
+                Text("Wind-driven rain")
+            } footer: {
+                Text("With any chance of rain.")
+            }
+            Section {
+                QuantityRow(quantity: .dewSpread(units), value: $model.settings.dewSpreadC)
+                QuantityRow(quantity: .clearSky, value: $model.settings.clearSky)
+                QuantityRow(quantity: .calmWind(units), value: $model.settings.calmWindMS)
+            } header: {
+                Text("Dew and frost")
+            } footer: {
+                Text("All three in the same hour. Below freezing it is frost.")
+            }
+            Section {
+                QuantityRow(quantity: .cold(units), value: $model.settings.coldC)
+            } header: {
+                Text("Cold")
+            }
+            Section {
+                QuantityRow(quantity: .ventHumidity, value: $model.settings.ventHumidity)
+            } header: {
+                Text("Vents")
+            } footer: {
+                Text("Suggests opening the vents with the fly on.")
+            }
+            Button("Reset to defaults") {
+                model.settings = model.settings.resettingThresholds()
+            }
+            .disabled(model.settings == model.settings.resettingThresholds())
+        }
+        .navigationTitle("Checks")
+    }
 }
 
 private struct QuantityRow: View {

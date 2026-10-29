@@ -30,7 +30,7 @@ struct VerdictView: View {
                 NavigationLink {
                     CampsView()
                 } label: {
-                    Image(systemName: "list.bullet")
+                    Image(systemName: "tent")
                 }
                 .accessibilityLabel("Camps")
             }
@@ -70,10 +70,15 @@ private struct VerdictContent: View {
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
-                Text("\(text.night.location.name) · \(VerdictText.age(since: text.night.fetchedAt, at: now))")
+                Text("\(text.night.location.title) · \(VerdictText.age(since: text.night.fetchedAt, at: now))")
                     .font(.caption2)
                     .foregroundStyle(VerdictText.staleness(since: text.night.fetchedAt, at: now).color)
                     .padding(.top, 4)
+                Label("All checks", systemImage: "chevron.right")
+                    .labelStyle(TrailingIcon())
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.accentColor)
+                    .padding(.top, 6)
             }
             .frame(maxWidth: .infinity)
             .accessibilityElement(children: .combine)
@@ -82,9 +87,19 @@ private struct VerdictContent: View {
     }
 }
 
+private struct TrailingIcon: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 4) {
+            configuration.title
+            configuration.icon.imageScale(.small)
+        }
+    }
+}
+
 private struct ProblemView: View {
     @Environment(ForecastModel.self) private var model
     let message: String
+    @State private var isAddingCamp = false
 
     var body: some View {
         ScrollView {
@@ -98,6 +113,15 @@ private struct ProblemView: View {
                     .multilineTextAlignment(.center)
                 Button("Try again") {
                     Task { await model.refresh() }
+                }
+                Button("Add a camp") { isAddingCamp = true }
+            }
+        }
+        .sheet(isPresented: $isAddingCamp) {
+            NavigationStack {
+                AddCampView { camp in
+                    isAddingCamp = false
+                    if let camp { Task { await model.show(camp.name) } }
                 }
             }
         }
