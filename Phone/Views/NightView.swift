@@ -17,6 +17,14 @@ struct NightView<Extra: View>: View {
 
     private var shownPeriod: String { period ?? text.period(at: now) }
 
+    private var overnight: String {
+        switch shownPeriod {
+        case "Tonight": "Overnight tonight"
+        case "This morning": "Overnight last night"
+        default: "Overnight \(shownPeriod)"
+        }
+    }
+
     private var window: NightWindow { NightWindow(text.night, packByMinutes: text.settings.packByMinutes) }
 
     var body: some View {
@@ -41,7 +49,7 @@ struct NightView<Extra: View>: View {
                     }
                 }
             }
-            Section(shownPeriod == "Tonight" ? "Overnight tonight" : "Overnight") {
+            Section(overnight) {
                 if let low = window.low {
                     LabeledContent("Night low", value: text.degrees(low))
                 }
