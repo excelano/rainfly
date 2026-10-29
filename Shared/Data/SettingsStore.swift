@@ -35,6 +35,7 @@ struct Preferences: Codable, Equatable, Sendable {
     var pressureWatch = true
     /// The iPhone's dew diary; it stays on the device and is not synced.
     var dewDiary = false
+    var diaryReminder = true
     /// Whether answered diary nights are shared with Excelano, under `diaryID`.
     var shareDiary = false
     /// Made the first time sharing is turned on, and replaced when the user asks for a new one.
@@ -48,6 +49,7 @@ struct Preferences: Codable, Equatable, Sendable {
         units = try c.decodeIfPresent(DisplayUnits.self, forKey: .units) ?? .locale
         pressureWatch = try c.decodeIfPresent(Bool.self, forKey: .pressureWatch) ?? true
         dewDiary = try c.decodeIfPresent(Bool.self, forKey: .dewDiary) ?? false
+        diaryReminder = try c.decodeIfPresent(Bool.self, forKey: .diaryReminder) ?? true
         shareDiary = try c.decodeIfPresent(Bool.self, forKey: .shareDiary) ?? false
         diaryID = try c.decodeIfPresent(UUID.self, forKey: .diaryID)
     }

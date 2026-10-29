@@ -8,6 +8,7 @@ import WatchConnectivity
 struct SettingsScreen: View {
     @Environment(ForecastModel.self) private var model
     @Environment(\.diaryRecorder) private var recorder
+    @AppStorage("welcomed") private var welcomed = true
 
     var body: some View {
         @Bindable var model = model
@@ -51,16 +52,33 @@ struct SettingsScreen: View {
             }
             Section {
                 Toggle("Dew diary", isOn: $model.preferences.dewDiary)
+                    .onChange(of: model.preferences.dewDiary) {
+                        if model.preferences.dewDiary, model.preferences.diaryReminder {
+                            Task { await DiaryReminder.requestPermission() }
+                        } else {
+                            DiaryReminder.cancel()
+                        }
+                    }
+                if model.preferences.dewDiary {
+                    Toggle("Morning reminder", isOn: $model.preferences.diaryReminder)
+                        .onChange(of: model.preferences.diaryReminder) {
+                            if model.preferences.diaryReminder {
+                                Task { await DiaryReminder.requestPermission() }
+                            } else {
+                                DiaryReminder.cancel()
+                            }
+                        }
+                }
                 if model.preferences.dewDiary, let recorder {
                     ShareToggle(recorder: recorder)
                 }
                 if let recorder, model.preferences.dewDiary || !recorder.diary.nights.isEmpty {
-                    NavigationLink("Nights and suggestions") {
+                    NavigationLink("Open the dew diary") {
                         DiaryScreen(recorder: recorder)
                     }
                 }
             } footer: {
-                Text("Each morning, note what you found on something left under the sky, and see how the dew forecast did at your campsites.")
+                Text("Each morning, note what you found on something left under the sky, and see how the dew forecast did at your campsites. The reminder comes half an hour before you break camp.")
             }
             Section {
                 Toggle("Pressure alert", isOn: $model.preferences.pressureWatch)
@@ -69,6 +87,9 @@ struct SettingsScreen: View {
                     }
             } footer: {
                 Text("Warns overnight when the pressure falls fast and the rainfly is off. iOS gives the phone only occasional time in the background, so this is a rough check. While your watch has its own pressure alert on, the phone stays quiet and the watch warns. \(PressureWatch.status)")
+            }
+            Section {
+                Button("Show the welcome again") { welcomed = false }
             }
             if WCSession.isSupported(), WCSession.default.isWatchAppInstalled {
                 Section {

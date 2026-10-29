@@ -156,6 +156,13 @@ struct DewDiarySuggestionTests {
         #expect(diary(allWet).suggestedDewSpread(settings: Settings(), units: metric) == nil)
     }
 
+    @Test func progressCountsOpenSkyNightsOfEachKind() {
+        let some = diary(Array(nearMisses.prefix(4)) + [(night("trees", spread: 5), .wet, false)])
+        #expect(some.openSkyCounts.wet + some.openSkyCounts.dry == 4)
+        #expect(!some.canSuggest)
+        #expect(diary(nearMisses).canSuggest)
+    }
+
     @Test func noSuggestionWhenTheCurrentSpreadIsBest() {
         var settings = Settings()
         settings.dewSpreadC = 3.5

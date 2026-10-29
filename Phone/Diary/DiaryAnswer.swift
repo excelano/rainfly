@@ -9,34 +9,51 @@ struct DiaryAnswerRows: View {
     let recorder: DiaryRecorder
     let night: DiaryNight
     var answered: () -> Void = {}
-    @State private var openSky: Bool
-
-    init(recorder: DiaryRecorder, night: DiaryNight, answered: @escaping () -> Void = {}) {
-        self.recorder = recorder
-        self.night = night
-        self.answered = answered
-        _openSky = State(initialValue: night.observation?.openSky ?? true)
-    }
+    @State private var found: DewObservation.Kind?
 
     var body: some View {
-        Toggle("Under open sky", isOn: $openSky)
-        ForEach(DewObservation.Kind.allCases, id: \.self) { kind in
+        if let found {
+            Text("Where was it?")
+                .font(.headline)
             Button {
-                recorder.observe(kind, openSky: openSky, night: night)
-                answered()
+                record(found, openSky: true)
             } label: {
-                LabeledContent {
-                    if night.observation?.kind == kind {
-                        Image(systemName: "checkmark")
-                            .accessibilityLabel("Chosen")
+                LabeledContent("Under open sky") { Text("nothing overhead") }
+            }
+            Button {
+                record(found, openSky: false)
+            } label: {
+                LabeledContent("Under cover") { Text("trees, a roof or an awning") }
+            }
+            Button("Back") { self.found = nil }
+        } else {
+            ForEach(DewObservation.Kind.allCases, id: \.self) { kind in
+                Button {
+                    if kind == .rain || kind == .notChecked {
+                        record(kind, openSky: night.observation?.openSky ?? true)
                     } else {
-                        Text(kind.detail)
+                        found = kind
                     }
                 } label: {
-                    Text(kind.title)
+                    LabeledContent {
+                        if night.observation?.kind == kind {
+                            Image(systemName: "checkmark")
+                                .accessibilityLabel("Chosen")
+                        } else {
+                            Text(kind.detail)
+                        }
+                    } label: {
+                        Text(kind.title)
+                    }
                 }
             }
         }
+    }
+
+    private func record(_ kind: DewObservation.Kind, openSky: Bool) {
+        recorder.observe(kind, openSky: openSky, night: night)
+        found = nil
+        answered()
     }
 }
 

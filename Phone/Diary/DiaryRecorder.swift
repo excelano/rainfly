@@ -34,6 +34,7 @@ final class DiaryRecorder {
     func observe(_ kind: DewObservation.Kind, openSky: Bool, night: DiaryNight) {
         diary.observe(DewObservation(kind: kind, openSky: openSky, at: .now), campName: night.campName, on: night.date)
         save()
+        DiaryReminder.cancel()
         Task { await share() }
     }
 
@@ -119,6 +120,10 @@ final class DiaryRecorder {
         guard model.preferences.dewDiary else { return }
         diary.record(night)
         save()
+        let date = ForecastCache.date(of: night)
+        if model.preferences.diaryReminder, date == model.nightDate(), night.location.name == model.camps.campName(on: date) {
+            Task { await DiaryReminder.schedule(after: night, packByMinutes: model.settings.packByMinutes) }
+        }
     }
 
     private func save() {

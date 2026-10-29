@@ -18,20 +18,25 @@ struct DiaryScreen: View {
         List {
             if tally.judged + tally.lightDew > 0 {
                 Section {
-                    LabeledContent("Caught", value: "\(tally.caught)")
-                    LabeledContent("Clear", value: "\(tally.clear)")
-                    LabeledContent("Missed", value: "\(tally.missed)")
-                    LabeledContent("False alarms", value: "\(tally.falseAlarms)")
-                    LabeledContent("Light dew", value: tally.lightDew == 0 ? "0" : "\(tally.lightDew), \(tally.lightDewFlagged) flagged")
+                    LabeledContent("Dew forecast, dew found", value: "\(tally.caught)")
+                    LabeledContent("No dew forecast, none found", value: "\(tally.clear)")
+                    LabeledContent("Dew found, not forecast", value: "\(tally.missed)")
+                    LabeledContent("Dew forecast, none found", value: "\(tally.falseAlarms)")
+                    LabeledContent("Light dew", value: tally.lightDew == 0 ? "0" : "\(tally.lightDew), \(tally.lightDewFlagged) forecast as dew")
                 } header: {
                     Text("How the forecast did")
                 } footer: {
-                    Text("Caught and clear are nights the dew check called right. Light dew is marginal, so either call counts as fine; rain nights are left out.")
+                    Text("The first two are nights the dew forecast got right. Light dew is borderline, so either call counts as fine, and rainy nights are left out.")
                 }
             }
             if let suggestion = recorder.diary.suggestedDewSpread(settings: settings, units: units) {
                 SuggestionSection(suggestion: suggestion, units: units) {
                     model.settings.dewSpreadC = suggestion.suggested.spreadC
+                }
+            } else {
+                Section("Suggested setting") {
+                    Text(progress)
+                        .foregroundStyle(.secondary)
                 }
             }
             if model.preferences.dewDiary {
@@ -39,7 +44,7 @@ struct DiaryScreen: View {
             }
             Section {
                 if recorder.diary.nights.isEmpty {
-                    Text("No nights yet. A night appears here once the diary has kept a forecast for it.")
+                    Text("Tonight's forecast goes in when Rainfly fetches it. Tomorrow after sunrise, the main screen asks what you found.")
                         .foregroundStyle(.secondary)
                 }
                 ForEach(recorder.diary.nights.reversed(), id: \.id) { night in
@@ -56,6 +61,10 @@ struct DiaryScreen: View {
                 }
             } header: {
                 Text("Nights")
+            } footer: {
+                if !recorder.diary.nights.isEmpty {
+                    Text("Tap a night to answer or change it.")
+                }
             }
         }
         .navigationTitle("Dew diary")
@@ -78,6 +87,17 @@ struct DiaryScreen: View {
             }
             .presentationDetents([.medium, .large])
         }
+    }
+}
+
+extension DiaryScreen {
+    private var progress: String {
+        let counts = recorder.diary.openSkyCounts
+        let nights = counts.wet + counts.dry
+        if recorder.diary.canSuggest {
+            return "The current dew-point gap already does best on your nights."
+        }
+        return "\(nights) of \(DewDiary.suggestionNights) open-sky nights so far, \(counts.wet) wet and \(counts.dry) dry. A suggestion needs at least \(DewDiary.suggestionNights), with both wet and dry mornings."
     }
 }
 
@@ -139,7 +159,7 @@ private struct NightRow: View {
             let sunrise = night.forecasts.last?.sunrise ?? .distantPast
             return Date.now < sunrise ? "Waiting for the morning" : "Not answered"
         }
-        let place = observation.openSky ? "" : ", under trees"
+        let place = observation.openSky ? "" : ", under cover"
         return observation.kind == .notChecked ? "Not checked" : "Found: \(observation.kind.title.lowercased())\(place)"
     }
 
@@ -152,19 +172,19 @@ private struct NightRow: View {
 
     private var verdict: String? {
         switch judgement?.outcome {
-        case .caught?: "Caught"
-        case .clear?: "Clear"
-        case .missed?: "Missed · \(cause)"
-        case .falseAlarm?: "False alarm · \(cause)"
+        case .caught?: "Right · dew forecast, dew found"
+        case .clear?: "Right · no dew forecast, none found"
+        case .missed?: "Dew found, not forecast · \(cause)"
+        case .falseAlarm?: "Dew forecast, none found · \(cause)"
         case nil: nil
         }
     }
 
     private var cause: String {
         switch judgement?.cause {
-        case .forecast?: "the forecast missed"
-        case .settings?: "the settings missed"
-        case nil: "cause not known yet"
+        case .forecast?: "the forecast was wrong about the night"
+        case .settings?: "the forecast was right, but the dew-point gap setting wasn't"
+        case nil: "waiting for WeatherKit's record of the night"
         }
     }
 

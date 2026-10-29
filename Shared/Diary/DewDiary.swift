@@ -80,14 +80,9 @@ struct DewDiary: Codable, Equatable {
     /// value the setting can hold in `units`, when it beats the current one. Catching moisture
     /// counts first, fewer false alarms second, and nearness to the current value breaks ties.
     func suggestedDewSpread(settings: Settings, units: DisplayUnits) -> SpreadSuggestion? {
-        let judged = nights.compactMap { night -> (forecast: NightForecast, wet: Bool)? in
-            guard let observation = night.observation, observation.openSky,
-                  let wet = observation.kind.foundMoisture, let forecast = night.pitched
-            else { return nil }
-            return (forecast, wet)
-        }
+        let judged = openSkyNights
         let wetNights = judged.filter(\.wet).count
-        guard judged.count >= Self.suggestionNights, wetNights > 0, wetNights < judged.count else { return nil }
+        guard canSuggest else { return nil }
 
         let quantity = Quantity.dewSpread(units)
         let current = quantity.display(settings.dewSpreadC)
@@ -110,6 +105,25 @@ struct DewDiary: Codable, Equatable {
               (best.score.caught, -best.score.falseAlarms) > (now.caught, -now.falseAlarms)
         else { return nil }
         return SpreadSuggestion(suggested: best.score, current: now, wetNights: wetNights)
+    }
+
+    var openSkyCounts: (wet: Int, dry: Int) {
+        let wet = openSkyNights.filter(\.wet).count
+        return (wet, openSkyNights.count - wet)
+    }
+
+    var canSuggest: Bool {
+        let counts = openSkyCounts
+        return counts.wet + counts.dry >= Self.suggestionNights && counts.wet > 0 && counts.dry > 0
+    }
+
+    private var openSkyNights: [(forecast: NightForecast, wet: Bool)] {
+        nights.compactMap { night in
+            guard let observation = night.observation, observation.openSky,
+                  let wet = observation.kind.foundMoisture, let forecast = night.pitched
+            else { return nil }
+            return (forecast, wet)
+        }
     }
 
     private func index(of campName: String, on date: NightDate) -> Int? {
