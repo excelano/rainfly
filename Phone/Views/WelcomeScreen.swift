@@ -18,10 +18,10 @@ struct WelcomeScreen: View {
                     Text("Rainfly")
                         .font(.largeTitle.bold())
                         .frame(maxWidth: .infinity)
-                    Beat(symbol: "tent", title: "Should the rain fly go on tonight?",
+                    Beat(symbol: "tent", title: "Should the rainfly go on tonight?",
                          detail: "Rainfly reads the night's forecast for your campsite and answers with Rainfly on or Rainfly off, and the reason.")
                     Beat(symbol: "checklist", title: "Seven checks",
-                         detail: "Storms, rain, wind-driven rain, frost, dew, morning rain and cold. Any one of them puts the fly on. Tap a check to see why it matters.")
+                         detail: "Storms, rain, wind-driven rain, frost, dew, morning rain and cold. Any one of them puts the rainfly on. Tap a check to see why it matters.")
                     Beat(symbol: "antenna.radiowaves.left.and.right.slash", title: "Ready offline",
                          detail: "Forecasts stay on your iPhone, so the answer holds once the signal is gone. Plan a trip to download each night ahead.")
                 }

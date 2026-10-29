@@ -44,8 +44,8 @@ struct VerdictWidget: Widget {
             VerdictWidgetView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
-        .configurationDisplayName("Rain fly")
-        .description("Tonight's rain fly verdict, and when the tent will be dry.")
+        .configurationDisplayName("Rainfly")
+        .description("Tonight's rainfly verdict, and when the tent will be dry.")
         .supportedFamilies(Self.families)
     }
 

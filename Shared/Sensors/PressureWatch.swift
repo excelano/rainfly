@@ -16,7 +16,7 @@ struct PressureWatch {
     let sample: @MainActor () async -> Double?
     let warn: @MainActor (String) async -> Void
 
-    static let message = "Pressure dropping fast — consider the fly."
+    static let message = "Pressure dropping fast — consider the rainfly."
 
     static func live() -> PressureWatch {
         PressureWatch(store: Store(name: "pressure"), sample: { await Barometer().read() }, warn: post)

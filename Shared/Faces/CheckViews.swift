@@ -64,7 +64,7 @@ struct CheckDetail<Thresholds: View>: View {
             Section("Why it matters") {
                 Text(VerdictText.why(trigger))
             }
-            Section("When it puts the fly on") {
+            Section("When it puts the rainfly on") {
                 Text(text.rule(trigger))
                 if trigger != .storm {
                     NavigationLink("Change the thresholds") {

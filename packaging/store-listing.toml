@@ -8,7 +8,7 @@
 # description 4,000, apple-review-notes 4,000.
 
 apple-review-notes = """
-Rainfly is for people sleeping in a tent. It reads the overnight forecast for the campsite and says whether the rain fly should go on tonight, "Rainfly on" or "Rainfly off", with the reason. It is a full app on iPhone and a full app on Apple Watch; either works without the other, and with both installed they keep the same camps, trip and settings. Nothing has to be signed into, and there is no account.
+Rainfly is for people sleeping in a tent. It reads the overnight forecast for the campsite and says whether the rainfly should go on tonight, "Rainfly on" or "Rainfly off", with the reason. It is a full app on iPhone and a full app on Apple Watch; either works without the other, and with both installed they keep the same camps, trip and settings. Nothing has to be signed into, and there is no account.
 
 Forecasts come from WeatherKit, so the device needs a connection before the first verdict appears. A camp's forecast is kept on the device after that.
 
@@ -39,17 +39,17 @@ website = "https://github.com/excelano/rainfly"
 support = "https://github.com/excelano/rainfly"
 privacy = "https://excelano.com/legal/#rainfly"
 description = """
-Rainfly answers one question at camp: should the rain fly go on tonight?
+Rainfly answers one question at camp: should the rainfly go on tonight?
 
 It reads the night's forecast for your campsite and gives a plain yes or no with the reason: "Dew likely by 4 AM", "Rain 35% after 2 AM", "Storms possible at 11 PM", or "Clear, dry, mild." In the morning it estimates when the tent will be dry enough to pack.
 
-Every check stands on its own, and any one of them puts the fly on: thunderstorms, rain overnight, rain carried by strong wind, dew or frost on a clear and calm night, rain in the morning before you break camp, and a cold night. Each comes with the time it fires, alongside the night's low, the closest the air comes to its dew point, and the highest chance of rain. Rainfly also suggests opening the vents on a damp night with the fly on, and warns when the low falls below your sleeping bag's comfort rating.
+Every check stands on its own, and any one of them puts the rainfly on: thunderstorms, rain overnight, rain carried by strong wind, dew or frost on a clear and calm night, rain in the morning before you break camp, and a cold night. Each comes with the time it fires, alongside the night's low, the closest the air comes to its dew point, and the highest chance of rain. Rainfly also suggests opening the vents on a damp night with the rainfly on, and warns when the low falls below your sleeping bag's comfort rating.
 
 Plan a trip and it follows you. Add camps by searching for a campground, park or town, from where you stand, by dropping them on a map, or by typing coordinates. Plan which camp you sleep at each night, download the trip while you have signal, and each evening Rainfly shows that night's camp, with or without a connection. On iPhone, every downloaded night shows its verdict at a glance.
 
 Rainfly runs on iPhone and on Apple Watch, and each works on its own. With both, your camps, trip and settings stay the same on phone and wrist, and a trip downloaded on the phone at home is waiting on the watch at the trailhead.
 
-See the verdict without opening the app: a widget on the Home Screen or Lock Screen, and a complication on the watch face, showing the dry-by time in the morning. With the overnight pressure alert on, Rainfly reads the barometer through the night and alerts you when the pressure falls fast while the fly is off. It samples a few times an hour at most, as the system allows, so it is an early hint rather than a weather station.
+See the verdict without opening the app: a widget on the Home Screen or Lock Screen, and a complication on the watch face, showing the dry-by time in the morning. With the overnight pressure alert on, Rainfly reads the barometer through the night and alerts you when the pressure falls fast while the rainfly is off. It samples a few times an hour at most, as the system allows, so it is an early hint rather than a weather station.
 
 Keep a dew diary on iPhone to check the dew forecast against your own mornings. Each morning, note what you found outside; Rainfly shows how often it called the dew right, whether a miss was the forecast's or the settings', and suggests a dew-point gap that suits your campsites. If you like, share your diary to help improve the dew forecast for everyone; it is off unless you turn it on.
 
@@ -63,5 +63,5 @@ Weather data is provided by Apple Weather.
 [locales."en-us".apple]
 name = "Rainfly"
 subtitle = "Rain fly on or off tonight?"
-promotional-text = "Should the rain fly go on tonight? A yes or no for your campsite, with the reason and the time, plus when the tent will be dry in the morning. Plans a whole trip."
+promotional-text = "Should the rainfly go on tonight? A yes or no for your campsite, with the reason and the time, plus when the tent will be dry in the morning. Plans a whole trip."
 keywords = "tent,camping,backpacking,overnight,dew,frost,condensation,campsite,forecast,weather,hiking,trip"

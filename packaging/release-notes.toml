@@ -6,5 +6,5 @@ version = "1.0.2"
 
 [locales."en-us"]
 whats-new = """
-The first release of Rainfly: whether the rain fly goes on tonight, on your iPhone and your Apple Watch. On iPhone, a dew diary checks the dew forecast against your own mornings, and you can choose to share it with Excelano to help improve the forecast for everyone.
+The first release of Rainfly: whether the rainfly goes on tonight, on your iPhone and your Apple Watch. On iPhone, a dew diary checks the dew forecast against your own mornings, and you can choose to share it with Excelano to help improve the forecast for everyone.
 """

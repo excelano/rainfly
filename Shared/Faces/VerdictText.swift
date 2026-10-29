@@ -47,7 +47,7 @@ struct VerdictText {
         case .frost: "Frost likely by \(time)"
         case .dew: "Dew likely by \(time)"
         case .morningRain: "Morning rain \(chance(at: firing.at)) at \(time)"
-        case .cold: "Below \(degrees(settings.coldC)) by \(time): the fly holds warmth"
+        case .cold: "Below \(degrees(settings.coldC)) by \(time): the rainfly holds warmth"
         }
     }
 
@@ -88,7 +88,7 @@ struct VerdictText {
         return switch trigger {
         case .storm: verdict.firing(.storm) == nil ? "None forecast" : "Thunder forecast"
         case .rain: chance(window.nightHours, settings.rainChance) ?? "No forecast hours"
-        case .morningRain: chance(window.morningHours, settings.morningRainChance) ?? "Covered by the overnight rain check"
+        case .morningRain: chance(window.morningHours, settings.morningRainChance) ?? "Break camp is before sunrise"
         case .windRain:
             (window.nightHours.map { max($0.windMS, $0.gustMS ?? 0) }.max().map { "Strongest \(speed($0)) · " } ?? "")
                 + "Rainfly on above \(speed(settings.windRainMS)) with rain"
@@ -110,7 +110,7 @@ struct VerdictText {
         case .windRain: "Rainfly on when the wind or its gusts go above \(speed(settings.windRainMS)) in an hour with any chance of rain."
         case .frost: "Rainfly on when \(gap), with \(sky), at or below freezing."
         case .dew: "Rainfly on when \(gap), with \(sky), above freezing."
-        case .morningRain: "Rainfly on when an hour starting between sunrise and \(packBy) has a chance of rain of \(percent(settings.morningRainChance)) or above. When no hour starts in that time, the overnight rain check covers it."
+        case .morningRain: "Rainfly on when an hour between sunrise and \(packBy) has a chance of rain of \(percent(settings.morningRainChance)) or above."
         case .cold: "Rainfly on when the night drops below \(degrees(settings.coldC))."
         }
     }
@@ -120,10 +120,10 @@ struct VerdictText {
         case .storm: "Thunderstorms bring sudden downpours and gusts, often with little warning."
         case .rain: "Rain falls straight through the mesh of an inner tent and soaks what is inside."
         case .windRain: "Wind drives rain sideways under any gap, so even a small chance of rain matters when it blows."
-        case .frost: "On a clear, calm night the tent cools below the air, and moisture freezes onto it. The fly takes the frost, and the inner tent stays dry."
-        case .dew: "On a clear, calm night the tent cools below the air, and dew settles on it and soaks through mesh. The fly takes the dew, and the inner tent stays dry."
-        case .morningRain: "Rain before you break camp means packing a wet tent. With the fly on, the inner tent packs dry."
-        case .cold: "The fly holds a layer of warmer air around the inner tent and blocks the breeze, keeping the tent a few degrees warmer."
+        case .frost: "On a clear, calm night the tent cools below the air, and moisture freezes onto it. The rainfly takes the frost, and the inner tent stays dry."
+        case .dew: "On a clear, calm night the tent cools below the air, and dew settles on it and soaks through mesh. The rainfly takes the dew, and the inner tent stays dry."
+        case .morningRain: "Rain before you break camp means packing a wet tent. With the rainfly on, the inner tent packs dry."
+        case .cold: "The rainfly holds a layer of warmer air around the inner tent and blocks the breeze, keeping the tent a few degrees warmer."
         }
     }
 

@@ -47,7 +47,7 @@ struct SettingsScreen: View {
                     ChecksSettingsScreen()
                 }
             } footer: {
-                Text("When each check puts the fly on.")
+                Text("When each check puts the rainfly on.")
             }
             Section {
                 Toggle("Dew diary", isOn: $model.preferences.dewDiary)
@@ -68,7 +68,7 @@ struct SettingsScreen: View {
                         if model.preferences.pressureWatch { Task { await PressureWatch.requestPermission() } }
                     }
             } footer: {
-                Text("Warns overnight when the pressure falls fast and the fly is off. iOS gives the phone only occasional time in the background, so this is a rough check. While your watch has its own pressure alert on, the phone stays quiet and the watch warns. \(PressureWatch.status)")
+                Text("Warns overnight when the pressure falls fast and the rainfly is off. iOS gives the phone only occasional time in the background, so this is a rough check. While your watch has its own pressure alert on, the phone stays quiet and the watch warns. \(PressureWatch.status)")
             }
             if WCSession.isSupported(), WCSession.default.isWatchAppInstalled {
                 Section {
@@ -154,7 +154,7 @@ struct ChecksSettingsScreen: View {
             } header: {
                 Text("Cold")
             } footer: {
-                Text("Rainfly on when the night drops below this, since the fly keeps the tent warmer.")
+                Text("Rainfly on when the night drops below this, since the rainfly keeps the tent warmer.")
             }
             Section {
                 QuantityStepper(quantity: .ventHumidity, value: $model.settings.ventHumidity)
@@ -169,7 +169,7 @@ struct ChecksSettingsScreen: View {
                 }
                 .disabled(model.settings == model.settings.resettingThresholds())
             } footer: {
-                Text("Storms always put the fly on and have no setting.")
+                Text("Storms always put the rainfly on and have no setting.")
             }
         }
         .navigationTitle("Checks")

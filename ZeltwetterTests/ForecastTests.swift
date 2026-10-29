@@ -77,9 +77,9 @@ struct VerdictTextTests {
         #expect(plain(morning.reason) == "Morning rain 40% at 7 AM")
 
         let cold = text(F.night { F.hour($0, temp: 8, dewPoint: 0) })
-        #expect(plain(cold.reason) == "Below 10° by 8 PM: the fly holds warmth")
+        #expect(plain(cold.reason) == "Below 10° by 8 PM: the rainfly holds warmth")
         let coldF = text(F.night { F.hour($0, temp: 8, dewPoint: 0) }, fahrenheit: true)
-        #expect(plain(coldF.reason) == "Below 50° by 8 PM: the fly holds warmth")
+        #expect(plain(coldF.reason) == "Below 50° by 8 PM: the rainfly holds warmth")
     }
 
     @Test func notesForDewThatDries() {

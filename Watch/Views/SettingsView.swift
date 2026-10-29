@@ -47,7 +47,7 @@ struct SettingsView: View {
                     ChecksSettingsView()
                 }
             } footer: {
-                Text("When each check puts the fly on.")
+                Text("When each check puts the rainfly on.")
             }
             Section {
                 Toggle("Pressure alert", isOn: $model.preferences.pressureWatch)
@@ -55,7 +55,7 @@ struct SettingsView: View {
                         if model.preferences.pressureWatch { Task { await PressureWatch.requestPermission() } }
                     }
             } footer: {
-                Text("Warns overnight when the pressure falls fast and the fly is off. \(PressureWatch.status)")
+                Text("Warns overnight when the pressure falls fast and the rainfly is off. \(PressureWatch.status)")
             }
             if WCSession.isSupported(), WCSession.default.isCompanionAppInstalled {
                 Section {

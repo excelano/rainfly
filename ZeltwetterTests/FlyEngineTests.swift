@@ -85,9 +85,15 @@ struct FlyEngineTests {
         #expect(!verdict.flyOn)
     }
 
-    @Test func hourHoldingSunriseBelongsToTheNight() {
+    @Test func hourHoldingSunriseCountsForTheNightAndTheMorning() {
         let verdict = evaluate(F.night { d in F.hour(d, chance: d == F.at(1, 5) ? 0.5 : 0) })
-        #expect(verdict.firings == [Firing(trigger: .rain, at: F.at(1, 5))])
+        #expect(verdict.firings == [Firing(trigger: .rain, at: F.at(1, 5)), Firing(trigger: .morningRain, at: F.at(1, 5))])
+
+        var settings = Settings()
+        settings.packByMinutes = 6 * 60
+        let lightRain = F.night { d in F.hour(d, chance: d == F.at(1, 5) ? 0.1 : 0) }
+        settings.morningRainChance = 0.1
+        #expect(triggers(evaluate(lightRain, settings)) == [.morningRain])
     }
 
     @Test func hourHoldingSunsetBelongsToTheNight() {
