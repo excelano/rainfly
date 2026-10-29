@@ -124,21 +124,21 @@ struct ChecksSettingsScreen: View {
             } header: {
                 Text("Rain")
             } footer: {
-                Text("Rainfly on when any hour of the night reaches this chance of rain, or rain is forecast to fall.")
+                Text("Rainfly on when any hour of the night has a chance of rain at or above this, or rain is forecast to fall.")
             }
             Section {
                 QuantityStepper(quantity: .morningRainChance, value: $model.settings.morningRainChance)
             } header: {
                 Text("Morning rain")
             } footer: {
-                Text("The same, for the hours between sunrise and breaking camp.")
+                Text("The same, for the hours between sunrise and break camp.")
             }
             Section {
                 QuantityStepper(quantity: .windRain(units), value: $model.settings.windRainMS)
             } header: {
                 Text("Wind-driven rain")
             } footer: {
-                Text("Rainfly on when the wind or its gusts pass this in an hour with any chance of rain.")
+                Text("Rainfly on when the wind or its gusts go above this in an hour with any chance of rain.")
             }
             Section {
                 QuantityStepper(quantity: .dewSpread(units), value: $model.settings.dewSpreadC)
@@ -147,7 +147,7 @@ struct ChecksSettingsScreen: View {
             } header: {
                 Text("Dew and frost")
             } footer: {
-                Text("Rainfly on when the air comes this close to its dew point under a clear sky and calm air, all three in the same hour. Below freezing it is frost.")
+                Text("Rainfly on when the dew-point gap, the cloud cover and the wind are all within these in the same hour. At or below freezing it is frost.")
             }
             Section {
                 QuantityStepper(quantity: .cold(units), value: $model.settings.coldC)
@@ -161,7 +161,7 @@ struct ChecksSettingsScreen: View {
             } header: {
                 Text("Vents")
             } footer: {
-                Text("With the fly on, suggests opening the vents when the humidity reaches this or the air is calm.")
+                Text("With Rainfly on, suggests opening the vents when the humidity is at or above this, or the wind is below the calm setting under Dew and frost.")
             }
             Section {
                 Button("Reset to defaults") {

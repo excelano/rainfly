@@ -82,35 +82,35 @@ struct VerdictText {
 
     func summary(_ trigger: Trigger) -> String {
         let window = NightWindow(night, packByMinutes: settings.packByMinutes)
-        let gap = degreeSpan(settings.dewSpreadC)
-        let measured: String? = switch trigger {
-        case .storm: nil
-        case .rain: window.nightHours.map(\.precipChance).max().map { "Highest \(percent($0))" }
-        case .morningRain: window.morningHours.map(\.precipChance).max().map { "Highest \(percent($0))" }
-        case .windRain: window.nightHours.map { max($0.windMS, $0.gustMS ?? 0) }.max().map { "Strongest \(speed($0))" }
-        case .dew, .frost: window.closestSpread.map { "Closest gap \(degreeSpan($0))" }
-        case .cold: window.low.map { "Low \(degrees($0))" }
+        let chance = { (hours: [HourSample], threshold: Double) in
+            hours.map(\.precipChance).max().map { "Highest \(percent($0)) · Rainfly on at \(percent(threshold)) or above" }
         }
-        let threshold = switch trigger {
+        return switch trigger {
         case .storm: verdict.firing(.storm) == nil ? "None forecast" : "Thunder forecast"
-        case .rain, .morningRain: "on at \(percent(trigger == .rain ? settings.rainChance : settings.morningRainChance))"
-        case .windRain: "on over \(speed(settings.windRainMS)) with rain"
-        case .dew, .frost: "on within \(gap), clear and calm"
-        case .cold: "on below \(degrees(settings.coldC))"
+        case .rain: chance(window.nightHours, settings.rainChance) ?? "No forecast hours"
+        case .morningRain: chance(window.morningHours, settings.morningRainChance) ?? "Covered by the overnight rain check"
+        case .windRain:
+            (window.nightHours.map { max($0.windMS, $0.gustMS ?? 0) }.max().map { "Strongest \(speed($0)) · " } ?? "")
+                + "Rainfly on above \(speed(settings.windRainMS)) with rain"
+        case .dew, .frost:
+            (window.closestSpread.map { "Closest gap \(degreeSpan($0)) · " } ?? "")
+                + "Rainfly on at \(degreeSpan(settings.dewSpreadC)) or below, clear and calm"
+        case .cold:
+            (window.low.map { "Low \(degrees($0)) · " } ?? "") + "Rainfly on below \(degrees(settings.coldC))"
         }
-        return [measured, threshold].compactMap { $0 }.joined(separator: " · ")
     }
 
     func rule(_ trigger: Trigger) -> String {
-        let gap = degreeSpan(settings.dewSpreadC)
-        let sky = "cloud cover under \(percent(settings.clearSky)) and wind under \(speed(settings.calmWindMS))"
+        let gap = "the gap between the air and its dew point is \(degreeSpan(settings.dewSpreadC)) or below"
+        let sky = "cloud cover below \(percent(settings.clearSky)) and wind below \(speed(settings.calmWindMS))"
+        let packBy = clock(NightWindow(night, packByMinutes: settings.packByMinutes).packBy)
         return switch trigger {
         case .storm: "Rainfly on for a thunderstorm at any hour of the night or before you break camp."
-        case .rain: "Rainfly on when any hour of the night has a \(percent(settings.rainChance)) chance of rain or more, or rain is forecast to fall."
-        case .windRain: "Rainfly on when the wind or its gusts pass \(speed(settings.windRainMS)) in an hour with any chance of rain."
-        case .frost: "Rainfly on when the air comes within \(gap) of its dew point, with \(sky), at or below freezing."
-        case .dew: "Rainfly on when the air comes within \(gap) of its dew point, with \(sky), above freezing."
-        case .morningRain: "Rainfly on when an hour between sunrise and \(clock(NightWindow(night, packByMinutes: settings.packByMinutes).packBy)) has a \(percent(settings.morningRainChance)) chance of rain or more."
+        case .rain: "Rainfly on when any hour of the night has a chance of rain of \(percent(settings.rainChance)) or above, or rain is forecast to fall."
+        case .windRain: "Rainfly on when the wind or its gusts go above \(speed(settings.windRainMS)) in an hour with any chance of rain."
+        case .frost: "Rainfly on when \(gap), with \(sky), at or below freezing."
+        case .dew: "Rainfly on when \(gap), with \(sky), above freezing."
+        case .morningRain: "Rainfly on when an hour starting between sunrise and \(packBy) has a chance of rain of \(percent(settings.morningRainChance)) or above. When no hour starts in that time, the overnight rain check covers it."
         case .cold: "Rainfly on when the night drops below \(degrees(settings.coldC))."
         }
     }

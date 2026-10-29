@@ -144,7 +144,7 @@ struct ChecksSettingsView: View {
             } header: {
                 Text("Vents")
             } footer: {
-                Text("Suggests opening the vents with the fly on.")
+                Text("Suggests opening the vents with Rainfly on.")
             }
             Button("Reset to defaults") {
                 model.settings = model.settings.resettingThresholds()
