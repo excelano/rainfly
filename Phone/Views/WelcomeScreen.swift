@@ -55,8 +55,8 @@ struct WelcomeScreen: View {
                  detail: "Before you break camp, Rainfly reminds you and asks what you found on something left out overnight, such as a car windshield or a picnic table: dry, light dew, wet, frost or rain.")
             Beat(symbol: "slider.horizontal.3", title: "A setting tuned to you",
                  detail: "Rainfly counts the nights its dew forecast got right and wrong. After a few nights of both dry and wet mornings, it suggests a dew-point gap that suits where you camp.")
-            Beat(symbol: "lock", title: "Stays on your iPhone",
-                 detail: "The diary is kept on this iPhone. You can choose to share it with Excelano later, in Settings, to help improve the dew forecast.")
+            Beat(symbol: "icloud.and.arrow.up", title: "Shared to improve the forecast",
+                 detail: "Each night you answer is sent to Excelano to help improve the dew forecast, with the camp's position rounded to about 11 km and nothing about you. To keep the diary on this iPhone, turn off Share with Excelano in Settings.")
         } buttons: {
             if model.preferences.dewDiary {
                 Button {

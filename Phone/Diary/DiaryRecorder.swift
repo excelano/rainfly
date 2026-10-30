@@ -61,7 +61,9 @@ final class DiaryRecorder {
     /// Sends what needs sending, while the diary and sharing are both on.
     func share() async {
         let preferences = model.preferences
-        guard preferences.dewDiary, preferences.shareDiary, let diaryID = preferences.diaryID, !isSharing else { return }
+        guard preferences.dewDiary, preferences.shareDiary, !isSharing else { return }
+        let diaryID = preferences.diaryID ?? UUID()
+        if preferences.diaryID == nil { model.preferences.diaryID = diaryID }
         let due = diary.needingShare().compactMap { night in
             SharedNight(night, diaryID: diaryID, settings: model.settings, appVersion: Self.appVersion).map { (night, $0) }
         }

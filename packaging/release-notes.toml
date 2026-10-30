@@ -2,11 +2,11 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "1.0.3"
+version = "1.0.4"
 
 [locales."en-us"]
 whats-new = """
 Clearer from the first launch. A short welcome explains how Rainfly works and offers the dew diary. The verdict now reads Rainfly on or Rainfly off, and every check has its own weather symbol, says plainly whether it is expected, shows the night's value against its threshold, and opens to why it matters. Thresholds are grouped by check under Settings, Checks. Tapping a camp shows it without changing your trip, and morning rain now includes the hour of sunrise.
 
-Your iPhone and Apple Watch now merge camps, the trip and settings, so changes made on both while they were apart are all kept. The dew diary gains a morning reminder, plainer results, and a count of the nights still needed for a suggested setting.
+Your iPhone and Apple Watch now merge camps, the trip and settings, so changes made on both while they were apart are all kept. The dew diary gains a morning reminder, plainer results, and a count of the nights still needed for a suggested setting. A new dew diary shares the nights you answer with Excelano to help improve the dew forecast, which Share with Excelano in Settings turns off.
 """

@@ -37,8 +37,8 @@ struct Preferences: Codable, Equatable, Sendable {
     var dewDiary = false
     var diaryReminder = true
     /// Whether answered diary nights are shared with Excelano, under `diaryID`.
-    var shareDiary = false
-    /// Made the first time sharing is turned on, and replaced when the user asks for a new one.
+    var shareDiary = true
+    /// Made the first time a night is shared, and replaced when the user asks for a new one.
     var diaryID: UUID?
 
     init() {}
@@ -50,7 +50,7 @@ struct Preferences: Codable, Equatable, Sendable {
         pressureWatch = try c.decodeIfPresent(Bool.self, forKey: .pressureWatch) ?? true
         dewDiary = try c.decodeIfPresent(Bool.self, forKey: .dewDiary) ?? false
         diaryReminder = try c.decodeIfPresent(Bool.self, forKey: .diaryReminder) ?? true
-        shareDiary = try c.decodeIfPresent(Bool.self, forKey: .shareDiary) ?? false
+        shareDiary = try c.decodeIfPresent(Bool.self, forKey: .shareDiary) ?? true
         diaryID = try c.decodeIfPresent(UUID.self, forKey: .diaryID)
     }
 }

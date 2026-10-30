@@ -206,8 +206,7 @@ extension DiaryNight: Identifiable {
     var id: String { "\(campName)|\(date.year)-\(date.month)-\(date.day)" }
 }
 
-/// The switch for sharing the diary. Turning it on the first time makes the diary ID, and
-/// sends whatever is answered.
+/// The switch for sharing the diary. Turning it on sends whatever is answered.
 struct ShareToggle: View {
     @Environment(ForecastModel.self) private var model
     let recorder: DiaryRecorder
@@ -217,7 +216,6 @@ struct ShareToggle: View {
         Toggle("Share with Excelano", isOn: $model.preferences.shareDiary)
             .onChange(of: model.preferences.shareDiary) {
                 guard model.preferences.shareDiary else { return }
-                if model.preferences.diaryID == nil { model.preferences.diaryID = UUID() }
                 Task { await recorder.share() }
             }
     }
