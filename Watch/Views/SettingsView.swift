@@ -120,10 +120,11 @@ struct ChecksSettingsView: View {
             }
             Section {
                 QuantityRow(quantity: .windRain(units), value: $model.settings.windRainMS)
+                QuantityRow(quantity: .windRainChance, value: $model.settings.windRainChance)
             } header: {
-                Text("Wind-driven rain")
+                Text("Wind with rain")
             } footer: {
-                Text("With any chance of rain.")
+                Text("Both in the same hour.")
             }
             Section {
                 QuantityRow(quantity: .dewSpread(units), value: $model.settings.dewSpreadC)

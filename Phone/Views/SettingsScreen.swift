@@ -156,10 +156,11 @@ struct ChecksSettingsScreen: View {
             }
             Section {
                 QuantityStepper(quantity: .windRain(units), value: $model.settings.windRainMS)
+                QuantityStepper(quantity: .windRainChance, value: $model.settings.windRainChance)
             } header: {
-                Text("Wind-driven rain")
+                Text("Wind with rain")
             } footer: {
-                Text("Rainfly on when the wind or its gusts go above this in an hour with any chance of rain.")
+                Text("Rainfly on when the wind or its gusts go above this in an hour with at least this chance of rain. Set below Rain's chance, it catches light rain that wind would drive in.")
             }
             Section {
                 QuantityStepper(quantity: .dewSpread(units), value: $model.settings.dewSpreadC)

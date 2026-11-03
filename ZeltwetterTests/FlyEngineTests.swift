@@ -104,16 +104,21 @@ struct FlyEngineTests {
         #expect(sunsetHour.firings == [Firing(trigger: .rain, at: F.at(0, 20))])
     }
 
-    @Test func gustsWithAnyRainChanceFireWindRain() {
+    @Test func gustsWithTenPercentFireWindRain() {
         let verdict = evaluate(F.night { d in
-            d == F.at(1, 1) ? F.hour(d, wind: 5, gust: 10, chance: 0.05) : F.hour(d)
+            d == F.at(1, 1) ? F.hour(d, wind: 5, gust: 10, chance: 0.10) : F.hour(d)
         })
         #expect(verdict.firings == [Firing(trigger: .windRain, at: F.at(1, 1))])
 
         let atThreshold = evaluate(F.night { d in
-            d == F.at(1, 1) ? F.hour(d, wind: 5, gust: 8, chance: 0.05) : F.hour(d)
+            d == F.at(1, 1) ? F.hour(d, wind: 5, gust: 8, chance: 0.10) : F.hour(d)
         })
         #expect(!atThreshold.flyOn)
+
+        let slightChance = evaluate(F.night { d in
+            d == F.at(1, 1) ? F.hour(d, wind: 5, gust: 10, chance: 0.05) : F.hour(d)
+        })
+        #expect(!slightChance.flyOn)
 
         let dryGale = evaluate(F.night { d in F.hour(d, wind: 12, gust: 20) })
         #expect(!dryGale.flyOn)

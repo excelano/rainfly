@@ -29,7 +29,7 @@ enum FlyEngine {
         record(.storm, in: nightHours + morningHours) { $0.isThunderstorm }
         record(.rain, in: nightHours) { rains($0, chance: s.rainChance) }
         record(.morningRain, in: morningHours) { rains($0, chance: s.morningRainChance) }
-        record(.windRain, in: nightHours) { max($0.windMS, $0.gustMS ?? 0) > s.windRainMS && $0.precipChance > 0 }
+        record(.windRain, in: nightHours) { max($0.windMS, $0.gustMS ?? 0) > s.windRainMS && $0.precipChance >= s.windRainChance }
         record(.dew, in: nightHours) { condenses($0) && $0.tempC > 0 }
         record(.frost, in: nightHours) { condenses($0) && $0.tempC <= 0 }
         record(.cold, in: nightHours) { $0.tempC < s.coldC }

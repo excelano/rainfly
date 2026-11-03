@@ -9,6 +9,7 @@ struct Settings: Codable, Equatable, Sendable {
     var rainChance = 0.20
     var morningRainChance = 0.20
     var windRainMS = 8.0
+    var windRainChance = 0.10
     var dewSpreadC = 3.0
     var clearSky = 0.30
     var calmWindMS = 3.0
@@ -28,6 +29,7 @@ extension Settings {
         rainChance = try c.decodeIfPresent(Double.self, forKey: .rainChance) ?? d.rainChance
         morningRainChance = try c.decodeIfPresent(Double.self, forKey: .morningRainChance) ?? d.morningRainChance
         windRainMS = try c.decodeIfPresent(Double.self, forKey: .windRainMS) ?? d.windRainMS
+        windRainChance = try c.decodeIfPresent(Double.self, forKey: .windRainChance) ?? d.windRainChance
         dewSpreadC = try c.decodeIfPresent(Double.self, forKey: .dewSpreadC) ?? d.dewSpreadC
         clearSky = try c.decodeIfPresent(Double.self, forKey: .clearSky) ?? d.clearSky
         calmWindMS = try c.decodeIfPresent(Double.self, forKey: .calmWindMS) ?? d.calmWindMS

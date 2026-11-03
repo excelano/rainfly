@@ -43,7 +43,7 @@ struct VerdictText {
         return switch firing.trigger {
         case .storm: "Storms possible at \(time)"
         case .rain: "Rain \(chance(at: firing.at)) after \(time)"
-        case .windRain: "Wind-driven rain at \(time)"
+        case .windRain: "Wind with rain \(chance(at: firing.at)) at \(time)"
         case .frost: "Frost likely by \(time)"
         case .dew: "Dew likely by \(time)"
         case .morningRain: "Morning rain \(chance(at: firing.at)) at \(time)"
@@ -72,7 +72,7 @@ struct VerdictText {
         switch trigger {
         case .storm: "No storms"
         case .rain: "No rain"
-        case .windRain: "No wind-driven rain"
+        case .windRain: "No wind with rain"
         case .frost: "No frost"
         case .dew: "No dew"
         case .morningRain: "Dry morning"
@@ -86,12 +86,12 @@ struct VerdictText {
             hours.map(\.precipChance).max().map { "Highest \(percent($0)) · Rainfly on at \(percent(threshold)) or above" }
         }
         return switch trigger {
-        case .storm: verdict.firing(.storm) == nil ? "None forecast" : "Thunder forecast"
+        case .storm: verdict.firing(.storm).map { "Forecast at \(clock($0.at))" } ?? "None forecast"
         case .rain: chance(window.nightHours, settings.rainChance) ?? "No forecast hours"
         case .morningRain: chance(window.morningHours, settings.morningRainChance) ?? "Break camp is before sunrise"
         case .windRain:
             (window.nightHours.map { max($0.windMS, $0.gustMS ?? 0) }.max().map { "Strongest \(speed($0)) · " } ?? "")
-                + "Rainfly on above \(speed(settings.windRainMS)) with rain"
+                + "Rainfly on above \(speed(settings.windRainMS)) with rain at \(percent(settings.windRainChance)) or above"
         case .dew, .frost:
             (window.closestSpread.map { "Closest gap \(degreeSpan($0)) · " } ?? "")
                 + "Rainfly on at \(degreeSpan(settings.dewSpreadC)) or below, clear and calm"
@@ -105,9 +105,9 @@ struct VerdictText {
         let sky = "cloud cover below \(percent(settings.clearSky)) and wind below \(speed(settings.calmWindMS))"
         let packBy = clock(NightWindow(night, packByMinutes: settings.packByMinutes).packBy)
         return switch trigger {
-        case .storm: "Rainfly on for a thunderstorm at any hour of the night or before you break camp."
+        case .storm: "Rainfly on when any hour of the night, or before you break camp, is forecast as a thunderstorm, whatever its chance of rain."
         case .rain: "Rainfly on when any hour of the night has a chance of rain of \(percent(settings.rainChance)) or above, or rain is forecast to fall."
-        case .windRain: "Rainfly on when the wind or its gusts go above \(speed(settings.windRainMS)) in an hour with any chance of rain."
+        case .windRain: "Rainfly on when the wind or its gusts go above \(speed(settings.windRainMS)) in an hour with a chance of rain of \(percent(settings.windRainChance)) or above."
         case .frost: "Rainfly on when \(gap), with \(sky), at or below freezing."
         case .dew: "Rainfly on when \(gap), with \(sky), above freezing."
         case .morningRain: "Rainfly on when an hour between sunrise and \(packBy) has a chance of rain of \(percent(settings.morningRainChance)) or above."
@@ -117,9 +117,9 @@ struct VerdictText {
 
     static func why(_ trigger: Trigger) -> String {
         switch trigger {
-        case .storm: "Thunderstorms bring sudden downpours and gusts, often with little warning."
+        case .storm: "Thunderstorms bring sudden downpours and gusts, often with little warning, so a storm in the forecast counts even when the chance of rain is low."
         case .rain: "Rain falls straight through the mesh of an inner tent and soaks what is inside."
-        case .windRain: "Wind drives rain sideways under any gap, so even a small chance of rain matters when it blows."
+        case .windRain: "Wind drives rain sideways under any gap, so on a windy night a smaller chance of rain than the rain check needs is enough."
         case .frost: "On a clear, calm night the tent cools below the air, and moisture freezes onto it. The rainfly takes the frost, and the inner tent stays dry."
         case .dew: "On a clear, calm night the tent cools below the air, and dew settles on it and soaks through mesh. The rainfly takes the dew, and the inner tent stays dry."
         case .morningRain: "Rain before you break camp means packing a wet tent. With the rainfly on, the inner tent packs dry."
@@ -137,7 +137,7 @@ struct VerdictText {
         switch trigger {
         case .storm: "Storms"
         case .rain: "Rain"
-        case .windRain: "Wind-driven rain"
+        case .windRain: "Wind with rain"
         case .frost: "Frost"
         case .dew: "Dew"
         case .morningRain: "Morning rain"

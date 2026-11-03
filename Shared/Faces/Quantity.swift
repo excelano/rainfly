@@ -48,6 +48,7 @@ struct Quantity: Sendable {
 
     static let rainChance = percent("Chance of rain at or above", 5...100)
     static let morningRainChance = percent("Chance of rain at or above", 5...100)
+    static let windRainChance = percent("Chance of rain at or above", 5...100)
     static let clearSky = percent("Cloud cover below", 5...80)
     static let ventHumidity = percent("Humidity at or above", 50...100)
 
