@@ -8,7 +8,7 @@
 # description 4,000, apple-review-notes 4,000.
 
 apple-review-notes = """
-Rainfly is for people sleeping in a tent. It reads the overnight forecast for the campsite and says whether the rainfly should go on tonight, "Rainfly on" or "Rainfly off", with the reason. It is a full app on iPhone and iPad and a full app on Apple Watch; each works without the others, and with an iPhone and its watch both installed they keep the same camps, trip and settings. There is no account to sign into.
+Rainfly is for people sleeping in a tent. It reads the overnight forecast for the campsite and says whether the rainfly should go on tonight, "Rainfly on" or "Rainfly off", with the reason. It is a full app on iPhone, iPad and Apple Watch; each works alone, and an iPhone and its watch keep the same camps, trip and settings. There is no account to sign into.
 
 Forecasts come from WeatherKit, so the device needs a connection before the first verdict appears. A camp's forecast is kept on the device after that.
 
