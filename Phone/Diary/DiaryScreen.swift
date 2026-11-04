@@ -260,14 +260,14 @@ struct SharingSection: View {
         } header: {
             Text("Sharing")
         } footer: {
-            Text("Shared nights help improve the dew check. Each answered night is sent to Excelano's database in Apple's iCloud with what you found, the night's forecast and its history, your thresholds, the camp's position rounded to about 11 km, and a random diary ID that tells one site's nights from another's. Camp names, exact positions and anything about you or this iPhone are never sent. A new diary ID keeps later nights from being linked to earlier ones. Sharing needs iCloud.")
+            Text("Shared nights help improve the dew check. Each answered night is sent to Excelano's database in Apple's iCloud with what you found, the night's forecast and its history, your thresholds, the camp's position rounded to about 11 km, and a random diary ID that tells one site's nights from another's. Camp names, exact positions and anything about you or this \(UIDevice.current.model) are never sent. A new diary ID keeps later nights from being linked to earlier ones. Sharing needs iCloud.")
         }
-        .confirmationDialog("Delete the \(recorder.sharedCount == 1 ? "night" : "\(recorder.sharedCount) nights") this iPhone shared?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
+        .confirmationDialog("Delete the \(recorder.sharedCount == 1 ? "night" : "\(recorder.sharedCount) nights") this \(UIDevice.current.model) shared?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
             Button("Delete shared nights", role: .destructive) {
                 Task { await recorder.deleteShared() }
             }
         } message: {
-            Text("The diary on this iPhone stays as it is.")
+            Text("The diary on this \(UIDevice.current.model) stays as it is.")
         }
     }
 }

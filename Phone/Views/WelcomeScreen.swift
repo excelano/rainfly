@@ -25,7 +25,7 @@ struct WelcomeScreen: View {
                 Beat(symbol: "checklist", title: "Seven checks",
                      detail: "Storms, rain, wind with rain, frost, dew, morning rain and cold. Any one of them puts the rainfly on. Tap a check to see why it matters.")
                 Beat(symbol: "antenna.radiowaves.left.and.right.slash", title: "Ready offline",
-                     detail: "Forecasts stay on your iPhone, so the answer holds once the signal is gone. Plan a trip to download each night ahead.")
+                     detail: "Forecasts stay on your \(UIDevice.current.model), so the answer holds once the signal is gone. Plan a trip to download each night ahead.")
             } buttons: {
                 Button {
                     path.append(.diary)
@@ -56,7 +56,7 @@ struct WelcomeScreen: View {
             Beat(symbol: "slider.horizontal.3", title: "A setting tuned to you",
                  detail: "Rainfly counts the nights its dew forecast got right and wrong. After a few nights of both dry and wet mornings, it suggests a dew-point gap that suits where you camp.")
             Beat(symbol: "icloud.and.arrow.up", title: "Shared to improve the forecast",
-                 detail: "Each night you answer is sent to Excelano to help improve the dew forecast, with the camp's position rounded to about 11 km and nothing about you. To keep the diary on this iPhone, turn off Share with Excelano in Settings.")
+                 detail: "Each night you answer is sent to Excelano to help improve the dew forecast, with the camp's position rounded to about 11 km and nothing about you. To keep the diary on this \(UIDevice.current.model), turn off Share with Excelano in Settings.")
         } buttons: {
             if model.preferences.dewDiary {
                 Button {
@@ -111,19 +111,26 @@ private struct WelcomePage<Content: View, Buttons: View>: View {
     @ViewBuilder var content: Content
     @ViewBuilder var buttons: Buttons
 
+    /// A readable column on a wide screen.
+    private static var width: CGFloat { 560 }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 content
             }
+            .frame(maxWidth: Self.width)
             .padding(24)
+            .frame(maxWidth: .infinity)
         }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 12) {
                 buttons
             }
             .controlSize(.large)
+            .frame(maxWidth: Self.width)
             .padding(24)
+            .frame(maxWidth: .infinity)
             .background(.background)
         }
     }

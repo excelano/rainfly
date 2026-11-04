@@ -27,7 +27,7 @@ case "$lang" in
 esac
 case "$(xcrun simctl list devices | grep -F "($device)" | head -1)" in
     *Watch*) kind=watch; plist=$(echo "$app"/Watch/*.app/Info.plist) ;;
-    *iPhone*) kind=phone; plist=$app/Info.plist ;;
+    *iPhone*|*iPad*) kind=phone; plist=$app/Info.plist ;;
     *) echo "shots.sh: no set is written for $device" >&2; exit 2 ;;
 esac
 bundle=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$plist")
