@@ -19,7 +19,7 @@ struct ComplicationFace: Equatable, Sendable {
     var notes: [String] = []
 
     static let noForecast = ComplicationFace(
-        flyOn: nil, headline: "No forecast", detail: "Open Rainfly online", inline: "Rainfly: no forecast",
+        flyOn: nil, headline: "No forecast", detail: "Open Rainfly with a signal", inline: "Rainfly: no forecast",
         dryTime: nil, fetchedAt: nil
     )
 
