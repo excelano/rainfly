@@ -37,13 +37,13 @@ extension ComplicationFace {
             self.init(
                 flyOn: verdict.flyOn, headline: text.headline, detail: "Dry by ~\(text.clock(dryBy))",
                 inline: "Dry by \(text.compactClock(dryBy))", dryTime: text.compactClock(dryBy),
-                fetchedAt: text.night.fetchedAt, camp: text.night.location.name, notes: text.notes
+                fetchedAt: text.night.fetchedAt, camp: text.night.location.title, notes: text.notes
             )
         } else {
             self.init(
                 flyOn: verdict.flyOn, headline: text.headline, detail: text.reason,
                 inline: verdict.headline.map { "Rainfly on · \(text.brief($0))" } ?? "Rainfly off", dryTime: nil,
-                fetchedAt: text.night.fetchedAt, camp: text.night.location.name, notes: text.notes
+                fetchedAt: text.night.fetchedAt, camp: text.night.location.title, notes: text.notes
             )
         }
     }
