@@ -143,9 +143,13 @@ struct VerdictTextTests {
     }
 }
 
+/// Metric units, whose steps hold the default settings, so a test doesn't depend on the
+/// simulator's region.
 func temporarySettings() -> SettingsStore {
     let name = "zeltwetter-\(UUID().uuidString)"
-    return SettingsStore(defaults: UserDefaults(suiteName: name)!)
+    let store = SettingsStore(defaults: UserDefaults(suiteName: name)!)
+    store.preferences.units = DisplayUnits(fahrenheit: false, mph: false)
+    return store
 }
 
 func temporaryCamps() -> Store<Camps> {

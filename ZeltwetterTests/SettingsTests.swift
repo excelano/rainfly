@@ -87,6 +87,19 @@ struct SettingsTests {
         #expect(Quantity.dewSpread(metric).text(3) == "3.0°")
         #expect(Quantity.calmWind(us).text(3) == "7 mph")
     }
+
+    @Test func settingsSnapToWhatSettingsShows() {
+        let us = DisplayUnits(fahrenheit: true, mph: true)
+        let metric = DisplayUnits(fahrenheit: false, mph: false)
+        let snapped = Settings().snapped(to: us)
+        #expect(abs(snapped.dewSpreadC - 5 * 5.0 / 9) < 1e-9)
+        #expect(abs(snapped.windRainMS - 18 * 0.44704) < 1e-9)
+        #expect(abs(snapped.calmWindMS - 7 * 0.44704) < 1e-9)
+        #expect(snapped.coldC == 10)
+        #expect(snapped.rainChance == 0.2)
+        #expect(snapped.snapped(to: us) == snapped)
+        #expect(Settings().snapped(to: metric) == Settings())
+    }
 }
 
 @MainActor
@@ -100,6 +113,26 @@ struct SettingsModelTests {
         model.preferences.pressureWatch = false
         #expect(store.settings.coldC == 5)
         #expect(!store.preferences.pressureWatch)
+    }
+
+    @Test func settingsFollowTheUnitsShown() {
+        let store = temporarySettings()
+        let model = ForecastModel(provider: NoProvider(), cache: ForecastCache(store: Store(url: .temporaryDirectory.appending(path: UUID().uuidString))), store: store, campStore: temporaryCamps()) {
+            throw ForecastError.noLocation
+        }
+        #expect(model.settings == Settings())
+        model.preferences.units = DisplayUnits(fahrenheit: true, mph: true)
+        #expect(abs(store.settings.dewSpreadC - 5 * 5.0 / 9) < 1e-9)
+
+        var unsnapped = Settings()
+        unsnapped.dewSpreadC = 3
+        store.settings = unsnapped
+        let reopened = ForecastModel(provider: NoProvider(), cache: ForecastCache(store: Store(url: .temporaryDirectory.appending(path: UUID().uuidString))), store: store, campStore: temporaryCamps()) {
+            throw ForecastError.noLocation
+        }
+        #expect(abs(reopened.settings.dewSpreadC - 5 * 5.0 / 9) < 1e-9)
+        #expect(abs(store.settings.dewSpreadC - 5 * 5.0 / 9) < 1e-9)
+        #expect(store.changedAt?["settings/dewSpreadC"] != nil)
     }
 }
 

@@ -158,7 +158,10 @@ struct SyncModelTests {
         #expect(model.settings.rainChance == 0.5)
         #expect(model.preferences.units.fahrenheit)
         #expect(!model.preferences.pressureWatch)
-        #expect(model.sharedState == received)
+        var snapped = received
+        snapped.settings = received.settings.snapped(to: received.units)
+        #expect(model.sharedState == snapped)
+        #expect(model.settings.dewSpreadC != received.settings.dewSpreadC)
         #expect(announced == 0)
         #expect(!(await model.apply(received)))
     }

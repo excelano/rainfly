@@ -87,3 +87,25 @@ struct Quantity: Sendable {
         temperature("Comfort rating", units, c: -30...20, f: -20...68)
     }
 }
+
+extension Settings {
+    /// Each threshold on the step its editor shows in `units`, so the checks decide with the
+    /// value Settings shows: a 3.0°C dew-point gap is 5.4°F, shown and kept as 5°F.
+    func snapped(to units: DisplayUnits) -> Settings {
+        func snap(_ value: Double, _ quantity: Quantity) -> Double {
+            quantity.stored(quantity.display(value))
+        }
+        var snapped = self
+        snapped.rainChance = snap(rainChance, .rainChance)
+        snapped.morningRainChance = snap(morningRainChance, .morningRainChance)
+        snapped.windRainMS = snap(windRainMS, .windRain(units))
+        snapped.windRainChance = snap(windRainChance, .windRainChance)
+        snapped.dewSpreadC = snap(dewSpreadC, .dewSpread(units))
+        snapped.clearSky = snap(clearSky, .clearSky)
+        snapped.calmWindMS = snap(calmWindMS, .calmWind(units))
+        snapped.coldC = snap(coldC, .cold(units))
+        snapped.ventHumidity = snap(ventHumidity, .ventHumidity)
+        snapped.bagRatingC = bagRatingC.map { snap($0, .bagRating(units)) }
+        return snapped
+    }
+}

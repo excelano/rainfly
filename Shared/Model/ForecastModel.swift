@@ -39,6 +39,7 @@ final class ForecastModel {
         didSet {
             changed { store.preferences = preferences }
             if preferences.units != oldValue.units {
+                snapSettings()
                 var old = sharedState
                 old.units = oldValue.units
                 sharedChanged(from: old)
@@ -82,6 +83,18 @@ final class ForecastModel {
             let items = SyncRules.items(sharedState)
             store.changedAt = store.syncedAt.map { at in items.mapValues { _ in at } } ?? [:]
         }
+        let snapped = settings.snapped(to: preferences.units)
+        if snapped != settings {
+            let old = sharedState
+            settings = snapped
+            store.settings = snapped
+            sharedChanged(from: old)
+        }
+    }
+
+    private func snapSettings() {
+        let snapped = settings.snapped(to: preferences.units)
+        if snapped != settings { settings = snapped }
     }
 
     static func live() -> ForecastModel {
@@ -205,7 +218,8 @@ final class ForecastModel {
 
     @discardableResult
     func apply(_ received: SyncedState) async -> Bool {
-        let merged = SyncRules.merge(received, into: sharedState)
+        var merged = SyncRules.merge(received, into: sharedState)
+        merged.settings = merged.settings.snapped(to: merged.units)
         guard merged != sharedState else { return false }
         isApplying = true
         camps = merged.camps
