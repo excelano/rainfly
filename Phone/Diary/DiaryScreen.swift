@@ -97,6 +97,11 @@ extension DiaryScreen {
         if recorder.diary.canSuggest {
             return "The current dew-point gap already does best on your nights."
         }
+        if nights >= DewDiary.suggestionNights {
+            return counts.wet == 0
+                ? "\(nights) open-sky nights so far, all dry. A suggestion also needs a wet morning."
+                : "\(nights) open-sky nights so far, all wet. A suggestion also needs a dry morning."
+        }
         return "\(nights) of \(DewDiary.suggestionNights) open-sky nights so far, \(counts.wet) wet and \(counts.dry) dry. A suggestion needs at least \(DewDiary.suggestionNights), with both wet and dry mornings."
     }
 }
@@ -109,7 +114,7 @@ private struct SuggestionSection: View {
     var body: some View {
         let quantity = Quantity.dewSpread(units)
         Section {
-            Text("A dew-point gap of \(quantity.text(suggestion.suggested.spreadC)) would have caught \(suggestion.suggested.caught) of \(suggestion.wetNights) wet nights with \(Self.alarms(suggestion.suggested.falseAlarms)). The current \(quantity.text(suggestion.current.spreadC)) catches \(suggestion.current.caught) with \(Self.alarms(suggestion.current.falseAlarms)).")
+            Text("A dew-point gap of \(quantity.text(suggestion.suggested.spreadC)) would have caught \(suggestion.suggested.caught) of \(suggestion.wetNights) wet \(suggestion.wetNights == 1 ? "night" : "nights") with \(Self.alarms(suggestion.suggested.falseAlarms)). The current \(quantity.text(suggestion.current.spreadC)) catches \(suggestion.current.caught) with \(Self.alarms(suggestion.current.falseAlarms)).")
             Button("Apply \(quantity.text(suggestion.suggested.spreadC))", action: apply)
         } header: {
             Text("Suggested setting")
