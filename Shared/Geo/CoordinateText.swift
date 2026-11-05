@@ -6,10 +6,10 @@ import Foundation
 
 /// One axis of a typed coordinate: decimal degrees ("39.9389", "-105.6106") or degrees and
 /// decimal minutes ("N 39° 56.334"), with the hemisphere as a letter at either end or a
-/// leading minus.
+/// leading minus. A decimal comma reads as a point.
 enum CoordinateText {
     static func parse(_ text: String, isLatitude: Bool) -> Double? {
-        var rest = text.trimmingCharacters(in: .whitespaces).uppercased()
+        var rest = text.trimmingCharacters(in: .whitespaces).uppercased().replacingOccurrences(of: ",", with: ".")
         let positive: Character = isLatitude ? "N" : "E"
         let negative: Character = isLatitude ? "S" : "W"
         var sign = 1.0

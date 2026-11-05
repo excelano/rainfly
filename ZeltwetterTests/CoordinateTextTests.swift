@@ -22,6 +22,13 @@ struct CoordinateTextTests {
         #expect(CoordinateText.parse("39 56.334", isLatitude: true) != nil)
     }
 
+    @Test func decimalCommas() throws {
+        #expect(CoordinateText.parse("47,5", isLatitude: true) == 47.5)
+        let latitude = try #require(CoordinateText.parse("N 47° 30,6", isLatitude: true))
+        #expect(abs(latitude - (47 + 30.6 / 60)) < 1e-9)
+        #expect(CoordinateText.parse("47,5,1", isLatitude: true) == nil)
+    }
+
     @Test func rejectsWhatIsNotACoordinate() {
         #expect(CoordinateText.parse("", isLatitude: true) == nil)
         #expect(CoordinateText.parse("91", isLatitude: true) == nil)
