@@ -207,11 +207,15 @@ extension DewDiary {
         let verdict = FlyEngine.evaluate(night, settings: settings)
         let firing = verdict.firing(.frost) ?? verdict.firing(.dew)
         let spread = NightWindow(night, packByMinutes: settings.packByMinutes).closestSpread
-        var style = Date.FormatStyle().hour(.twoDigits(amPM: .omitted)).minute()
-        style.timeZone = night.location.timeZone
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = night.location.timeZone
+        let time = { (date: Date) in
+            let parts = calendar.dateComponents([.hour, .minute], from: date)
+            return String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
+        }
         return (
             firing.map { $0.trigger.rawValue } ?? "dry",
-            firing.map { $0.at.formatted(style) } ?? "",
+            firing.map { time($0.at) } ?? "",
             spread.map { String(format: "%.1f", $0) } ?? ""
         )
     }
