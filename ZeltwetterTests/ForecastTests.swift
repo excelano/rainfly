@@ -135,6 +135,8 @@ struct VerdictTextTests {
         #expect(VerdictText.age(since: fetched, at: fetched.addingTimeInterval(20)) == "Forecast just now")
         #expect(VerdictText.age(since: fetched, at: fetched.addingTimeInterval(25 * 60)) == "Forecast 25 min old")
         #expect(VerdictText.age(since: fetched, at: fetched.addingTimeInterval(6.5 * 3600)) == "Forecast 6 h old")
+        #expect(VerdictText.age(since: fetched, at: fetched.addingTimeInterval(47 * 3600)) == "Forecast 47 h old")
+        #expect(VerdictText.age(since: fetched, at: fetched.addingTimeInterval(97 * 3600)) == "Forecast 4 days old")
         #expect(VerdictText.staleness(since: fetched, at: fetched.addingTimeInterval(12 * 3600)) == .fresh)
         #expect(VerdictText.staleness(since: fetched, at: fetched.addingTimeInterval(13 * 3600)) == .aging)
         #expect(VerdictText.staleness(since: fetched, at: fetched.addingTimeInterval(25 * 3600)) == .stale)

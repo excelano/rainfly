@@ -208,7 +208,8 @@ struct VerdictText {
         return switch minutes {
         case ..<1: "Forecast just now"
         case ..<60: "Forecast \(minutes) min old"
-        default: "Forecast \(minutes / 60) h old"
+        case ..<(48 * 60): "Forecast \(minutes / 60) h old"
+        default: "Forecast \(minutes / (24 * 60)) days old"
         }
     }
 
