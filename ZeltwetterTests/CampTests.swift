@@ -198,6 +198,24 @@ struct TripModelTests {
         #expect(model.night?.location == ridge)
     }
 
+    @Test func aCampShownDuringARefreshIsFetched() async {
+        let provider = FakeProvider(fetchedAt: afternoon)
+        let campStore = temporaryCamps()
+        campStore.save(trip([]))
+        let gate = Gate()
+        let model = ForecastModel(provider: provider, cache: temporaryCache(), store: temporarySettings(), campStore: campStore) {
+            await gate.wait()
+            return CampLocation(name: CampLocation.hereName, latitude: 39.6, longitude: -105.9, timeZoneID: TimeZone.current.identifier)
+        }
+        let first = Task { await model.refreshIfStale(now: afternoon) }
+        while !gate.isWaiting { await Task.yield() }
+        await model.show(lake.name, now: afternoon)
+        gate.open()
+        await first.value
+        #expect(model.campName == lake.name)
+        #expect(model.night?.location == lake)
+    }
+
     @Test func removingTheShownCampFallsBackToHere() async {
         let provider = FakeProvider(fetchedAt: afternoon)
         let model = model(provider, camps: trip([(lake, 0)]))
@@ -224,5 +242,21 @@ struct TripModelTests {
         let fetched = await provider.campsFetched.filter { $0 != CampLocation.hereName }.count
         await model.downloadTrip(now: afternoon.addingTimeInterval(60))
         #expect(await provider.campsFetched.filter { $0 != CampLocation.hereName }.count == fetched)
+    }
+}
+
+/// Holds a location request until the test lets it through.
+@MainActor
+private final class Gate {
+    private var continuation: CheckedContinuation<Void, Never>?
+    var isWaiting: Bool { continuation != nil }
+
+    func wait() async {
+        await withCheckedContinuation { continuation = $0 }
+    }
+
+    func open() {
+        continuation?.resume()
+        continuation = nil
     }
 }

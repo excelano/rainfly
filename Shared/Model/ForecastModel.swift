@@ -53,6 +53,7 @@ final class ForecastModel {
     /// Called after a saved camp's night is fetched, so the other device can cache it too.
     @ObservationIgnored var nightFetched: ((NightForecast) -> Void)?
     @ObservationIgnored private var isApplying = false
+    @ObservationIgnored private var refreshAgain = false
     /// Called after every fetch, Here included, for the dew diary.
     @ObservationIgnored var anyNightFetched: ((NightForecast) -> Void)?
 
@@ -119,10 +120,25 @@ final class ForecastModel {
         await refresh(now: now, inBackground: inBackground)
     }
 
+    /// A refresh asked for while one is running runs once that one ends, since the camp it
+    /// was asked for may not be the one being fetched.
     func refresh(now: Date = .now, inBackground: Bool = false) async {
-        guard !isRefreshing else { return }
+        guard !isRefreshing else {
+            refreshAgain = true
+            return
+        }
         isRefreshing = true
         defer { isRefreshing = false }
+        repeat {
+            refreshAgain = false
+            await fetchShownNight(now: now, inBackground: inBackground)
+        } while refreshAgain
+        if attribution == .fallback, let fetched = try? await provider.attribution() {
+            attribution = fetched
+        }
+    }
+
+    private func fetchShownNight(now: Date, inBackground: Bool) async {
         let date = nightDate(at: now)
         let name = camps.campName(on: date)
         campName = name
@@ -142,10 +158,7 @@ final class ForecastModel {
                 evaluate()
             }
         } catch {
-            problem = Self.describe(error)
-        }
-        if attribution == .fallback, let fetched = try? await provider.attribution() {
-            attribution = fetched
+            if name == campName { problem = Self.describe(error) }
         }
     }
 
