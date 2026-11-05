@@ -145,16 +145,20 @@ struct VerdictText {
         }
     }
 
+    func clock(_ date: Date) -> String {
+        Self.clock(date, in: night.location.timeZone, locale: locale)
+    }
+
     /// "4 AM" on the hour, "8:40 AM" otherwise. A 24-hour clock always keeps the minutes,
     /// since an hour alone reads as a bare number: "23:00", not "23".
-    func clock(_ date: Date) -> String {
+    static func clock(_ date: Date, in timeZone: TimeZone, locale: Locale = .current) -> String {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = night.location.timeZone
+        calendar.timeZone = timeZone
         let twelveHour = [.oneToTwelve, .zeroToEleven].contains(locale.hourCycle)
         var style = twelveHour && calendar.component(.minute, from: date) == 0
             ? Date.FormatStyle().hour()
             : Date.FormatStyle().hour().minute()
-        style.timeZone = night.location.timeZone
+        style.timeZone = timeZone
         style.locale = locale
         return date.formatted(style)
     }

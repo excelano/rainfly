@@ -171,7 +171,7 @@ private struct NightRow: View {
     private var forecast: String {
         guard let judgement else { return "No forecast kept" }
         let spread = judgement.closestSpread.map { ", closest gap \(Quantity.dewSpread(units).format(units.temperatureSpan($0)))" } ?? ""
-        let call = judgement.firing.map { "\($0.trigger == .frost ? "frost" : "dew") by \(Self.clock($0.at, in: night))" } ?? "dry"
+        let call = judgement.firing.map { "\($0.trigger == .frost ? "frost" : "dew") by \(VerdictText.clock($0.at, in: night.forecasts.first?.location.timeZone ?? .current))" } ?? "dry"
         return "Forecast: \(call)\(spread)"
     }
 
@@ -198,12 +198,6 @@ private struct NightRow: View {
         case .missed?, .falseAlarm?: .orange
         default: .green
         }
-    }
-
-    private static func clock(_ date: Date, in night: DiaryNight) -> String {
-        var style = Date.FormatStyle().hour().minute()
-        style.timeZone = night.forecasts.first?.location.timeZone ?? .current
-        return date.formatted(style)
     }
 }
 
