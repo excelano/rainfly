@@ -106,6 +106,7 @@ struct VerdictTextTests {
         german.locale = Locale(identifier: "de_DE")
         #expect(german.compactClock(F.at(1, 6, 45)) == "06:45")
         #expect(german.compactClock(F.at(0, 20, 5)) == "20:05")
+        #expect(german.clock(F.at(0, 20)) == "20:00")
     }
 
     @Test func spreadConvertsWithoutTheOffset() {
