@@ -22,10 +22,10 @@ struct DetailView: View {
                 }
                 Section {
                     if let low = window.low {
-                        LabeledContent("Night low", value: text.degrees(low))
+                        LabeledContent("Night low", value: text.low(low))
                     }
                     if let spread = window.closestSpread {
-                        LabeledContent("Closest dew-point gap", value: text.degreeSpan(spread))
+                        LabeledContent("Closest dew-point gap", value: text.spread(spread))
                     }
                     if let chance = window.maxPrecipChance {
                         LabeledContent("Highest rain chance", value: text.percent(chance))

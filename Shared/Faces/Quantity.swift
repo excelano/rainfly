@@ -25,8 +25,20 @@ struct Quantity: Sendable {
     }
 
     func format(_ shown: Double) -> String {
-        shown.formatted(.number.precision(.fractionLength(step < 1 ? 1 : 0))) + suffix
+        shown.formatted(.number.precision(.fractionLength(digits))) + suffix
     }
+
+    /// A forecast value in the shown unit, to the setting's precision. Where that would read
+    /// as the threshold itself without being it, one more decimal, rounded away from the
+    /// threshold, keeps it on the side the check saw: "9.9°" against "below 10°".
+    func measured(_ value: Double, against threshold: Double) -> String {
+        let plain = format(shown(value))
+        guard plain == text(threshold), value != threshold else { return plain }
+        let rule: FloatingPointRoundingRule = shown(value) < shown(threshold) ? .down : .up
+        return shown(value).formatted(.number.precision(.fractionLength(digits + 1)).rounded(rule: rule)) + suffix
+    }
+
+    private var digits: Int { step < 1 ? 1 : 0 }
 
     private static func percent(_ title: String, _ range: ClosedRange<Double>) -> Quantity {
         Quantity(title: title, range: range, step: 5, shown: { $0 * 100 }, stored: { $0 / 100 }, suffix: "%")

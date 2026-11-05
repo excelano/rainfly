@@ -47,7 +47,7 @@ struct VerdictText {
         case .frost: "Frost likely by \(time)"
         case .dew: "Dew likely by \(time)"
         case .morningRain: "Morning rain \(chance(at: firing.at)) at \(time)"
-        case .cold: "Below \(degrees(settings.coldC)) by \(time): the rainfly holds warmth"
+        case .cold: "Below \(coldLimit) by \(time): the rainfly holds warmth"
         }
     }
 
@@ -76,7 +76,7 @@ struct VerdictText {
         case .frost: "No frost"
         case .dew: "No dew"
         case .morningRain: "Dry morning"
-        case .cold: "Stays above \(degrees(settings.coldC))"
+        case .cold: "Stays above \(coldLimit)"
         }
     }
 
@@ -90,28 +90,28 @@ struct VerdictText {
         case .rain: chance(window.nightHours, settings.rainChance) ?? "No forecast hours"
         case .morningRain: chance(window.morningHours, settings.morningRainChance) ?? "Break camp is before sunrise"
         case .windRain:
-            (window.nightHours.map { max($0.windMS, $0.gustMS ?? 0) }.max().map { "Strongest \(speed($0)) · " } ?? "")
-                + "Rainfly on above \(speed(settings.windRainMS)) with rain at \(percent(settings.windRainChance)) or above"
+            (window.nightHours.map { max($0.windMS, $0.gustMS ?? 0) }.max().map { "Strongest \(wind($0)) · " } ?? "")
+                + "Rainfly on above \(windRainLimit) with rain at \(percent(settings.windRainChance)) or above"
         case .dew, .frost:
-            (window.closestSpread.map { "Closest gap \(degreeSpan($0)) · " } ?? "")
-                + "Rainfly on at \(degreeSpan(settings.dewSpreadC)) or below, clear and calm"
+            (window.closestSpread.map { "Closest gap \(spread($0)) · " } ?? "")
+                + "Rainfly on at \(spreadLimit) or below, clear and calm"
         case .cold:
-            (window.low.map { "Low \(degrees($0)) · " } ?? "") + "Rainfly on below \(degrees(settings.coldC))"
+            (window.low.map { "Low \(low($0)) · " } ?? "") + "Rainfly on below \(coldLimit)"
         }
     }
 
     func rule(_ trigger: Trigger) -> String {
-        let gap = "the gap between the air and its dew point is \(degreeSpan(settings.dewSpreadC)) or below"
-        let sky = "cloud cover below \(percent(settings.clearSky)) and wind below \(speed(settings.calmWindMS))"
+        let gap = "the gap between the air and its dew point is \(spreadLimit) or below"
+        let sky = "cloud cover below \(percent(settings.clearSky)) and wind below \(Quantity.calmWind(units).text(settings.calmWindMS))"
         let packBy = clock(NightWindow(night, packByMinutes: settings.packByMinutes).packBy)
         return switch trigger {
         case .storm: "Rainfly on when any hour of the night, or before you break camp, is forecast as a thunderstorm, whatever its chance of rain."
         case .rain: "Rainfly on when any hour of the night has a chance of rain of \(percent(settings.rainChance)) or above, or rain is forecast to fall."
-        case .windRain: "Rainfly on when the wind or its gusts go above \(speed(settings.windRainMS)) in an hour with a chance of rain of \(percent(settings.windRainChance)) or above."
+        case .windRain: "Rainfly on when the wind or its gusts go above \(windRainLimit) in an hour with a chance of rain of \(percent(settings.windRainChance)) or above."
         case .frost: "Rainfly on when \(gap), with \(sky), at or below freezing."
         case .dew: "Rainfly on when \(gap), with \(sky), above freezing."
         case .morningRain: "Rainfly on when an hour between sunrise and \(packBy) has a chance of rain of \(percent(settings.morningRainChance)) or above."
-        case .cold: "Rainfly on when the night drops below \(degrees(settings.coldC))."
+        case .cold: "Rainfly on when the night drops below \(coldLimit)."
         }
     }
 
@@ -175,17 +175,23 @@ struct VerdictText {
         }
     }
 
-    func degrees(_ celsius: Double) -> String {
-        "\(Int(units.temperature(celsius).rounded()))°"
+    /// The night's low, written against the cold check's threshold.
+    func low(_ celsius: Double) -> String {
+        Quantity.cold(units).measured(celsius, against: settings.coldC)
     }
 
-    func degreeSpan(_ celsius: Double) -> String {
-        "\(Int(units.temperatureSpan(celsius).rounded()))°"
+    /// The closest dew-point gap, written against the dew check's threshold.
+    func spread(_ celsius: Double) -> String {
+        Quantity.dewSpread(units).measured(celsius, against: settings.dewSpreadC)
     }
 
-    func speed(_ metersPerSecond: Double) -> String {
-        "\(Int(units.speed(metersPerSecond).rounded())) \(units.speedUnit)"
+    private func wind(_ metersPerSecond: Double) -> String {
+        Quantity.windRain(units).measured(metersPerSecond, against: settings.windRainMS)
     }
+
+    private var coldLimit: String { Quantity.cold(units).text(settings.coldC) }
+    private var spreadLimit: String { Quantity.dewSpread(units).text(settings.dewSpreadC) }
+    private var windRainLimit: String { Quantity.windRain(units).text(settings.windRainMS) }
 
     func percent(_ fraction: Double) -> String {
         "\(Int((fraction * 100).rounded()))%"

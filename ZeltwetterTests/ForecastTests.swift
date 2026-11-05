@@ -111,8 +111,22 @@ struct VerdictTextTests {
 
     @Test func spreadConvertsWithoutTheOffset() {
         let words = text(F.night(), fahrenheit: true)
-        #expect(words.degrees(0) == "32°")
-        #expect(words.degreeSpan(2) == "4°")
+        #expect(words.low(0) == "32°")
+        #expect(words.spread(2) == "4°")
+    }
+
+    @Test func measuredValuesStayOnTheSideTheCheckSaw() {
+        var settings = Settings()
+        settings.dewSpreadC = 2.5
+        settings.coldC = 10
+        let words = text(F.night(), settings)
+        #expect(words.spread(2.5) == "2.5°")
+        #expect(words.spread(3.4) == "3.4°")
+        #expect(words.spread(2.53) == "2.53°")
+        #expect(words.low(9.6) == "9.6°")
+        #expect(words.low(10.3) == "10.3°")
+        #expect(words.low(12.4) == "12°")
+        #expect(words.summary(.dew).hasSuffix("Rainfly on at 2.5° or below, clear and calm"))
     }
 
     @Test func forecastAgeAndStaleness() {
