@@ -35,8 +35,8 @@ The coordinates of the camp being forecast go to WeatherKit, and to Apple's map 
 """
 
 [locales."en-us"]
-website = "https://github.com/excelano/rainfly"
-support = "https://github.com/excelano/rainfly"
+website = "https://anderix.com/rainfly/"
+support = "https://excelano.com/support/?app=Rainfly&channel=App%20Store"
 privacy = "https://excelano.com/legal/#rainfly"
 description = """
 Rainfly answers one question at camp: should the rainfly go on tonight?
