@@ -214,6 +214,7 @@ final class ForecastModel {
         preferences.units = merged.units
         store.changedAt = merged.changedAt
         isApplying = false
+        WidgetCenter.shared.reloadAllTimelines()
         await refreshIfStale()
         return true
     }
