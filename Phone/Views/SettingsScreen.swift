@@ -86,7 +86,7 @@ struct SettingsScreen: View {
                         if model.preferences.pressureWatch { Task { await PressureWatch.requestPermission() } }
                     }
             } footer: {
-                Text("Warns overnight when the pressure falls fast and the rainfly is off. iOS gives the phone only occasional time in the background, so this is a rough check. While your watch has its own pressure alert on, the phone stays quiet and the watch warns. \(PressureWatch.status)")
+                Text("Warns overnight when the pressure falls fast and the rainfly is off. Your \(UIDevice.current.model) gets only occasional time in the background, so this is a rough check. While your watch has its own pressure alert on, this \(UIDevice.current.model) stays quiet and the watch warns. \(PressureWatch.status)")
             }
             Section {
                 Button("Show the welcome again") { welcomed = false }
