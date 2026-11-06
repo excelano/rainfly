@@ -16,7 +16,7 @@ struct ZeltwetterPhoneApp: App {
             let model = Demo.model(scene: scene)
             _model = State(initialValue: model)
             sync = nil
-            recorder = Demo.opens == "diary" ? Self.demoRecorder(model) : nil
+            recorder = Demo.keepsDiary ? Self.demoRecorder(model) : nil
             return
         }
         #endif

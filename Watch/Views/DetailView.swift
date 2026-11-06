@@ -28,7 +28,7 @@ struct DetailView: View {
                         LabeledContent("Closest dew-point gap", value: text.spread(spread))
                     }
                     if let chance = window.maxPrecipChance {
-                        LabeledContent("Highest rain chance to break camp", value: text.percent(chance))
+                        LabeledContent("Highest chance of rain before you pack up", value: text.percent(chance))
                     }
                 }
             }

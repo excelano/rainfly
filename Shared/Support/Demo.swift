@@ -16,6 +16,9 @@ import Foundation
 ///                                         settings and camps
 ///     --open diary                        on the iPhone, a week of answered dew diary
 ///                                         nights at the first camp, and its diary screen
+///     --open review                       the same week, and last night at My Location
+///                                         with dew forecast and no answer, so from 6:10 AM
+///                                         to 8:10 PM the main screen asks if it was right
 enum Demo {
     static var scene: String? { argument(after: "--demo") }
     static var opens: String? { argument(after: "--open") }
@@ -25,6 +28,8 @@ enum Demo {
         guard let index = arguments.firstIndex(of: flag), index + 1 < arguments.count else { return nil }
         return arguments[index + 1]
     }
+
+    static var keepsDiary: Bool { opens == "diary" || opens == "review" }
 
     static let camp = CampLocation(
         name: "Lost Lake", latitude: 39.9389, longitude: -105.6106, timeZoneID: TimeZone.current.identifier
@@ -39,7 +44,7 @@ enum Demo {
         try? FileManager.default.removeItem(at: url)
         let defaults = UserDefaults(suiteName: "demo")!
         defaults.removePersistentDomain(forName: "demo")
-        if opens == "diary" {
+        if keepsDiary {
             var preferences = Preferences()
             preferences.dewDiary = true
             SettingsStore(defaults: defaults).preferences = preferences
@@ -78,6 +83,11 @@ enum Demo {
             let forecast = Provider(scene: night.scene).makeNight(at: camp, evening: date.start(in: calendar), scene: night.scene)
             diary.record(forecast)
             diary.observe(DewObservation(kind: night.found, openSky: night.openSky, at: forecast.sunrise), campName: camp.name, on: date)
+        }
+        if opens == "review" {
+            let here = CampLocation(name: CampLocation.hereName, latitude: camp.latitude, longitude: camp.longitude, timeZoneID: camp.timeZoneID)
+            let lastNight = NightDate(.now.addingTimeInterval(-86_400), calendar: calendar)
+            diary.record(Provider(scene: "dew").makeNight(at: here, evening: lastNight.start(in: calendar), scene: "dew"))
         }
         return diary
     }
