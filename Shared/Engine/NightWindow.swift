@@ -24,7 +24,8 @@ struct NightWindow: Sendable {
             bySettingHour: packByMinutes / 60, minute: packByMinutes % 60, second: 0, of: night.sunrise
         ) ?? night.sunrise
         let hours = night.hours.sorted { $0.date < $1.date }
-        nightHours = hours.filter { $0.date.addingTimeInterval(3600) > night.sunset && $0.date < night.sunrise }
+        let nightEnd = min(night.sunrise, packBy)
+        nightHours = hours.filter { $0.date.addingTimeInterval(3600) > night.sunset && $0.date < nightEnd }
         morningHours = hours.filter { [packBy] in $0.date.addingTimeInterval(3600) > night.sunrise && $0.date < packBy }
     }
 

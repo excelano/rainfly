@@ -32,7 +32,9 @@ struct ForecastCache {
         store.save(kept + [night])
     }
 
+    /// The evening a night belongs to: twelve hours before its sunset, since far north the
+    /// sun can set after midnight.
     static func date(of night: NightForecast) -> NightDate {
-        NightDate(night.sunset, calendar: NightWindow.localCalendar(for: night.location))
+        NightDate(night.sunset.addingTimeInterval(-12 * 3600), calendar: NightWindow.localCalendar(for: night.location))
     }
 }

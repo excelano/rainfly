@@ -47,4 +47,6 @@ struct NightForecast: Codable, Equatable, Sendable {
     /// The sunrise that ends this night, on the following morning.
     let sunrise: Date
     let hours: [HourSample]
+    /// Set where the sun stays up or stays down, when sunset and sunrise are 9 PM and 6 AM.
+    var polar: PolarSky? = nil
 }

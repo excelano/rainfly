@@ -25,18 +25,20 @@ struct WeatherKitProvider: ForecastProvider {
             ),
             .hourly(startDate: hoursStart, endDate: hoursEnd)
         )
-        guard let sunset = days.compactMap(\.sun.sunset).filter({ $0 >= evening && $0 < morning }).min(),
-              let sunrise = days.compactMap(\.sun.sunrise).filter({ $0 > sunset }).min()
-        else {
+        guard let sun = NightSun(
+            sunsets: days.compactMap(\.sun.sunset), sunrises: days.compactMap(\.sun.sunrise),
+            evening: evening, latitude: camp.latitude, calendar: calendar
+        ) else {
             throw ForecastError.noSunset
         }
 
         return NightForecast(
             location: camp,
             fetchedAt: .now,
-            sunset: sunset,
-            sunrise: sunrise,
-            hours: hours.filter { $0.date.addingTimeInterval(3600) > sunset }.map(Self.sample)
+            sunset: sun.sunset,
+            sunrise: sun.sunrise,
+            hours: hours.filter { $0.date.addingTimeInterval(3600) > sun.sunset }.map(Self.sample),
+            polar: sun.polar
         )
     }
 

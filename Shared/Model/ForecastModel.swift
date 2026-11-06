@@ -116,14 +116,17 @@ final class ForecastModel {
 
     /// The night that matters at `now`: last night until pack-by, tonight from then on.
     func nightDate(at now: Date = .now) -> NightDate {
-        NightDate.covering(now, packByMinutes: settings.packByMinutes, calendar: .current)
+        camps.night(at: now, packByMinutes: settings.packByMinutes)
     }
 
     /// In the background the watch's position comes from the last fetch for Here, since
     /// watchOS gives no fresh location to an app that is off screen.
     func refreshIfStale(now: Date = .now, inBackground: Bool = false) async {
         let date = nightDate(at: now)
-        dropPastNights(before: date)
+        // A trip night stays until it is over on the device too, since without it its night
+        // would fall back to Here, judged in the device's zone.
+        let onDevice = NightDate.covering(now, packByMinutes: settings.packByMinutes, calendar: .current)
+        dropPastNights(before: min(date, onDevice))
         let name = camps.campName(on: date)
         if name != campName { problem = nil }
         campName = name
@@ -176,7 +179,8 @@ final class ForecastModel {
     }
 
     func show(_ name: String, now: Date = .now) async {
-        updateCamps { $0.show(name, on: nightDate(at: now)) }
+        let date = nightDate(at: now)
+        updateCamps { $0.show(name, on: date) }
         await refreshIfStale(now: now)
     }
 

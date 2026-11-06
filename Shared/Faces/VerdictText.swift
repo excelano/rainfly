@@ -28,6 +28,11 @@ struct VerdictText {
     /// The advice under the reason, in the order the main screen shows it.
     var notes: [String] {
         var notes: [String] = []
+        switch night.polar {
+        case .midnightSun?: notes.append("The sun stays up all night here")
+        case .polarNight?: notes.append("The sun doesn't rise here tomorrow")
+        case nil: break
+        }
         if verdict.ventAdvice { notes.append(ventNote) }
         if verdict.bagWarning != nil { notes.append("Wear layers: it gets colder than your sleeping bag is rated for") }
         if let dryBy = verdict.dryBy {
@@ -180,13 +185,14 @@ struct VerdictText {
         let calm = Quantity.calmWind(units).text(settings.calmWindMS)
         let condenses = "If, in the same hour, the air gets within \(spreadLimit) of its dew point, the sky is less than \(percent(settings.clearSky)) cloudy, the wind is under \(calm)"
         let anyRain = "chance of rain, or any rain at all is forecast to fall, the rainfly goes on."
+        let (sunset, sunrise) = night.polar == nil ? ("sunset", "sunrise") : (clock(night.sunset), clock(night.sunrise))
         return switch trigger {
-        case .storm: "If a thunderstorm is forecast any time from sunset until you pack up, the rainfly goes on, even if the chance of rain is small."
-        case .rain: "If any hour from sunset to sunrise has a \(percent(settings.rainChance)) or higher \(anyRain)"
+        case .storm: "If a thunderstorm is forecast any time from \(sunset) until you pack up, the rainfly goes on, even if the chance of rain is small."
+        case .rain: "If any hour from \(sunset) to \(sunrise) has a \(percent(settings.rainChance)) or higher \(anyRain)"
         case .windRain: "If, in the same hour, the wind or its gusts go over \(windRainLimit) and the chance of rain is \(percent(settings.windRainChance)) or more, the rainfly goes on."
         case .frost: "\(condenses), and it's at or below freezing, the rainfly goes on."
         case .dew: "\(condenses), and it's above freezing, the rainfly goes on."
-        case .morningRain: "If any hour from sunrise until you pack up at \(packBy) has a \(percent(settings.morningRainChance)) or higher \(anyRain)"
+        case .morningRain: "If any hour from \(sunrise) until you pack up at \(packBy) has a \(percent(settings.morningRainChance)) or higher \(anyRain)"
         case .cold: "If the temperature drops below \(coldLimit) during the night, the rainfly goes on."
         }
     }
