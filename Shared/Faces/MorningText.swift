@@ -37,6 +37,11 @@ struct MorningText {
         return dryBy <= window.packBy ? .dryToPack : .packingWet
     }
 
+    /// When the tent should be dry, on a night that wet it.
+    var dryBy: Date? {
+        isWet && !rained ? text.verdict.dryBy : nil
+    }
+
     var headline: String {
         switch packing {
         case .dryNight: "Dry night"

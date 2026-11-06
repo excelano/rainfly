@@ -140,13 +140,13 @@ final class ForecastModel {
     }
 
     /// The night that matters at `now`: last night until noon, tonight from then on.
-    func nightDate(at now: Date = .now) -> NightDate {
+    func nightDate(at now: Date = AppClock.now) -> NightDate {
         camps.night(at: now)
     }
 
     /// In the background the watch's position comes from the last fetch for Here, since
     /// watchOS gives no fresh location to an app that is off screen.
-    func refreshIfStale(now: Date = .now, inBackground: Bool = false) async {
+    func refreshIfStale(now: Date = AppClock.now, inBackground: Bool = false) async {
         let date = nightDate(at: now)
         // A trip night stays until it is over on the device too, since without it its night
         // would fall back to Here, judged in the device's zone.
@@ -183,7 +183,7 @@ final class ForecastModel {
 
     /// The night after the one shown, for a look at tonight before noon: cached, or fetched
     /// when it isn't.
-    func upcoming(now: Date = .now) async -> NightForecast? {
+    func upcoming(now: Date = AppClock.now) async -> NightForecast? {
         let date = nightDate(at: now).adding(days: 1)
         let name = camps.campName(on: date)
         if let cached = cache.night(at: name, on: date) { return cached }
@@ -198,7 +198,7 @@ final class ForecastModel {
 
     /// A refresh asked for while one is running runs once that one ends, since the camp it
     /// was asked for may not be the one being fetched.
-    func refresh(now: Date = .now, inBackground: Bool = false) async {
+    func refresh(now: Date = AppClock.now, inBackground: Bool = false) async {
         guard !isRefreshing else {
             refreshAgain = true
             return
@@ -239,7 +239,7 @@ final class ForecastModel {
         }
     }
 
-    func show(_ name: String, now: Date = .now) async {
+    func show(_ name: String, now: Date = AppClock.now) async {
         let date = nightDate(at: now)
         updateCamps { $0.show(name, on: date) }
         await refreshIfStale(now: now)
@@ -313,7 +313,7 @@ final class ForecastModel {
 
     /// Fetches every trip night within reach whose forecast is missing or old, so the
     /// trip holds offline.
-    func downloadTrip(now: Date = .now) async {
+    func downloadTrip(now: Date = AppClock.now) async {
         guard !isDownloading else { return }
         isDownloading = true
         defer { isDownloading = false }

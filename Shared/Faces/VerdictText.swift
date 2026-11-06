@@ -56,11 +56,13 @@ struct VerdictText {
         beforeTonight(at: now).map { "\($0.isThunderstorm ? "Storms" : "Rain") \(clock($0.date))" }
     }
 
-    /// Which part of the night `now` is looking at: the morning after it from sunrise until
-    /// break camp, the night itself before that.
+    /// Which part of the night `now` is in, by name.
     func period(at now: Date) -> String {
-        let packBy = NightWindow(night, packByMinutes: settings.packByMinutes).packBy
-        return now >= night.sunrise && now < packBy ? "This morning" : "Tonight"
+        switch NightWindow(night, packByMinutes: settings.packByMinutes).phase(at: now) {
+        case .evening: "Tonight"
+        case .overnight: "Overnight"
+        case .morning: "This morning"
+        }
     }
 
     var reason: String {
@@ -293,6 +295,16 @@ struct VerdictText {
         default:
             return String(format: "%02d", hour) + ":" + minute
         }
+    }
+
+    /// A temperature, in whole degrees.
+    func temperature(_ celsius: Double) -> String {
+        Quantity.cold(units).format(units.temperature(celsius))
+    }
+
+    /// A wind speed, to the step the wind settings use.
+    func speed(_ metersPerSecond: Double) -> String {
+        Quantity.calmWind(units).format(units.speed(metersPerSecond))
     }
 
     /// The night's low, written against the cold check's threshold.

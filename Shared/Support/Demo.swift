@@ -16,6 +16,10 @@ import Foundation
 ///                                         settings and camps
 ///     --open diary                        on the iPhone, a week of answered dew diary
 ///                                         nights at the first camp, and its diary screen
+///     --at HH:MM                          runs the app at that time: from noon on the
+///                                         evening of tonight, before noon the morning after
+///     --was clear|rain|storm|dew|frost    the forecast at 22:00 in that scene, so the
+///                                         overnight and morning screens show a change
 ///     --open review                       the same week, and last night at My Location
 ///                                         with dew forecast and no answer, so from 6:10 AM
 ///                                         to 8:10 PM the main screen asks if it was right
@@ -27,6 +31,15 @@ enum Demo {
         let arguments = CommandLine.arguments
         guard let index = arguments.firstIndex(of: flag), index + 1 < arguments.count else { return nil }
         return arguments[index + 1]
+    }
+
+    /// The time `--at` sets, on today's date from noon and tomorrow's before it.
+    static let now: Date? = argument(after: "--at").flatMap { text in
+        let parts = text.split(separator: ":").compactMap { Int($0) }
+        guard parts.count == 2 else { return nil }
+        let today = Calendar.current.startOfDay(for: Date())
+        let day = parts[0] < NightWindow.handoverHour ? 1 : 0
+        return Calendar.current.date(byAdding: DateComponents(day: day, hour: parts[0], minute: parts[1]), to: today)
     }
 
     static var keepsDiary: Bool { opens == "diary" || opens == "review" }
@@ -49,7 +62,7 @@ enum Demo {
             preferences.dewDiary = true
             SettingsStore(defaults: defaults).preferences = preferences
         }
-        let tonight = NightDate.covering(.now, calendar: .current)
+        let tonight = NightDate.covering(AppClock.now, calendar: .current)
         var camps = Camps()
         camps.add(camp)
         camps.add(nextCamp)
@@ -61,6 +74,11 @@ enum Demo {
         let cache = ForecastCache(store: Store(url: url))
         let calendar = NightWindow.localCalendar(for: nextCamp)
         cache.save(provider.makeNight(at: nextCamp, evening: tonight.adding(days: 1).start(in: calendar), scene: "clear"))
+        if let was = argument(after: "--was") {
+            let evening = tonight.start(in: NightWindow.localCalendar(for: camp))
+            let decided = provider.makeNight(at: camp, evening: evening, scene: was, fetchedAt: evening.addingTimeInterval(21 * 3600))
+            cache.save(decided, now: decided.fetchedAt)
+        }
         return ForecastModel(
             provider: provider, cache: cache,
             store: SettingsStore(defaults: defaults), campStore: campStore
@@ -75,7 +93,7 @@ enum Demo {
     ]
 
     static func diary() -> DewDiary {
-        let tonight = NightDate.covering(.now, calendar: .current)
+        let tonight = NightDate.covering(AppClock.now, calendar: .current)
         let calendar = NightWindow.localCalendar(for: camp)
         var diary = DewDiary()
         for night in diaryNights {
@@ -100,12 +118,14 @@ enum Demo {
             makeNight(at: camp, evening: evening, scene: scene)
         }
 
-        func makeNight(at camp: CampLocation, evening: Date, scene: String) -> NightForecast {
+        /// Fetched three hours ago, or ten minutes ago when `--at` sets the time, so a morning
+        /// fetch counts as the night's record.
+        func makeNight(at camp: CampLocation, evening: Date, scene: String, fetchedAt: Date? = nil) -> NightForecast {
             let calendar = NightWindow.localCalendar(for: camp)
             let at = { (minutes: Int) in calendar.date(byAdding: .minute, value: minutes, to: evening)! }
             return NightForecast(
                 location: camp,
-                fetchedAt: .now.addingTimeInterval(-3 * 3600),
+                fetchedAt: fetchedAt ?? AppClock.now.addingTimeInterval(Demo.now == nil ? -3 * 3600 : -600),
                 sunset: at(20 * 60 + 30),
                 sunrise: at(30 * 60 + 10),
                 hours: (19...36).map { sample(at(60 * $0), hour: $0, scene: scene) }
