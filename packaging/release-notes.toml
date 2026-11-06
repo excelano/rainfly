@@ -2,13 +2,13 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "1.3.1"
+version = "1.3.2"
 
 [locales."en-us"]
 whats-new = """
 Rainfly now changes with the time of day. From noon it shows tonight's forecast. From 22:00 to sunrise it shows what has changed since 22:00, the weather right now and the rest of the night, on a dark red screen that keeps your eyes used to the dark. In the morning it tells you whether you'll pack a dry tent, and checks last night's 22:00 forecast against Apple Weather's record of the night, check by check. Tonight's forecast comes back at noon, or tap to see it early.
 
-If the forecast changes after 22:00 and the rainfly should go on, Rainfly sends you a notification. You can turn it off, and the red screen, in Settings under Overnight.
+If the forecast changes after 22:00 and the rainfly should go on, Rainfly sends you a notification, and the pressure alert now says plainly when rain may be coming. You can turn it off, and the red screen, in Settings under Overnight.
 
 Every check explains itself in plain words, and the dew diary's morning question is a quick review: Rainfly says what it expected and asks if it was right.
 
