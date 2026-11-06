@@ -2,15 +2,13 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "1.1.0"
+version = "1.1.1"
 
 [locales."en-us"]
 whats-new = """
-Rainfly now runs on iPad, with the same verdict, checks, camps, trip and dew diary as on iPhone.
+Times read correctly on a 24-hour clock: Dew likely by 23:00, not by 23.
 
-Clearer from the first launch. A short welcome explains how Rainfly works and offers the dew diary. The verdict now reads Rainfly on or Rainfly off, and every check has its own weather symbol, says plainly whether it is expected, shows the night's value against its threshold, and opens to why it matters. Thresholds are grouped by check under Settings, Checks. Tapping a camp shows it without changing your trip, and morning rain now includes the hour of sunrise.
+In Fahrenheit and miles per hour, the checks now use the thresholds Settings shows, so a dew-point gap of 5° is checked as 5°. Each check writes its threshold as Settings does, and a forecast value close to it keeps a decimal, so the numbers no longer seem to contradict the verdict.
 
-Your iPhone and Apple Watch now merge camps, the trip and settings, so changes made on both while they were apart are all kept. The dew diary gains a morning reminder, plainer results, and a count of the nights still needed for a suggested setting. A new dew diary shares the nights you answer with Excelano to help improve the dew forecast, which Share with Excelano in Settings turns off.
-
-Wind-driven rain is now Wind with rain, with its own chance of rain to go with the wind speed, 10% by default, so a breezy night with only a slight chance of rain no longer puts the rainfly on. Storms explain that they count whatever the chance of rain.
+Widgets name your location My Location and redraw as soon as a change arrives from your other device. A camp you tap while a forecast is loading now gets its own forecast. Coordinates can be typed with a decimal comma, downloaded forecasts give their age in days once they are two days old, and the dew diary writes times as the main screen does and says which kind of morning it still needs for a suggestion.
 """
