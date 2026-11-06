@@ -41,13 +41,13 @@ struct VerdictText {
             }
     }
 
-    /// "Rain 30% at 3 PM, before tonight starts".
+    /// "Rain 30% at 3 PM, before tonight's forecast starts".
     func beforeTonightText(at now: Date) -> String? {
         beforeTonight(at: now).map { hour in
             let time = clock(hour.date)
-            if hour.isThunderstorm { return "Storms possible at \(time), before tonight starts" }
-            if hour.precipChance < settings.rainChance { return "Rain forecast at \(time), before tonight starts" }
-            return "Rain \(percent(hour.precipChance)) at \(time), before tonight starts"
+            if hour.isThunderstorm { return "Storms possible at \(time), before tonight's forecast starts" }
+            if hour.precipChance < settings.rainChance { return "Rain forecast at \(time), before tonight's forecast starts" }
+            return "Rain \(percent(hour.precipChance)) at \(time), before tonight's forecast starts"
         }
     }
 

@@ -144,12 +144,12 @@ struct BeforeTonightTests {
     @Test func rainBeforeSunsetIsAHeadsUpNotAVerdict() {
         let rainy = text { F.hour($0, chance: $0 == F.at(0, 15) ? 0.6 : 0) }
         #expect(rainy.verdict.flyOn == false)
-        #expect(plain(rainy.beforeTonightText(at: F.at(0, 9))) == "Rain 60% at 3 PM, before tonight starts")
+        #expect(plain(rainy.beforeTonightText(at: F.at(0, 9))) == "Rain 60% at 3 PM, before tonight's forecast starts")
         #expect(plain(rainy.beforeTonightBrief(at: F.at(0, 9))) == "Rain 3 PM")
         #expect(rainy.beforeTonightText(at: F.at(0, 16)) == nil)
 
         let stormy = text { F.hour($0, storm: $0 == F.at(0, 14)) }
-        #expect(plain(stormy.beforeTonightText(at: F.at(0, 9))) == "Storms possible at 2 PM, before tonight starts")
+        #expect(plain(stormy.beforeTonightText(at: F.at(0, 9))) == "Storms possible at 2 PM, before tonight's forecast starts")
         #expect(text().beforeTonightText(at: F.at(0, 9)) == nil)
     }
 
@@ -166,7 +166,7 @@ struct BeforeTonightTests {
         let rainy = text { F.hour($0, chance: $0 == F.at(0, 15) ? 0.6 : 0) }
         let face = ComplicationFace(rainy, at: F.at(0, 9))
         #expect(face.headline == "Rainfly off tonight")
-        #expect(plain(face.detail) == "Rain 60% at 3 PM, before tonight starts")
+        #expect(plain(face.detail) == "Rain 60% at 3 PM, before tonight's forecast starts")
         #expect(plain(face.inline) == "Rain 3 PM, before tonight")
         #expect(face.notes.first == rainy.reason)
         #expect(ComplicationFace(rainy, at: F.at(0, 21)).inline == "Rainfly off tonight")
