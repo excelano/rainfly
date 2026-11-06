@@ -177,16 +177,16 @@ struct TripModelTests {
         #expect(await provider.campsFetched == [lake.name])
     }
 
-    /// Half past eight in the morning at the hut is past break camp there, whatever the
-    /// device's zone, so the hut has moved on to its next night.
-    @Test func aCampInAnotherZoneMovesOnAtItsOwnBreakCamp() async {
+    /// Half past noon at the hut is past its morning, whatever the device's zone, so the hut
+    /// has moved on to its next night.
+    @Test func aCampInAnotherZoneMovesOnAtItsOwnNoon() async {
         let provider = FakeProvider(fetchedAt: afternoon)
         let cache = temporaryCache()
         var camps = Camps()
         let hut = camps.add(CampLocation(name: "Hut", latitude: -43.6, longitude: 170.1, timeZoneID: "Pacific/Auckland"))
         camps.plan(hut.name, on: tonight)
         camps.plan(hut.name, on: tonight.adding(days: 1))
-        let morning = tonight.adding(days: 1).start(in: NightWindow.localCalendar(for: hut)).addingTimeInterval(8.5 * 3600)
+        let morning = tonight.adding(days: 1).start(in: NightWindow.localCalendar(for: hut)).addingTimeInterval(12.5 * 3600)
         let model = model(provider, cache: cache, camps: camps)
         await model.refreshIfStale(now: morning)
         #expect(model.nightDate(at: morning) == tonight.adding(days: 1))

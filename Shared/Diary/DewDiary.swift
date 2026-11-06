@@ -155,10 +155,9 @@ struct DiaryNight: Codable, Equatable {
     /// Set once the night has been shared with Excelano.
     var shared: SharedMark?
 
-    /// The forecast that decided the fly: the last one fetched before sunset, or else the first.
+    /// The forecast that decided the fly: the last one fetched by 22:00, or else the first.
     var pitched: NightForecast? {
-        guard let first = forecasts.first else { return nil }
-        return forecasts.last { $0.fetchedAt < first.sunset } ?? first
+        NightWindow.decided(forecasts)
     }
 
     func judge(settings: Settings) -> DiaryJudgement? {

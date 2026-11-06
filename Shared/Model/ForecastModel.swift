@@ -116,7 +116,7 @@ final class ForecastModel {
 
     /// The night that matters at `now`: last night until pack-by, tonight from then on.
     func nightDate(at now: Date = .now) -> NightDate {
-        camps.night(at: now, packByMinutes: settings.packByMinutes)
+        camps.night(at: now)
     }
 
     /// In the background the watch's position comes from the last fetch for Here, since
@@ -125,7 +125,7 @@ final class ForecastModel {
         let date = nightDate(at: now)
         // A trip night stays until it is over on the device too, since without it its night
         // would fall back to Here, judged in the device's zone.
-        let onDevice = NightDate.covering(now, packByMinutes: settings.packByMinutes, calendar: .current)
+        let onDevice = NightDate.covering(now, calendar: .current)
         dropPastNights(before: min(date, onDevice))
         let name = camps.campName(on: date)
         if name != campName { problem = nil }

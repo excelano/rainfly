@@ -98,12 +98,12 @@ struct DewDiaryRecordingTests {
 }
 
 struct DewDiaryJudgingTests {
-    @Test func theForecastBeforeSunsetIsTheOneJudged() {
+    @Test func theForecastByTenIsTheOneJudged() {
         var diary = DewDiary()
         diary.record(night("A", spread: 8, fetchedAt: F.at(0, 17)))
-        diary.record(night("A", spread: 2, fetchedAt: F.at(0, 19)))
+        diary.record(night("A", spread: 2, fetchedAt: F.at(0, 21, 30)))
         diary.record(night("A", spread: 8, fetchedAt: F.at(0, 23)))
-        #expect(diary.nights[0].pitched?.fetchedAt == F.at(0, 19))
+        #expect(diary.nights[0].pitched?.fetchedAt == F.at(0, 21, 30))
         #expect(diary.nights[0].judge(settings: Settings())?.predicted == true)
     }
 

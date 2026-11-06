@@ -31,15 +31,15 @@ struct Camps: Codable, Equatable, Sendable {
         return trip.first { $0.date == date }?.campName ?? shown?.campName ?? CampLocation.hereName
     }
 
-    /// The night that matters at `now`: the first one whose pack-by has not passed at its
-    /// own camp, which can be in another zone than the device.
-    func night(at now: Date, packByMinutes: Int, deviceZone: TimeZone = .current) -> NightDate {
-        let device = NightDate.covering(now, packByMinutes: packByMinutes, calendar: Self.calendar(deviceZone))
+    /// The night that matters at `now`: the first one whose morning has not ended at noon at
+    /// its own camp, which can be in another zone than the device.
+    func night(at now: Date, deviceZone: TimeZone = .current) -> NightDate {
+        let device = NightDate.covering(now, calendar: Self.calendar(deviceZone))
         let candidates = (-1...1).map { device.adding(days: $0) }
         return candidates.first { date in
             let zone = camp(named: campName(on: date))?.timeZone ?? deviceZone
-            let packBy = date.adding(days: 1).start(in: Self.calendar(zone)).addingTimeInterval(TimeInterval(packByMinutes * 60))
-            return now < packBy
+            let noon = date.adding(days: 1).start(in: Self.calendar(zone)).addingTimeInterval(TimeInterval(NightWindow.handoverHour * 3600))
+            return now < noon
         } ?? device.adding(days: 1)
     }
 

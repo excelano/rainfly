@@ -49,7 +49,7 @@ enum Demo {
             preferences.dewDiary = true
             SettingsStore(defaults: defaults).preferences = preferences
         }
-        let tonight = NightDate.covering(.now, packByMinutes: Settings().packByMinutes, calendar: .current)
+        let tonight = NightDate.covering(.now, calendar: .current)
         var camps = Camps()
         camps.add(camp)
         camps.add(nextCamp)
@@ -75,7 +75,7 @@ enum Demo {
     ]
 
     static func diary() -> DewDiary {
-        let tonight = NightDate.covering(.now, packByMinutes: Settings().packByMinutes, calendar: .current)
+        let tonight = NightDate.covering(.now, calendar: .current)
         let calendar = NightWindow.localCalendar(for: camp)
         var diary = DewDiary()
         for night in diaryNights {

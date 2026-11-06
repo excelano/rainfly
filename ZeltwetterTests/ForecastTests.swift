@@ -9,15 +9,26 @@ import Testing
 private typealias F = Fixture
 
 struct NightWindowTests {
-    @Test func nightIsLastNightUntilPackBy() {
-        let night = { (now: Date) in NightDate.covering(now, packByMinutes: 8 * 60, calendar: F.calendar) }
+    @Test func nightIsLastNightUntilNoon() {
+        let night = { (now: Date) in NightDate.covering(now, calendar: F.calendar) }
         let july1 = NightDate(year: 2026, month: 7, day: 1)
         let july2 = NightDate(year: 2026, month: 7, day: 2)
         #expect(night(F.at(0, 21)) == july1)
         #expect(night(F.at(1, 3)) == july1)
-        #expect(night(F.at(1, 7, 59)) == july1)
-        #expect(night(F.at(1, 8)) == july2)
+        #expect(night(F.at(1, 11, 59)) == july1)
+        #expect(night(F.at(1, 12)) == july2)
         #expect(night(F.at(1, 15)) == july2)
+    }
+
+    @Test func theNightHasThreePhases() {
+        let window = NightWindow(F.night(), packByMinutes: 8 * 60)
+        #expect(window.anchor == F.at(0, 22))
+        #expect(window.handover == F.at(1, 12))
+        #expect(window.phase(at: F.at(0, 15)) == .evening)
+        #expect(window.phase(at: F.at(0, 22)) == .overnight)
+        #expect(window.phase(at: F.at(1, 5)) == .overnight)
+        #expect(window.phase(at: F.sunrise) == .morning)
+        #expect(window.phase(at: F.at(1, 11)) == .morning)
     }
 
     @Test func summaryCoversTheNightAndMorningRain() {
@@ -223,13 +234,27 @@ struct ForecastCacheTests {
         #expect(cache.night(at: F.camp.name, on: july1.adding(days: 1)) == nil)
     }
 
-    @Test func aNewFetchReplacesTheSameNight() {
+    @Test func aNightKeepsItsLatestItsDecidedAndItsLastBeforeMorning() {
         let cache = temporaryCache()
-        cache.save(F.night(), now: F.at(0, 18))
-        let rainy = F.night { F.hour($0, chance: 0.5) }
-        cache.save(rainy, now: F.at(0, 19))
-        #expect(cache.night(at: F.camp.name, on: july1) == rainy)
-        #expect(cache.store.load()?.count == 1)
+        let fetched = { (date: Date) in
+            let night = F.night()
+            return NightForecast(location: night.location, fetchedAt: date, sunset: night.sunset, sunrise: night.sunrise, hours: night.hours)
+        }
+        for date in [F.at(0, 18), F.at(0, 21, 30), F.at(0, 23), F.at(1, 5), F.at(1, 8)] {
+            cache.save(fetched(date), now: date)
+        }
+        #expect(cache.night(at: F.camp.name, on: july1)?.fetchedAt == F.at(1, 8))
+        #expect(cache.decided(at: F.camp.name, on: july1)?.fetchedAt == F.at(0, 21, 30))
+        #expect(cache.beforeMorning(at: F.camp.name, on: july1)?.fetchedAt == F.at(1, 5))
+        #expect(cache.store.load()?.count == 3)
+    }
+
+    @Test func aNightFirstFetchedAfterTenIsJudgedOnThatFetch() {
+        let cache = temporaryCache()
+        let night = F.night()
+        let late = NightForecast(location: night.location, fetchedAt: F.at(1, 1), sunset: night.sunset, sunrise: night.sunrise, hours: night.hours)
+        cache.save(late, now: F.at(1, 1))
+        #expect(cache.decided(at: F.camp.name, on: july1) == late)
     }
 
     @Test func oldNightsAreDropped() {

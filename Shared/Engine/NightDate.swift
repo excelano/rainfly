@@ -41,11 +41,11 @@ struct NightDate: Codable, Hashable, Comparable, Sendable {
         (lhs.year, lhs.month, lhs.day) < (rhs.year, rhs.month, rhs.day)
     }
 
-    /// The night that matters at `now`: last night until pack-by, tonight from then on.
-    static func covering(_ now: Date, packByMinutes: Int, calendar: Calendar) -> NightDate {
-        let packBy = calendar.date(bySettingHour: packByMinutes / 60, minute: packByMinutes % 60, second: 0, of: now) ?? now
+    /// The night that matters at `now`: last night until noon, tonight from then on.
+    static func covering(_ now: Date, calendar: Calendar) -> NightDate {
+        let handover = calendar.date(bySettingHour: NightWindow.handoverHour, minute: 0, second: 0, of: now) ?? now
         let today = NightDate(now, calendar: calendar)
-        return now < packBy ? today.adding(days: -1) : today
+        return now < handover ? today.adding(days: -1) : today
     }
 
     private static let utc: Calendar = {

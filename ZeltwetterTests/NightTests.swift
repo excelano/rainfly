@@ -105,20 +105,20 @@ struct NightAtTheCampTests {
 
     @Test func withoutATripTheDevicesPackByDecides() {
         let camps = Camps()
-        #expect(camps.night(at: at("America/Chicago", 2, 7), packByMinutes: 8 * 60, deviceZone: chicago) == NightDate(year: 2026, month: 7, day: 1))
-        #expect(camps.night(at: at("America/Chicago", 2, 9), packByMinutes: 8 * 60, deviceZone: chicago) == NightDate(year: 2026, month: 7, day: 2))
+        #expect(camps.night(at: at("America/Chicago", 2, 11), deviceZone: chicago) == NightDate(year: 2026, month: 7, day: 1))
+        #expect(camps.night(at: at("America/Chicago", 2, 13), deviceZone: chicago) == NightDate(year: 2026, month: 7, day: 2))
     }
 
-    @Test func aCampAheadOfTheDeviceMovesOnAtItsOwnPackBy() {
+    @Test func aCampAheadOfTheDeviceMovesOnAtItsOwnNoon() {
         let camps = trip("Pacific/Auckland")
-        #expect(camps.night(at: at("Pacific/Auckland", 2, 7, 30), packByMinutes: 8 * 60, deviceZone: chicago) == NightDate(year: 2026, month: 7, day: 1))
-        #expect(camps.night(at: at("Pacific/Auckland", 2, 8, 30), packByMinutes: 8 * 60, deviceZone: chicago) == NightDate(year: 2026, month: 7, day: 2))
+        #expect(camps.night(at: at("Pacific/Auckland", 2, 11, 30), deviceZone: chicago) == NightDate(year: 2026, month: 7, day: 1))
+        #expect(camps.night(at: at("Pacific/Auckland", 2, 12, 30), deviceZone: chicago) == NightDate(year: 2026, month: 7, day: 2))
     }
 
-    @Test func aCampBehindTheDeviceKeepsItsNightUntilItsOwnPackBy() {
+    @Test func aCampBehindTheDeviceKeepsItsNightUntilItsOwnNoon() {
         let camps = trip("Pacific/Honolulu")
-        #expect(camps.night(at: at("Pacific/Honolulu", 2, 4), packByMinutes: 8 * 60, deviceZone: chicago) == NightDate(year: 2026, month: 7, day: 1))
-        #expect(camps.night(at: at("Pacific/Honolulu", 2, 8, 30), packByMinutes: 8 * 60, deviceZone: chicago) == NightDate(year: 2026, month: 7, day: 2))
+        #expect(camps.night(at: at("Pacific/Honolulu", 2, 9), deviceZone: chicago) == NightDate(year: 2026, month: 7, day: 1))
+        #expect(camps.night(at: at("Pacific/Honolulu", 2, 12, 30), deviceZone: chicago) == NightDate(year: 2026, month: 7, day: 2))
     }
 }
 
