@@ -14,10 +14,10 @@ struct SettingsView: View {
         List {
             Section {
                 NavigationLink {
-                    DatePicker("Break camp", selection: packBy, displayedComponents: .hourAndMinute)
-                        .navigationTitle("Break camp")
+                    DatePicker("Pack up at", selection: packBy, displayedComponents: .hourAndMinute)
+                        .navigationTitle("Pack up at")
                 } label: {
-                    LabeledContent("Break camp", value: packBy.wrappedValue.formatted(date: .omitted, time: .shortened))
+                    LabeledContent("Pack up at", value: packBy.wrappedValue.formatted(date: .omitted, time: .shortened))
                 }
             } header: {
                 Text("Morning")
@@ -78,7 +78,7 @@ struct SettingsView: View {
         .navigationTitle("Settings")
     }
 
-    /// Break-camp time (pack-by) as a time today, which the picker needs; only the hour and minute are kept.
+    /// Pack-up time (pack-by) as a time today, which the picker needs; only the hour and minute are kept.
     private var packBy: Binding<Date> {
         Binding {
             let minutes = model.settings.packByMinutes
@@ -127,7 +127,7 @@ struct ChecksSettingsView: View {
             } header: {
                 Text("Morning rain")
             } footer: {
-                Text("From sunrise until you break camp.")
+                Text("From sunrise until you pack up.")
             }
             Section {
                 QuantityRow(quantity: .windRain(units), value: $model.settings.windRainMS)

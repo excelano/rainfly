@@ -8,30 +8,30 @@
 # description 4,000, apple-review-notes 4,000.
 
 apple-review-notes = """
-Rainfly is for people sleeping in a tent. It reads the overnight forecast for the campsite and says whether the rainfly should go on tonight, "Rainfly on" or "Rainfly off", with the reason. It is a full app on iPhone, iPad and Apple Watch; each works alone, and an iPhone and its watch keep the same camps, trip and settings. There is no account to sign into.
+Rainfly is for people sleeping in a tent. It reads the overnight forecast for the campsite and says whether the rainfly should go on tonight, "Rainfly on" or "Rainfly off", with the reason. It is a full app on iPhone, iPad and Apple Watch; each works alone, and a phone and its watch share camps, trip and settings. There is no account to sign into.
 
 Forecasts come from WeatherKit, so the device needs a connection before the first verdict appears. A camp's forecast is kept on the device after that.
 
 ON IPHONE AND IPAD
-A first-launch welcome explains the app, offers the dew diary, and ends with Use my location (which asks for Location) or Add a camp. The main screen shows tonight's verdict, the reason, any advice, and every check (storms, rain, wind with rain, frost, dew, morning rain, cold) with its time and the night's value against its threshold. Tapping a check explains it. The Apple Weather mark and its legal link are at the bottom. Pull down to fetch again. With Location denied, a camp can still be added by search, on the map or by coordinates.
+A first-launch welcome explains the app, offers the dew diary, and ends with Use my location (which asks for Location) or Add a camp. The main screen changes with the time of day at the camp. From noon to 22:00 it shows tonight's verdict, the reason, any advice, and every check, each explained on tap. From 22:00 to sunrise it shows what changed since 22:00, the weather now and the hours to sunrise on a dark red screen. From sunrise to noon it shows whether the tent packs dry and how the 22:00 forecast did against Apple Weather's record, check by check. The Apple Weather mark and its legal link are at the bottom. Pull down to fetch again. With Location denied, camps can still be added.
 
-The tent button at the top left opens Camps. Add camp offers Search ("Yosemite Valley" is a good one to try), Use current location, Pick on map (pan the map under the pin) and Enter coordinates. Tap a saved camp to show its verdict from tonight on. Add night plans a camp for a later date, and Download trip fetches every planned night in the coming week; each downloaded night then shows its own verdict in the list and opens to its checks.
+The tent button at the top left opens Camps. Add camp offers Search (try "Yosemite Valley"), current location, a map and coordinates. Tap a saved camp to show its verdict from tonight on. Add night plans a camp for a later date, and Download trip fetches every planned night in the coming week; each then shows its own verdict.
 
-The gear at the top right holds the units, the time you plan to break camp, your sleeping bag's comfort rating, every threshold the checks use under Checks, and the pressure alert.
+The gear at the top right holds the units, the time you plan to pack up, your sleeping bag's comfort rating, every threshold the checks use under Checks, the pressure alert, and under Overnight the overnight alert and the red screen.
 
-The verdict is also available as a Home Screen widget, small or medium, and on the Lock Screen.
+Widgets show the verdict on the Home Screen and Lock Screen.
 
 ON APPLE WATCH
-The watch app has the same verdict, checks, camps, trip and settings, with the Digital Crown for entering coordinates and values, and a complication for the circular, corner, rectangular and inline families.
+The watch app has the same verdict, checks, camps, trip and settings, with the Digital Crown for entering coordinates and values, and complications.
 
 THE DEW DIARY (IPHONE AND IPAD)
-Settings has a Dew diary switch, off by default. With it on, each morning from sunrise the main screen asks what was found on something left outside overnight (Dry, Light dew, Wet, Frost, Rain or Didn't check). Settings > Nights and suggestions shows how the dew forecast did on the answered nights, and after enough nights a suggested dew-point gap with an Apply button. A new install starts with no nights. Share with Excelano (on with the diary, as the welcome says; needs iCloud) sends each answered night to our CloudKit database to improve the dew forecast: position rounded to 0.1°, what was found, the forecast and history hours, the thresholds and a random diary ID; no camp names or personal details. The diary screen can reset the ID and delete every shared night.
+Settings has a Dew diary switch, off by default. With it on, each morning from sunrise the main screen says what Rainfly expected on something left outside overnight and asks if it was right (Yes, Partly: light dew, No, Rain or Didn't check); No then asks what was found and where. The diary screen shows how the dew forecast did and, after enough nights, a suggested dew-point gap with an Apply button. Share with Excelano (on with the diary; needs iCloud) sends each answered night to our CloudKit database to improve the dew forecast: position rounded to 0.1°, what was found, the forecast and history hours, the thresholds and a random diary ID; no camp names or personal details. The diary screen can reset the ID and delete every shared night.
 
-THE OVERNIGHT PRESSURE ALERT
-The first time a night shows "Rainfly off", Rainfly asks to send notifications and for Motion & Fitness. Both serve one optional feature: background refreshes at night read the barometer for a few seconds, and when the pressure falls fast while the verdict is "Rainfly off", the device raises a local notification. When the watch app is installed with its pressure alert on, the phone keeps quiet so one fall brings one notification. It needs a falling barometer at night, so it cannot be made to fire on demand.
+OVERNIGHT NOTIFICATIONS
+The first time a night shows "Rainfly off", Rainfly asks to send notifications and for Motion & Fitness. They serve two optional alerts, both local notifications from background refreshes at night. The pressure alert fires when the barometer falls fast while the verdict is "Rainfly off". The overnight alert fires once a night when a forecast fetched after 22:00 puts the rainfly on and the 22:00 forecast had it off. When the watch app has an alert on, the phone keeps that one quiet. Both need the weather to change at night, so neither can be made to fire on demand.
 
 WHERE DATA GOES
-The coordinates of the camp being forecast go to WeatherKit, and to Apple's map service when a camp is searched for, named or placed on the map. Between the iPhone and its paired watch, camps, the trip, settings and the forecasts for saved camps travel over WatchConnectivity. Shared dew diary nights, only when the user turns sharing on, go to the public database of our CloudKit container. All of it goes through Apple's frameworks; we run no server, and the app has no analytics or third-party code. Privacy policy: https://excelano.com/legal/#rainfly. Code: https://github.com/excelano/rainfly.
+The coordinates of the camp being forecast go to WeatherKit, and to Apple's map service when a camp is searched for, named or placed on the map. Camps, the trip, settings and saved camps' forecasts travel between the iPhone and its watch over WatchConnectivity. Shared dew diary nights, only when the user turns sharing on, go to the public database of our CloudKit container. All of it goes through Apple's frameworks; we run no server, and the app has no analytics or third-party code. Privacy policy: https://excelano.com/legal/#rainfly. Code: https://github.com/excelano/rainfly.
 """
 
 [locales."en-us"]
@@ -41,17 +41,19 @@ privacy = "https://excelano.com/legal/#rainfly"
 description = """
 Rainfly answers one question at camp: should the rainfly go on tonight?
 
-It reads the night's forecast for your campsite and gives a plain yes or no with the reason: "Dew likely by 4 AM", "Rain 35% after 2 AM", "Storms possible at 11 PM", or "Clear, dry, mild." In the morning it estimates when the tent will be dry enough to pack.
+It reads the night's forecast for your campsite and gives a plain yes or no with the reason: "Dew likely by 4 AM", "Rain 35% after 2 AM", "Storms possible at 11 PM", or "Clear, dry, mild."
 
-Every check stands on its own, and any one of them puts the rainfly on: thunderstorms, rain overnight, a lower chance of rain on a windy night, dew or frost on a clear and calm night, rain in the morning before you break camp, and a cold night. Each comes with the time it fires, alongside the night's low, the closest the air comes to its dew point, and the highest chance of rain. Rainfly also suggests opening the vents on a damp night with the rainfly on, and warns when the low falls below your sleeping bag's comfort rating.
+It changes with the time of day. From noon you see tonight's forecast. From 22:00 you see what has changed since then, the weather right now and the rest of the night, on a red screen that keeps your eyes used to the dark. In the morning it tells you whether you'll pack a dry tent and how last night's forecast did against what actually happened.
+
+Every check stands on its own, and any one of them puts the rainfly on: thunderstorms, rain overnight, a lower chance of rain on a windy night, dew or frost on a clear and calm night, rain in the morning before you pack up, and a cold night. Each comes with the time it fires, alongside the night's low, the closest the air comes to its dew point, and the highest chance of rain. Rainfly also suggests opening the vents on a damp night with the rainfly on, and warns when the low falls below your sleeping bag's comfort rating.
 
 Plan a trip and it follows you. Add camps by searching for a campground, park or town, from where you stand, by dropping them on a map, or by typing coordinates. Plan which camp you sleep at each night, download the trip while you have signal, and each evening Rainfly shows that night's camp, with or without a connection. On iPhone and iPad, every downloaded night shows its verdict at a glance.
 
 Rainfly runs on iPhone, iPad and Apple Watch, and each works on its own. With an iPhone and a watch, your camps, trip and settings stay the same on phone and wrist, and a trip downloaded on the phone at home is waiting on the watch at the trailhead.
 
-See the verdict without opening the app: a widget on the Home Screen or Lock Screen, and a complication on the watch face, showing the dry-by time in the morning. With the overnight pressure alert on, Rainfly reads the barometer through the night and alerts you when the pressure falls fast while the rainfly is off. It samples a few times an hour at most, as the system allows, so it is an early hint rather than a weather station.
+See the verdict without opening the app: a widget on the Home Screen or Lock Screen, and a complication on the watch face, following the same parts of the day. If the forecast changes after 22:00 and the rainfly should go on, Rainfly can send you a notification. With the overnight pressure alert on, Rainfly reads the barometer through the night and alerts you when the pressure falls fast while the rainfly is off. It samples a few times an hour at most, as the system allows, so it is an early hint rather than a weather station.
 
-Keep a dew diary on iPhone or iPad to check the dew forecast against your own mornings. Each morning, note what you found outside; Rainfly shows how often it called the dew right, whether a miss was the forecast's or the settings', and suggests a dew-point gap that suits your campsites. Answered nights are shared to help improve the dew forecast for everyone, and you can turn sharing off in Settings.
+Keep a dew diary on iPhone or iPad to check the dew forecast against your own mornings. Each morning, tell Rainfly whether its dew forecast was right; it shows how often it called the dew right, whether a miss was the forecast's or the settings', and suggests a dew-point gap that suits your campsites. Answered nights are shared to help improve the dew forecast for everyone, and you can turn sharing off in Settings.
 
 Every threshold can be changed, in °C or °F and m/s or mph.
 

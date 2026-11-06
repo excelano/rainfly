@@ -15,7 +15,7 @@ struct SettingsScreen: View {
         let units = model.preferences.units
         Form {
             Section {
-                DatePicker("Break camp", selection: packBy, displayedComponents: .hourAndMinute)
+                DatePicker("Pack up at", selection: packBy, displayedComponents: .hourAndMinute)
             } header: {
                 Text("Morning")
             } footer: {
@@ -78,7 +78,7 @@ struct SettingsScreen: View {
                     }
                 }
             } footer: {
-                Text("Each morning, note what you found on something left under the sky, and see how the dew forecast did at your campsites. The reminder comes half an hour before you break camp.")
+                Text("Each morning, note what you found on something left under the sky, and see how the dew forecast did at your campsites. The reminder comes half an hour before you pack up.")
             }
             Section {
                 Toggle("Pressure alert", isOn: $model.preferences.pressureWatch)
@@ -112,7 +112,7 @@ struct SettingsScreen: View {
         .navigationTitle("Settings")
     }
 
-    /// Break-camp time (pack-by) as a time today, which the picker needs; only the hour and minute are kept.
+    /// Pack-up time (pack-by) as a time today, which the picker needs; only the hour and minute are kept.
     private var packBy: Binding<Date> {
         Binding {
             let minutes = model.settings.packByMinutes
@@ -163,7 +163,7 @@ struct ChecksSettingsScreen: View {
             } header: {
                 Text("Morning rain")
             } footer: {
-                Text("The same, for the hours between sunrise and break camp.")
+                Text("The same, for the hours between sunrise and when you pack up.")
             }
             Section {
                 QuantityStepper(quantity: .windRain(units), value: $model.settings.windRainMS)

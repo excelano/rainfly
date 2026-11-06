@@ -52,7 +52,7 @@ struct WelcomeScreen: View {
             Beat(symbol: "drop", title: "Keep a dew diary",
                  detail: "Dew is the hardest check to forecast, and it depends on your campsite. The dew diary tests Rainfly's dew forecast against your own mornings.")
             Beat(symbol: "sunrise", title: "One tap each morning",
-                 detail: "Before you break camp, Rainfly reminds you and asks what you found on something left out overnight, such as a car windshield or a picnic table: dry, light dew, wet, frost or rain.")
+                 detail: "Before you pack up, Rainfly reminds you and asks what you found on something left out overnight, such as a car windshield or a picnic table: dry, light dew, wet, frost or rain.")
             Beat(symbol: "slider.horizontal.3", title: "A setting tuned to you",
                  detail: "Rainfly counts the nights its dew forecast got right and wrong. After a few nights of both dry and wet mornings, it suggests a dew-point gap that suits where you camp.")
             Beat(symbol: "icloud.and.arrow.up", title: "Shared to improve the forecast",
