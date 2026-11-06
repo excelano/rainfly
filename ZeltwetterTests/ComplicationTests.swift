@@ -69,7 +69,8 @@ struct ComplicationTimelineTests {
     @Test func clearNightFaces() {
         let face = entries(F.night(), now: F.at(0, 21))[0].face
         #expect(face.flyOn == false)
-        #expect(face.inline == "Rainfly off")
+        #expect(face.headline == "Rainfly off tonight")
+        #expect(face.inline == "Rainfly off tonight")
         #expect(face.detail == "Clear, dry, mild.")
         #expect(face.fetchedAt == F.at(0, 18))
     }

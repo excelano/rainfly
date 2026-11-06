@@ -56,7 +56,7 @@ private struct VerdictContent: View {
                 TentGlyph(flyOn: text.verdict.flyOn)
                     .frame(height: 52)
                     .foregroundStyle(text.verdict.flyOn ? Color.accentColor : .secondary)
-                Text(text.period(at: now).uppercased())
+                Text(text.periodLabel(at: now).uppercased())
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
                 Text(text.headline)
@@ -64,6 +64,12 @@ private struct VerdictContent: View {
                 Text(text.reason)
                     .font(.footnote)
                     .multilineTextAlignment(.center)
+                if let beforeTonight = text.beforeTonightText(at: now) {
+                    Text(beforeTonight)
+                        .font(.footnote)
+                        .foregroundStyle(.orange)
+                        .multilineTextAlignment(.center)
+                }
                 ForEach(text.notes, id: \.self) { note in
                     Text(note)
                         .font(.footnote)

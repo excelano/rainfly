@@ -10,8 +10,8 @@ struct WeatherKitProvider: ForecastProvider {
     func night(at camp: CampLocation, evening: Date) async throws -> NightForecast {
         let calendar = NightWindow.localCalendar(for: camp)
         let morning = calendar.date(byAdding: .day, value: 1, to: evening)!
-        // Noon on the evening is before any sunset that matters; noon the next day ends dry-by.
-        let hoursStart = calendar.date(byAdding: .hour, value: 12, to: evening)!
+        // The day's hours warn of rain before the night starts; noon the next day ends dry-by.
+        let hoursStart = evening
         let hoursEnd = calendar.date(byAdding: .hour, value: 13, to: morning)!
         let location = CLLocation(latitude: camp.latitude, longitude: camp.longitude)
 
@@ -37,7 +37,7 @@ struct WeatherKitProvider: ForecastProvider {
             fetchedAt: .now,
             sunset: sun.sunset,
             sunrise: sun.sunrise,
-            hours: hours.filter { $0.date.addingTimeInterval(3600) > sun.sunset }.map(Self.sample),
+            hours: hours.map(Self.sample),
             polar: sun.polar
         )
     }

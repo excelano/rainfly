@@ -30,7 +30,10 @@ struct NightView<Extra: View>: View {
     var body: some View {
         List {
             Section {
-                VerdictHeader(text: text, period: shownPeriod)
+                VerdictHeader(
+                    text: text, period: period ?? text.periodLabel(at: now),
+                    beforeTonight: period == nil ? text.beforeTonightText(at: now) : nil
+                )
             }
             .listRowBackground(Color.clear)
             if let problem {
@@ -79,6 +82,7 @@ extension NightView where Extra == EmptyView {
 private struct VerdictHeader: View {
     let text: VerdictText
     let period: String
+    let beforeTonight: String?
 
     var body: some View {
         VStack(spacing: 8) {
@@ -92,6 +96,10 @@ private struct VerdictHeader: View {
                 .font(.largeTitle.bold())
             Text(text.reason)
                 .font(.title3)
+            if let beforeTonight {
+                Label(beforeTonight, systemImage: "cloud.rain")
+                    .foregroundStyle(.orange)
+            }
             ForEach(text.notes, id: \.self) { note in
                 Text(note)
                     .foregroundStyle(.secondary)

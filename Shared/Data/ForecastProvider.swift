@@ -7,7 +7,7 @@ import Foundation
 /// A source of night forecasts, kept apart so the engine and the tests never see WeatherKit.
 protocol ForecastProvider: Sendable {
     /// The night that begins on the evening of `evening`, a start of day in the camp's zone,
-    /// with hours from sunset to noon the next day.
+    /// with hours from the start of that day to noon the next.
     func night(at camp: CampLocation, evening: Date) async throws -> NightForecast
     func attribution() async throws -> Attribution
 }

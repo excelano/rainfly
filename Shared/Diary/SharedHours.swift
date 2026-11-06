@@ -4,7 +4,7 @@
 
 import Foundation
 
-/// A night's forecast or history without its camp.
+/// A night's forecast or history without its camp or the day's hours before sunset.
 struct SharedHours: Codable, Equatable {
     let fetchedAt: Date
     let sunset: Date
@@ -15,7 +15,7 @@ struct SharedHours: Codable, Equatable {
         fetchedAt = night.fetchedAt
         sunset = night.sunset
         sunrise = night.sunrise
-        hours = night.hours
+        hours = night.hours.filter { $0.date.addingTimeInterval(3600) > night.sunset }
     }
 }
 

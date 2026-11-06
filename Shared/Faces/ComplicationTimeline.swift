@@ -25,24 +25,33 @@ struct ComplicationFace: Equatable, Sendable {
 
     /// For the watch face and widget galleries.
     static let sample = ComplicationFace(
-        flyOn: true, headline: "Rainfly on", detail: "Dew likely by 4 AM", inline: "Rainfly on · Dew 4 AM",
+        flyOn: true, headline: "Rainfly on tonight", detail: "Dew likely by 4 AM", inline: "Rainfly on · Dew 4 AM",
         dryTime: nil, fetchedAt: nil, camp: "Lost Lake", notes: ["Open the vents: it's a damp night", "Dry by ~8:40 AM"]
     )
 }
 
 extension ComplicationFace {
-    init(_ text: VerdictText, morning: Bool) {
+    /// The face at `date`: the morning's dry-by from sunrise, and before sunset any rain on
+    /// its way before the night starts, ahead of the night's own reason.
+    init(_ text: VerdictText, at date: Date) {
         let verdict = text.verdict
-        if morning, let dryBy = verdict.dryBy {
+        let headline = text.headline(at: date)
+        if date >= text.night.sunrise, let dryBy = verdict.dryBy {
             self.init(
-                flyOn: verdict.flyOn, headline: text.headline, detail: "Dry by ~\(text.clock(dryBy))",
+                flyOn: verdict.flyOn, headline: headline, detail: "Dry by ~\(text.clock(dryBy))",
                 inline: "Dry by \(text.compactClock(dryBy))", dryTime: text.compactClock(dryBy),
                 fetchedAt: text.night.fetchedAt, camp: text.night.location.title, notes: text.notes
             )
+        } else if let ahead = text.beforeTonightText(at: date), let brief = text.beforeTonightBrief(at: date) {
+            self.init(
+                flyOn: verdict.flyOn, headline: headline, detail: ahead,
+                inline: "\(brief), before tonight", dryTime: nil,
+                fetchedAt: text.night.fetchedAt, camp: text.night.location.title, notes: [text.reason] + text.notes
+            )
         } else {
             self.init(
-                flyOn: verdict.flyOn, headline: text.headline, detail: text.reason,
-                inline: verdict.headline.map { "Rainfly on · \(text.brief($0))" } ?? "Rainfly off", dryTime: nil,
+                flyOn: verdict.flyOn, headline: headline, detail: text.reason,
+                inline: verdict.headline.map { "Rainfly on · \(text.brief($0))" } ?? headline, dryTime: nil,
                 fetchedAt: text.night.fetchedAt, camp: text.night.location.title, notes: text.notes
             )
         }
@@ -70,14 +79,14 @@ enum ComplicationTimeline {
         var entries = Set(marks.filter { $0 >= now && $0 < window.packBy })
             .sorted()
             .map { date in
-                (date, ComplicationFace(text, morning: date >= night.sunrise))
+                (date, ComplicationFace(text, at: date))
             }
 
         let next = nightAt(window.packBy)
         let nextFace = next.map { next in
             let nextVerdict = FlyEngine.evaluate(next, settings: settings)
             return ComplicationFace(
-                VerdictText(night: next, verdict: nextVerdict, settings: settings, units: units), morning: false
+                VerdictText(night: next, verdict: nextVerdict, settings: settings, units: units), at: window.packBy
             )
         }
         entries.append((window.packBy, nextFace ?? .noForecast))

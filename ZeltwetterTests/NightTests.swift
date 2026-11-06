@@ -121,3 +121,54 @@ struct NightAtTheCampTests {
         #expect(camps.night(at: at("Pacific/Honolulu", 2, 8, 30), packByMinutes: 8 * 60, deviceZone: chicago) == NightDate(year: 2026, month: 7, day: 2))
     }
 }
+
+struct BeforeTonightTests {
+    /// The fixture night with the day's hours from noon, and rain at 3 PM when asked.
+    private func text(_ afternoon: (Date) -> HourSample = { F.hour($0) }) -> VerdictText {
+        let night = F.night()
+        let day = (12..<19).map { afternoon(F.at(0, $0)) }
+        let withDay = NightForecast(
+            location: night.location, fetchedAt: night.fetchedAt, sunset: night.sunset, sunrise: night.sunrise,
+            hours: day + night.hours
+        )
+        return VerdictText(
+            night: withDay, verdict: FlyEngine.evaluate(withDay, settings: Settings()), settings: Settings(),
+            units: DisplayUnits(fahrenheit: false, mph: false), locale: Locale(identifier: "en_US")
+        )
+    }
+
+    private func plain(_ string: String?) -> String? {
+        string?.replacingOccurrences(of: "\u{202F}", with: " ")
+    }
+
+    @Test func rainBeforeSunsetIsAHeadsUpNotAVerdict() {
+        let rainy = text { F.hour($0, chance: $0 == F.at(0, 15) ? 0.6 : 0) }
+        #expect(rainy.verdict.flyOn == false)
+        #expect(plain(rainy.beforeTonightText(at: F.at(0, 9))) == "Rain 60% at 3 PM, before tonight starts")
+        #expect(plain(rainy.beforeTonightBrief(at: F.at(0, 9))) == "Rain 3 PM")
+        #expect(rainy.beforeTonightText(at: F.at(0, 16)) == nil)
+
+        let stormy = text { F.hour($0, storm: $0 == F.at(0, 14)) }
+        #expect(plain(stormy.beforeTonightText(at: F.at(0, 9))) == "Storms possible at 2 PM, before tonight starts")
+        #expect(text().beforeTonightText(at: F.at(0, 9)) == nil)
+    }
+
+    @Test func theNightIsNamedBeforeSunset() {
+        let words = text()
+        #expect(plain(words.periodLabel(at: F.at(0, 9))) == "Tonight · sunset 8:30 PM to 8 AM")
+        #expect(words.periodLabel(at: F.at(0, 21)) == "Tonight")
+        #expect(words.periodLabel(at: F.at(1, 7)) == "This morning")
+        #expect(words.headline(at: F.at(0, 9)) == "Rainfly off tonight")
+        #expect(words.headline(at: F.at(1, 7)) == "Rainfly off")
+    }
+
+    @Test func theFaceLeadsWithRainBeforeTonight() {
+        let rainy = text { F.hour($0, chance: $0 == F.at(0, 15) ? 0.6 : 0) }
+        let face = ComplicationFace(rainy, at: F.at(0, 9))
+        #expect(face.headline == "Rainfly off tonight")
+        #expect(plain(face.detail) == "Rain 60% at 3 PM, before tonight starts")
+        #expect(plain(face.inline) == "Rain 3 PM, before tonight")
+        #expect(face.notes.first == rainy.reason)
+        #expect(ComplicationFace(rainy, at: F.at(0, 21)).inline == "Rainfly off tonight")
+    }
+}

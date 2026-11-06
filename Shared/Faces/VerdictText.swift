@@ -14,6 +14,48 @@ struct VerdictText {
 
     var headline: String { verdict.flyOn ? "Rainfly on" : "Rainfly off" }
 
+    /// The headline where nothing else says which night it is: "Rainfly off tonight".
+    func headline(at now: Date) -> String {
+        period(at: now) == "Tonight" ? "\(headline) tonight" : headline
+    }
+
+    /// "Tonight · sunset 8:30 PM to 8 AM" before sunset, so a daytime look reads as the
+    /// night's forecast; the period alone after it.
+    func periodLabel(at now: Date) -> String {
+        let period = period(at: now)
+        guard period == "Tonight", now < night.sunset else { return period }
+        let packBy = NightWindow(night, packByMinutes: settings.packByMinutes).packBy
+        let start = night.polar == nil ? "sunset \(clock(night.sunset))" : clock(night.sunset)
+        return "\(period) · \(start) to \(clock(packBy))"
+    }
+
+    /// The first hour from `now` to sunset with a storm or rain the night's checks would
+    /// count, which they don't cover because the night has not started.
+    func beforeTonight(at now: Date) -> HourSample? {
+        guard now < night.sunset else { return nil }
+        return night.hours
+            .sorted { $0.date < $1.date }
+            .first { hour in
+                hour.date.addingTimeInterval(3600) > now && hour.date < night.sunset
+                    && (hour.isThunderstorm || hour.precipChance >= settings.rainChance || hour.precipAmountMM > 0)
+            }
+    }
+
+    /// "Rain 30% at 3 PM, before tonight starts".
+    func beforeTonightText(at now: Date) -> String? {
+        beforeTonight(at: now).map { hour in
+            let time = clock(hour.date)
+            if hour.isThunderstorm { return "Storms possible at \(time), before tonight starts" }
+            if hour.precipChance < settings.rainChance { return "Rain forecast at \(time), before tonight starts" }
+            return "Rain \(percent(hour.precipChance)) at \(time), before tonight starts"
+        }
+    }
+
+    /// "Rain 3 PM", for the inline complication.
+    func beforeTonightBrief(at now: Date) -> String? {
+        beforeTonight(at: now).map { "\($0.isThunderstorm ? "Storms" : "Rain") \(clock($0.date))" }
+    }
+
     /// Which part of the night `now` is looking at: the morning after it from sunrise until
     /// break camp, the night itself before that.
     func period(at now: Date) -> String {
