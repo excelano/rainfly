@@ -24,6 +24,18 @@ struct CampLocation: Codable, Equatable, Sendable {
     var timeZone: TimeZone { TimeZone(identifier: timeZoneID) ?? .current }
 }
 
+/// Apple Weather's estimate of the weather at a camp right now.
+struct CurrentConditions: Codable, Equatable, Sendable {
+    let date: Date
+    let tempC: Double
+    let dewPointC: Double
+    let cloudCover: Double
+    let windMS: Double
+    let isRaining: Bool
+
+    var spreadC: Double { tempC - dewPointC }
+}
+
 /// One forecast hour, starting at `date`.
 struct HourSample: Codable, Equatable, Sendable {
     let date: Date

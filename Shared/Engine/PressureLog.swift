@@ -33,6 +33,23 @@ struct PressureLog: Codable, Equatable, Sendable {
         return peak - latest.hPa >= Self.fallHPa
     }
 
+    enum Trend: Equatable, Sendable { case fallingFast, falling, steady, rising }
+
+    /// How the pressure has moved over the `span` before the newest reading, when the readings
+    /// cover at least an hour of it.
+    var trend: (trend: Trend, hours: Int)? {
+        guard let latest = samples.last else { return nil }
+        let earlier = samples.filter { $0.date >= latest.date.addingTimeInterval(-Self.span) && $0.date < latest.date }
+        guard let first = earlier.first, latest.date.timeIntervalSince(first.date) >= 3600 else { return nil }
+        let change = latest.hPa - (earlier.map(\.hPa).max() ?? first.hPa)
+        let rise = latest.hPa - (earlier.map(\.hPa).min() ?? first.hPa)
+        let hours = Int((latest.date.timeIntervalSince(first.date) / 3600).rounded())
+        if change <= -Self.fallHPa { return (.fallingFast, hours) }
+        if change <= -0.5 { return (.falling, hours) }
+        if rise >= 0.5 { return (.rising, hours) }
+        return (.steady, hours)
+    }
+
     /// Warn when the pressure falls fast while the fly is off, once a night.
     func shouldWarn(verdict: Verdict, nightStart: Date) -> Bool {
         guard !verdict.flyOn, isFallingFast else { return false }

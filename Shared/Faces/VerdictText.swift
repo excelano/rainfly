@@ -199,25 +199,17 @@ struct VerdictText {
         if let firing, let hour = hour(at: firing.at) {
             return "At \(clock(hour.date)) the air is \(spread(hour.spreadC)) from its dew point, with a clear sky and little wind, so \(wet) will form."
         }
-        let close = window.nightHours.filter { $0.spreadC <= settings.dewSpreadC }
-        guard !close.isEmpty else {
-            return "The air stays at least \(spread(closest)) from its dew point. It has to get within \(spreadLimit) for \(wet)."
-        }
-        let isCloudy = { (hour: HourSample) in hour.cloudCover >= settings.clearSky }
-        let isWindy = { (hour: HourSample) in hour.windMS >= settings.calmWindMS }
-        if close.contains(where: { !isCloudy($0) && !isWindy($0) }) {
-            return trigger == .dew
+        let within = "The air gets within \(spread(closest)) of its dew point"
+        return switch SpreadMiss.of(trigger, hours: window.nightHours, settings: settings) {
+        case .tooDry?, nil:
+            "The air stays at least \(spread(closest)) from its dew point. It has to get within \(spreadLimit) for \(wet)."
+        case .otherSideOfFreezing?:
+            trigger == .dew
                 ? "Dew would form, but it's below freezing, so it will be frost instead."
                 : "Frost would form, but it's above freezing, so it will be dew instead."
-        }
-        let within = "The air gets within \(spread(closest)) of its dew point"
-        switch (close.contains(where: isCloudy), close.contains(where: isWindy)) {
-        case (true, false):
-            return "\(within), but it's cloudy then. Clouds keep the tent from cooling down, so \(wet) won't form."
-        case (false, true):
-            return "\(within), but it's windy then. Wind keeps the tent from cooling down, so \(wet) won't form."
-        default:
-            return "\(within), but whenever it does, it's either cloudy or windy, so \(wet) won't form."
+        case .cloudy?: "\(within), but it's cloudy then. Clouds keep the tent from cooling down, so \(wet) won't form."
+        case .windy?: "\(within), but it's windy then. Wind keeps the tent from cooling down, so \(wet) won't form."
+        case .cloudyOrWindy?: "\(within), but whenever it does, it's either cloudy or windy, so \(wet) won't form."
         }
     }
 
@@ -313,13 +305,13 @@ struct VerdictText {
         Quantity.dewSpread(units).measured(celsius, against: settings.dewSpreadC)
     }
 
-    private func wind(_ metersPerSecond: Double) -> String {
+    func wind(_ metersPerSecond: Double) -> String {
         Quantity.windRain(units).measured(metersPerSecond, against: settings.windRainMS)
     }
 
-    private var coldLimit: String { Quantity.cold(units).text(settings.coldC) }
-    private var spreadLimit: String { Quantity.dewSpread(units).text(settings.dewSpreadC) }
-    private var windRainLimit: String { Quantity.windRain(units).text(settings.windRainMS) }
+    var coldLimit: String { Quantity.cold(units).text(settings.coldC) }
+    var spreadLimit: String { Quantity.dewSpread(units).text(settings.dewSpreadC) }
+    var windRainLimit: String { Quantity.windRain(units).text(settings.windRainMS) }
 
     func percent(_ fraction: Double) -> String {
         "\(Int((fraction * 100).rounded()))%"
@@ -333,7 +325,7 @@ struct VerdictText {
         hour(at: date)?.precipChance ?? 0
     }
 
-    private func hour(at date: Date) -> HourSample? {
+    func hour(at date: Date) -> HourSample? {
         night.hours.first { $0.date == date }
     }
 
