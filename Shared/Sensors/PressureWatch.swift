@@ -16,7 +16,7 @@ struct PressureWatch {
     let sample: @MainActor () async -> Double?
     let warn: @MainActor (String) async -> Void
 
-    static let message = "Pressure dropping fast — consider the rainfly."
+    static let message = "The air pressure is dropping fast. Think about putting the rainfly on."
 
     static func live() -> PressureWatch {
         PressureWatch(store: Store(name: "pressure"), sample: { await Barometer().read() }, warn: post)
@@ -72,7 +72,7 @@ struct PressureWatch {
 
     private static func post(_ message: String) async {
         let content = UNMutableNotificationContent()
-        content.title = "Rainfly"
+        content.title = "Rain may be coming"
         content.body = message
         content.sound = .default
         try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "pressure", content: content, trigger: nil))

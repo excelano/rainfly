@@ -3,7 +3,8 @@
 # simulator, boots each simulator ship.toml names, installs the iPhone app or
 # the embedded watch app, and calls this with the simulator, the language and
 # where the frames go; this file is the half that is Rainfly's: which screens,
-# from the nights and camps a Debug build sets up when launched with --demo.
+# from the nights and camps a Debug build sets up when launched with --demo, each
+# at a fixed time with --at, since the main screen changes with the time of day.
 #
 #     ./packaging/ios/shots.sh --app <Zeltwetter.app> --device <udid> --lang en-us --outdir <dir>
 #
@@ -42,22 +43,25 @@ shot() {
     xcrun simctl io "$device" screenshot --type=png "$outdir/$name.png" >/dev/null
     echo "$name"
 }
+day="--at 16:00"
+night="--at 02:10 --was clear"
+morning="--at 09:00 --was dew"
 case $kind in
     watch)
-        shot 01-fly-on --demo dew
-        shot 02-checks --demo rain --open detail
-        shot 03-fly-off --demo clear
-        shot 04-storm --demo storm
-        shot 05-camps --demo clear --open camps
-        shot 06-settings --demo clear --open settings
+        shot 01-fly-on --demo dew $day
+        shot 02-checks --demo rain --open detail $day
+        shot 03-overnight --demo dew $night
+        shot 04-morning --demo dew $morning
+        shot 05-camps --demo clear --open camps $day
+        shot 06-settings --demo clear --open settings $day
         ;;
     phone)
-        shot 01-fly-on --demo dew
-        shot 02-rain --demo rain
-        shot 03-fly-off --demo clear
-        shot 04-storm --demo storm
-        shot 05-trip --demo rain --open camps
-        shot 06-settings --demo clear --open settings
+        shot 01-fly-on --demo dew $day
+        shot 02-overnight --demo dew $night
+        shot 03-morning --demo dew $morning
+        shot 04-storm --demo storm $day
+        shot 05-trip --demo rain --open camps $day
+        shot 06-settings --demo clear --open settings $day
         ;;
 esac
 xcrun simctl terminate "$device" "$bundle" >/dev/null 2>&1 || true
