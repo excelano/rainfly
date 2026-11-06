@@ -2,7 +2,7 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "1.3.0"
+version = "1.3.1"
 
 [locales."en-us"]
 whats-new = """
@@ -12,5 +12,5 @@ If the forecast changes after 22:00 and the rainfly should go on, Rainfly sends 
 
 Every check explains itself in plain words, and the dew diary's morning question is a quick review: Rainfly says what it expected and asks if it was right.
 
-Nights far north now work, including the midnight sun, and a trip camp in another time zone follows its own clock. In Fahrenheit and miles per hour the checks use the thresholds Settings shows, and times read correctly on a 24-hour clock.
+Nights far north now work, including the midnight sun, and a trip camp in another time zone follows its own clock. In Fahrenheit and miles per hour the checks use the thresholds Settings shows, times read correctly on a 24-hour clock, and the time you plan to leave camp is now "Pack up at" in Settings.
 """
