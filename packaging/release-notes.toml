@@ -2,15 +2,17 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "1.1.2"
+version = "1.2.0"
 
 [locales."en-us"]
 whats-new = """
-Every check now explains itself in plain words. Under each one, Rainfly says what it found tonight and what decided it: dew that won't form because the sky is cloudy or the wind is up, rain that counts because some is forecast to fall even at a low chance, or wind that never comes with rain. Tap a check to see what it looks for and why it matters. The advice under the verdict now says why too, such as opening the vents on a damp, still night.
+Rainfly now says plainly that it forecasts the night. Widgets and the watch face read "Rainfly off tonight", the main screen gives the night's hours before sunset, and if rain or a storm is due before sunset, a heads-up says so, such as "Rain 60% at 3 PM, before tonight starts".
 
-In Fahrenheit and miles per hour, the checks now use the thresholds Settings shows, so a dew-point gap of 5° is checked as 5°.
+Every check explains itself in plain words. Under each one, Rainfly says what it found tonight and what decided it: dew that won't form because the sky is cloudy or the wind is up, rain that counts because some is forecast to fall even at a low chance, or wind that never comes with rain. Tap a check to see what it looks for and why it matters. The advice under the verdict now says why too.
 
-Times read correctly on a 24-hour clock: Dew likely by 23:00, not by 23.
+The dew diary's morning question is now a quick review. Rainfly says what it expected and asks if it was right, with Partly for light dew. Only a wrong forecast asks what you found and where.
 
-Widgets name your location My Location and redraw as soon as a change arrives from your other device. A camp you tap while a forecast is loading now gets its own forecast. Coordinates can be typed with a decimal comma, downloaded forecasts give their age in days once they are two days old, and the dew diary says which kind of morning it still needs for a suggestion.
+Nights far north now work: where the sun sets after midnight, Rainfly finds the right sunset, and under the midnight sun or the polar night it checks from 9 PM until you pack up. A trip camp in another time zone moves on to its next night at its own break camp time.
+
+In Fahrenheit and miles per hour, the checks now use the thresholds Settings shows. Times read correctly on a 24-hour clock, widgets name your location My Location, and coordinates can be typed with a decimal comma.
 """
