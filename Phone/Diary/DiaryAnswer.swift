@@ -40,6 +40,9 @@ struct DiaryAnswerRows: View {
             answer("Yes, it was right", chosen: night.observation?.kind == Self.kind(for: judgement.firing)) {
                 record(Self.kind(for: judgement.firing), openSky: recorder.diary.lastOpenSky(before: night.date))
             }
+            answer("Partly: light dew", chosen: night.observation?.kind == .lightDew) {
+                record(.lightDew, openSky: recorder.diary.lastOpenSky(before: night.date))
+            }
             answer("No, it was wrong", chosen: isCorrection(judgement)) { correcting = true }
             answer(DewObservation.Kind.rain) { record(.rain, openSky: openSky) }
             answer(DewObservation.Kind.notChecked) { record(.notChecked, openSky: openSky) }
@@ -47,7 +50,9 @@ struct DiaryAnswerRows: View {
             Text("What did you find?")
                 .font(.headline)
             ForEach(choices, id: \.self) { kind in
-                answer(kind) { found = kind }
+                answer(kind) {
+                    if kind == .rain || kind == .notChecked { record(kind, openSky: openSky) } else { found = kind }
+                }
             }
             if judgement != nil {
                 Button("Back") { correcting = false }
@@ -55,15 +60,14 @@ struct DiaryAnswerRows: View {
         }
     }
 
-    /// After "it was wrong", only what the forecast did not expect.
+    /// After "it was wrong", only what the forecast did not expect; light dew has its own answer.
     private var choices: [DewObservation.Kind] {
-        let found: [DewObservation.Kind] = [.dry, .lightDew, .wet, .frost]
-        guard let judgement else { return found + [.rain, .notChecked] }
-        return found.filter { $0.foundMoisture != judgement.predicted }
+        guard let judgement else { return DewObservation.Kind.allCases }
+        return [.dry, .wet, .frost].filter { $0.foundMoisture != judgement.predicted }
     }
 
     private func isCorrection(_ judgement: DiaryJudgement) -> Bool {
-        guard let kind = night.observation?.kind, kind != .rain, kind != .notChecked else { return false }
+        guard let kind = night.observation?.kind, ![.lightDew, .rain, .notChecked].contains(kind) else { return false }
         return kind != Self.kind(for: judgement.firing)
     }
 
