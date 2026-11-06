@@ -74,10 +74,10 @@ struct DiaryScreen: View {
                     Section {
                         DiaryAnswerRows(recorder: recorder, night: night) { answering = nil }
                     } footer: {
-                        Text("What you found on the morning after \(NightRow.title(night)).")
+                        Text("The morning after \(NightRow.title(night)).")
                     }
                 }
-                .navigationTitle("What you found")
+                .navigationTitle("Was it right?")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {

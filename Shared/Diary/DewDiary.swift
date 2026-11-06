@@ -26,6 +26,15 @@ struct DewDiary: Codable, Equatable {
         nights[index].observation = observation
     }
 
+    /// Where the last answer before `date` was checked, since a right forecast doesn't ask
+    /// and most people check the same spot each morning.
+    func lastOpenSky(before date: NightDate) -> Bool {
+        nights
+            .filter { $0.date < date && $0.observation != nil }
+            .max { $0.date < $1.date }?
+            .observation?.openSky ?? true
+    }
+
     mutating func setHistory(_ history: NightForecast, campName: String, on date: NightDate) {
         guard let index = index(of: campName, on: date) else { return }
         nights[index].history = history

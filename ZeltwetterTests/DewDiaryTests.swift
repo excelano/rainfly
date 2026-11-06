@@ -39,6 +39,22 @@ struct DewDiaryRecordingTests {
         #expect(diary.nights[0].date == ForecastCache.date(of: forecast))
     }
 
+    @Test func aRightForecastTakesTheLastAnswersSpot() {
+        var diary = DewDiary()
+        let first = F.night()
+        let second = NightForecast(
+            location: first.location, fetchedAt: first.fetchedAt.addingTimeInterval(86_400),
+            sunset: first.sunset.addingTimeInterval(86_400), sunrise: first.sunrise.addingTimeInterval(86_400), hours: []
+        )
+        diary.record(first)
+        diary.record(second)
+        let firstDate = ForecastCache.date(of: first), secondDate = ForecastCache.date(of: second)
+        #expect(diary.lastOpenSky(before: firstDate))
+        diary.observe(DewObservation(kind: .dry, openSky: false, at: first.sunrise), campName: first.location.name, on: firstDate)
+        #expect(!diary.lastOpenSky(before: secondDate))
+        #expect(diary.lastOpenSky(before: firstDate))
+    }
+
     @Test func theMorningAsksOnceAboutTheNightsCamp() {
         var diary = DewDiary()
         let forecast = F.night()
