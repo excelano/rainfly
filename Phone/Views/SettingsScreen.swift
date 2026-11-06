@@ -19,7 +19,7 @@ struct SettingsScreen: View {
             } header: {
                 Text("Morning")
             } footer: {
-                Text("When you plan to take the tent down. Morning rain is checked until then, and tonight's forecast shows after it.")
+                Text("When you plan to take the tent down. Morning rain is checked until then, and the morning screen says if the tent will be dry by then.")
             }
             Section {
                 Toggle("Bag rating", isOn: hasBagRating)
@@ -78,7 +78,7 @@ struct SettingsScreen: View {
                     }
                 }
             } footer: {
-                Text("Each morning, note what you found on something left under the sky, and see how the dew forecast did at your campsites. The reminder comes half an hour before you pack up.")
+                Text("Each morning, tell Rainfly whether its dew forecast was right about something left under the sky, and see how it does at your campsites. The reminder comes half an hour before you pack up.")
             }
             Section {
                 Toggle("Pressure alert", isOn: $model.preferences.pressureWatch)

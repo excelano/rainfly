@@ -22,7 +22,7 @@ struct SettingsView: View {
             } header: {
                 Text("Morning")
             } footer: {
-                Text("When you plan to take the tent down. Morning rain is checked until then, and tonight's forecast shows after it.")
+                Text("When you plan to take the tent down. Morning rain is checked until then, and the morning screen says if the tent will be dry by then.")
             }
             Section {
                 Toggle("Bag rating", isOn: hasBagRating)
