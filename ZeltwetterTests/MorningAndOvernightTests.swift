@@ -164,3 +164,25 @@ struct OvernightTextTests {
         #expect(OvernightText.pressure(trend) == "Dropping slowly over the last 3 hours")
     }
 }
+
+@MainActor
+struct OvernightAlertTests {
+    private func message(decided: NightForecast, latest: NightForecast, at now: Date) -> (title: String, body: String)? {
+        OvernightAlert.message(
+            night: latest, verdict: FlyEngine.evaluate(latest, settings: Settings()), decided: decided,
+            settings: Settings(), units: metric, at: now
+        )
+    }
+
+    @Test func goesOutWhenTheForecastTurnsTheRainflyOnOvernight() {
+        let alert = message(decided: fetched(cloudy, at: F.at(0, 21)), latest: fetched(cloudyThenClear, at: F.at(1, 1)), at: F.at(1, 1))
+        #expect(alert?.title == "Put the rainfly on")
+        #expect(alert?.body.hasSuffix("Rainfly said it could stay off.") == true)
+    }
+
+    @Test func staysQuietOtherwise() {
+        #expect(message(decided: fetched(cloudy, at: F.at(0, 21)), latest: fetched(cloudyThenClear, at: F.at(0, 21)), at: F.at(0, 21)) == nil)
+        #expect(message(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 1)), at: F.at(1, 1)) == nil)
+        #expect(message(decided: fetched(cloudy, at: F.at(0, 21)), latest: fetched(cloudy, at: F.at(1, 1)), at: F.at(1, 1)) == nil)
+    }
+}

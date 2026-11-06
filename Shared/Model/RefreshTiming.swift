@@ -11,13 +11,15 @@ enum RefreshTiming {
     static let nightInterval: TimeInterval = 15 * 60
     static let dayInterval: TimeInterval = 3600
 
-    /// Every quarter hour through the night while the pressure is watched; otherwise hourly,
-    /// and soon after sunset and after pack-by, when the faces move to a new night.
-    static func nextDate(after now: Date, window: NightWindow?, pressureWatch: Bool) -> Date {
+    /// Every quarter hour through the night while the pressure or the forecast is watched;
+    /// otherwise hourly, and soon after sunset, 22:00, the record's arrival and noon, when the
+    /// screens and faces change.
+    static func nextDate(after now: Date, window: NightWindow?, watchesNight: Bool) -> Date {
         let soonest = now.addingTimeInterval(nightInterval)
         guard let window else { return now.addingTimeInterval(dayInterval) }
-        if pressureWatch, now >= window.sunset, now < window.sunrise { return soonest }
-        let marks = [window.sunset, window.packBy.addingTimeInterval(60)].filter { $0 > now }
+        if watchesNight, now >= window.sunset, now < window.sunrise { return soonest }
+        let record = window.sunrise.addingTimeInterval(NightReview.recordDelay + 60)
+        let marks = [window.sunset, window.anchor, record, window.handover.addingTimeInterval(60)].filter { $0 > now }
         let next = min(now.addingTimeInterval(dayInterval), marks.min() ?? .distantFuture)
         return max(soonest, next)
     }

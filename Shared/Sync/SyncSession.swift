@@ -42,7 +42,9 @@ final class SyncSession: NSObject, WCSessionDelegate {
     /// and has lost it.
     private func sendState(force: Bool = false) {
         guard counterpartInstalled else { return }
-        let message = SyncMessage(state: model.sharedState, pressureWatch: model.preferences.pressureWatch)
+        let message = SyncMessage(
+            state: model.sharedState, pressureWatch: model.preferences.pressureWatch, overnightAlert: model.preferences.overnightAlert
+        )
         do {
             let data = try Self.encoder.encode(message)
             guard force || data != store.lastSentState else { return }
@@ -69,7 +71,10 @@ final class SyncSession: NSObject, WCSessionDelegate {
         guard let message else { return }
         #if os(iOS)
         store.watchWatchesPressure = SyncRules.phoneStandsDown(
-            watchAppInstalled: session.isWatchAppInstalled, watchPressureWatch: message.pressureWatch
+            watchAppInstalled: session.isWatchAppInstalled, watchWarns: message.pressureWatch
+        )
+        store.watchAlertsOvernight = SyncRules.phoneStandsDown(
+            watchAppInstalled: session.isWatchAppInstalled, watchWarns: message.overnightAlert ?? false
         )
         #endif
         await model.apply(message.state)

@@ -112,6 +112,10 @@ enum Demo {
             )
         }
 
+        func current(at camp: CampLocation) async throws -> CurrentConditions {
+            CurrentConditions(date: .now, tempC: 7, dewPointC: 6, cloudCover: 0.1, windMS: 0.8, isRaining: false)
+        }
+
         func attribution() async throws -> Attribution { .fallback }
 
         private func sample(_ date: Date, hour: Int, scene: String) -> HourSample {

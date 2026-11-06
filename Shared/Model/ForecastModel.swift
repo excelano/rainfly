@@ -22,6 +22,10 @@ final class ForecastModel {
     private(set) var isRefreshing = false
     private(set) var problem: String?
     private(set) var campName = CampLocation.hereName
+    /// The evening of the night shown.
+    private(set) var date: NightDate?
+    /// Apple Weather's estimate of the weather now, fetched for the overnight screen.
+    private(set) var current: CurrentConditions?
     private(set) var camps: Camps
     private(set) var isDownloading = false
     private(set) var downloadReport: String?
@@ -114,7 +118,28 @@ final class ForecastModel {
         night.map { NightWindow($0, packByMinutes: settings.packByMinutes) }
     }
 
-    /// The night that matters at `now`: last night until pack-by, tonight from then on.
+    /// The forecast the shown night is judged against, fixed at 22:00.
+    var decided: NightForecast? {
+        _ = cacheRevision
+        return date.flatMap { cache.decided(at: campName, on: $0) }
+    }
+
+    /// The shown night's last forecast fetched before sunrise.
+    var beforeMorning: NightForecast? {
+        _ = cacheRevision
+        return date.flatMap { cache.beforeMorning(at: campName, on: $0) }
+    }
+
+    /// Whether the overnight alert went out for the shown night.
+    var wasAlerted: Bool {
+        date.map { store.alertedNight == OvernightAlert.key(campName, $0) } ?? false
+    }
+
+    func markAlerted() {
+        if let date { store.alertedNight = OvernightAlert.key(campName, date) }
+    }
+
+    /// The night that matters at `now`: last night until noon, tonight from then on.
     func nightDate(at now: Date = .now) -> NightDate {
         camps.night(at: now)
     }
@@ -128,12 +153,47 @@ final class ForecastModel {
         let onDevice = NightDate.covering(now, calendar: .current)
         dropPastNights(before: min(date, onDevice))
         let name = camps.campName(on: date)
-        if name != campName { problem = nil }
+        if name != campName || date != self.date { problem = nil; current = nil }
         campName = name
+        self.date = date
         night = cache.night(at: campName, on: date)
         evaluate()
-        if let night, now.timeIntervalSince(night.fetchedAt) < Self.refreshAge { return }
+        if let night, now.timeIntervalSince(night.fetchedAt) < Self.refreshAge, !awaitsRecord(night, now: now) {
+            if !inBackground { await refreshCurrent(now: now) }
+            return
+        }
         await refresh(now: now, inBackground: inBackground)
+        if !inBackground { await refreshCurrent(now: now) }
+    }
+
+    /// In the morning the night is fetched again once WeatherKit's hours have become its record.
+    private func awaitsRecord(_ night: NightForecast, now: Date) -> Bool {
+        window?.phase(at: now) == .morning && !NightReview.isRecord(night) && now >= NightReview.recordReady(night)
+    }
+
+    /// Overnight, the weather now at the night's camp, every quarter hour while on screen.
+    private func refreshCurrent(now: Date) async {
+        guard let night, window?.phase(at: now) == .overnight else {
+            current = nil
+            return
+        }
+        if let current, now.timeIntervalSince(current.date) < 15 * 60 { return }
+        current = try? await provider.current(at: night.location)
+    }
+
+    /// The night after the one shown, for a look at tonight before noon: cached, or fetched
+    /// when it isn't.
+    func upcoming(now: Date = .now) async -> NightForecast? {
+        let date = nightDate(at: now).adding(days: 1)
+        let name = camps.campName(on: date)
+        if let cached = cache.night(at: name, on: date) { return cached }
+        do {
+            let known = camps.camp(named: name) ?? night?.location
+            let camp = if let known { known } else { try await locate() }
+            return try await fetch(camp, on: date, now: now)
+        } catch {
+            return nil
+        }
     }
 
     /// A refresh asked for while one is running runs once that one ends, since the camp it
@@ -158,6 +218,7 @@ final class ForecastModel {
         let date = nightDate(at: now)
         let name = camps.campName(on: date)
         campName = name
+        self.date = date
         do {
             let camp: CampLocation
             if let saved = camps.camp(named: name) {

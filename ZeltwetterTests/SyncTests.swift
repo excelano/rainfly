@@ -110,10 +110,10 @@ struct SyncRulesTests {
     }
 
     @Test func thePhoneStandsDownOnlyWhileTheWatchWatches() {
-        #expect(SyncRules.phoneStandsDown(watchAppInstalled: true, watchPressureWatch: true))
-        #expect(!SyncRules.phoneStandsDown(watchAppInstalled: true, watchPressureWatch: false))
-        #expect(!SyncRules.phoneStandsDown(watchAppInstalled: false, watchPressureWatch: true))
-        #expect(!SyncRules.phoneStandsDown(watchAppInstalled: false, watchPressureWatch: false))
+        #expect(SyncRules.phoneStandsDown(watchAppInstalled: true, watchWarns: true))
+        #expect(!SyncRules.phoneStandsDown(watchAppInstalled: true, watchWarns: false))
+        #expect(!SyncRules.phoneStandsDown(watchAppInstalled: false, watchWarns: true))
+        #expect(!SyncRules.phoneStandsDown(watchAppInstalled: false, watchWarns: false))
     }
 }
 

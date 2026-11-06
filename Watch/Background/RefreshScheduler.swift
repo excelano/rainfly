@@ -11,6 +11,7 @@ enum RefreshScheduler {
     @MainActor
     static func run(_ model: ForecastModel, pressure: PressureWatch, now: Date = .now) async {
         await model.refreshIfStale(now: now, inBackground: true)
+        await OvernightAlert.check(model, now: now)
         var outcome: PressureWatch.Outcome?
         if model.preferences.pressureWatch {
             outcome = await pressure.check(night: model.night, verdict: model.verdict, now: now)
@@ -21,7 +22,7 @@ enum RefreshScheduler {
 
     @MainActor
     static func schedule(_ model: ForecastModel, now: Date = .now) {
-        let date = RefreshTiming.nextDate(after: now, window: model.window, pressureWatch: model.preferences.pressureWatch)
+        let date = RefreshTiming.nextDate(after: now, window: model.window, watchesNight: model.preferences.watchesNight)
         WKApplication.shared().scheduleBackgroundRefresh(withPreferredDate: date, userInfo: RefreshTiming.identifier as NSString) { _ in }
     }
 }

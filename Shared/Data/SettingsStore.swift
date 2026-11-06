@@ -33,6 +33,10 @@ struct DisplayUnits: Codable, Equatable, Sendable {
 struct Preferences: Codable, Equatable, Sendable {
     var units = DisplayUnits.locale
     var pressureWatch = true
+    /// A notification after 22:00 when the forecast changes from Rainfly off to on.
+    var overnightAlert = true
+    /// The overnight screen in red, to keep eyes used to the dark.
+    var redTint = true
     /// The iPhone's dew diary; it stays on the device and is not synced.
     var dewDiary = false
     var diaryReminder = true
@@ -43,11 +47,16 @@ struct Preferences: Codable, Equatable, Sendable {
 
     init() {}
 
+    /// Whether anything needs the night checked every quarter hour.
+    var watchesNight: Bool { pressureWatch || overnightAlert }
+
     /// A field missing from saved preferences keeps its default.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         units = try c.decodeIfPresent(DisplayUnits.self, forKey: .units) ?? .locale
         pressureWatch = try c.decodeIfPresent(Bool.self, forKey: .pressureWatch) ?? true
+        overnightAlert = try c.decodeIfPresent(Bool.self, forKey: .overnightAlert) ?? true
+        redTint = try c.decodeIfPresent(Bool.self, forKey: .redTint) ?? true
         dewDiary = try c.decodeIfPresent(Bool.self, forKey: .dewDiary) ?? false
         diaryReminder = try c.decodeIfPresent(Bool.self, forKey: .diaryReminder) ?? true
         shareDiary = try c.decodeIfPresent(Bool.self, forKey: .shareDiary) ?? true
@@ -92,6 +101,18 @@ struct SettingsStore {
     var watchWatchesPressure: Bool {
         get { load("watchWatchesPressure") ?? false }
         nonmutating set { save(newValue, "watchWatchesPressure") }
+    }
+
+    /// Whether the paired watch is installed and sends the overnight alert itself.
+    var watchAlertsOvernight: Bool {
+        get { load("watchAlertsOvernight") ?? false }
+        nonmutating set { save(newValue, "watchAlertsOvernight") }
+    }
+
+    /// The night the overnight alert last went out for, so it goes out once a night.
+    var alertedNight: String? {
+        get { load("alertedNight") }
+        nonmutating set { save(newValue, "alertedNight") }
     }
 
     private func load<Value: Decodable>(_ key: String) -> Value? {

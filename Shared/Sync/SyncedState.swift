@@ -18,6 +18,9 @@ struct SyncMessage: Codable, Equatable, Sendable {
     let state: SyncedState
     /// The sender's own pressure toggle, read by the phone so only one device warns.
     let pressureWatch: Bool
+    /// The sender's own overnight alert toggle, for the same reason; nil from a version
+    /// without the alert.
+    var overnightAlert: Bool? = nil
 }
 
 /// The choices sync makes, kept apart from WatchConnectivity so they can be tested.
@@ -83,8 +86,8 @@ enum SyncRules {
 
     /// The phone stays quiet while the watch is watching: iOS mirrors a locked phone's
     /// notifications to the wrist, so two warners would tap twice for one fall.
-    static func phoneStandsDown(watchAppInstalled: Bool, watchPressureWatch: Bool) -> Bool {
-        watchAppInstalled && watchPressureWatch
+    static func phoneStandsDown(watchAppInstalled: Bool, watchWarns: Bool) -> Bool {
+        watchAppInstalled && watchWarns
     }
 
     private static let encoder: JSONEncoder = {

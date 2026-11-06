@@ -138,5 +138,6 @@ struct SettingsModelTests {
 
 private struct NoProvider: ForecastProvider {
     func night(at camp: CampLocation, evening: Date) async throws -> NightForecast { throw ForecastError.noLocation }
+    func current(at camp: CampLocation) async throws -> CurrentConditions { throw ForecastError.noLocation }
     func attribution() async throws -> Attribution { .fallback }
 }

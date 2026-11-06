@@ -15,6 +15,7 @@ enum PhoneRefreshScheduler {
     @MainActor
     static func run(_ model: ForecastModel, pressure: PressureWatch, now: Date = .now) async {
         await model.refreshIfStale(now: now, inBackground: true)
+        await OvernightAlert.check(model, quiet: SettingsStore().watchAlertsOvernight, now: now)
         var outcome: PressureWatch.Outcome?
         if model.preferences.pressureWatch {
             outcome = await pressure.check(night: model.night, verdict: model.verdict, quiet: SettingsStore().watchWatchesPressure, now: now)
@@ -26,7 +27,7 @@ enum PhoneRefreshScheduler {
     @MainActor
     static func schedule(_ model: ForecastModel, now: Date = .now) {
         let request = BGAppRefreshTaskRequest(identifier: RefreshTiming.identifier)
-        request.earliestBeginDate = RefreshTiming.nextDate(after: now, window: model.window, pressureWatch: model.preferences.pressureWatch)
+        request.earliestBeginDate = RefreshTiming.nextDate(after: now, window: model.window, watchesNight: model.preferences.watchesNight)
         do {
             try BGTaskScheduler.shared.submit(request)
         } catch {

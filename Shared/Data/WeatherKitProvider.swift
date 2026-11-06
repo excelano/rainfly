@@ -42,6 +42,20 @@ struct WeatherKitProvider: ForecastProvider {
         )
     }
 
+    func current(at camp: CampLocation) async throws -> CurrentConditions {
+        let weather = try await WeatherService.shared.weather(
+            for: CLLocation(latitude: camp.latitude, longitude: camp.longitude), including: .current
+        )
+        return CurrentConditions(
+            date: weather.date,
+            tempC: weather.temperature.converted(to: .celsius).value,
+            dewPointC: weather.dewPoint.converted(to: .celsius).value,
+            cloudCover: weather.cloudCover,
+            windMS: weather.wind.speed.converted(to: .metersPerSecond).value,
+            isRaining: weather.precipitationIntensity.value > 0
+        )
+    }
+
     func attribution() async throws -> Attribution {
         let attribution = try await WeatherService.shared.attribution
         return Attribution(markURL: attribution.combinedMarkDarkURL, legalURL: attribution.legalPageURL)

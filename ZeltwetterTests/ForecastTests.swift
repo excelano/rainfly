@@ -288,6 +288,10 @@ actor FakeProvider: ForecastProvider {
         )
     }
 
+    func current(at camp: CampLocation) async throws -> CurrentConditions {
+        CurrentConditions(date: fetchedAt, tempC: 7, dewPointC: 5, cloudCover: 0.1, windMS: 1, isRaining: false)
+    }
+
     func attribution() async throws -> Attribution {
         Attribution(markURL: nil, legalURL: URL(string: "https://example.com/legal")!)
     }

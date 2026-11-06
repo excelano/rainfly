@@ -108,19 +108,19 @@ struct RefreshScheduleTests {
     private let window = NightWindow(F.night(), packByMinutes: 8 * 60)
 
     @Test func quarterHourlyThroughTheWatchedNight() {
-        #expect(RefreshTiming.nextDate(after: F.at(0, 23), window: window, pressureWatch: true) == F.at(0, 23, 15))
-        #expect(RefreshTiming.nextDate(after: F.at(0, 23), window: window, pressureWatch: false) == F.at(1, 0))
+        #expect(RefreshTiming.nextDate(after: F.at(0, 23), window: window, watchesNight: true) == F.at(0, 23, 15))
+        #expect(RefreshTiming.nextDate(after: F.at(0, 23), window: window, watchesNight: false) == F.at(1, 0))
     }
 
-    @Test func soonAfterSunsetAndPackBy() {
-        #expect(RefreshTiming.nextDate(after: F.at(0, 20), window: window, pressureWatch: true) == F.sunset)
-        #expect(RefreshTiming.nextDate(after: F.at(0, 20, 25), window: window, pressureWatch: true) == F.at(0, 20, 40))
-        #expect(RefreshTiming.nextDate(after: F.at(1, 7, 30), window: window, pressureWatch: true) == F.at(1, 8, 1))
+    @Test func soonAfterSunsetAndTheRecord() {
+        #expect(RefreshTiming.nextDate(after: F.at(0, 20), window: window, watchesNight: true) == F.sunset)
+        #expect(RefreshTiming.nextDate(after: F.at(0, 20, 25), window: window, watchesNight: true) == F.at(0, 20, 40))
+        #expect(RefreshTiming.nextDate(after: F.at(1, 7, 30), window: window, watchesNight: true) == F.at(1, 7, 46))
     }
 
     @Test func hourlyOtherwise() {
-        #expect(RefreshTiming.nextDate(after: F.at(1, 10), window: window, pressureWatch: true) == F.at(1, 11))
-        #expect(RefreshTiming.nextDate(after: F.at(1, 10), window: nil, pressureWatch: true) == F.at(1, 11))
+        #expect(RefreshTiming.nextDate(after: F.at(1, 10), window: window, watchesNight: true) == F.at(1, 11))
+        #expect(RefreshTiming.nextDate(after: F.at(1, 10), window: nil, watchesNight: true) == F.at(1, 11))
     }
 }
 
