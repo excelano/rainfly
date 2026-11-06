@@ -2,17 +2,15 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "1.2.0"
+version = "1.3.0"
 
 [locales."en-us"]
 whats-new = """
-Rainfly now says plainly that it forecasts the night. Widgets and the watch face read "Rainfly off tonight", the main screen gives the night's hours before sunset, and if rain or a storm is due before sunset, a heads-up says so, such as "Rain 60% at 3 PM, before tonight starts".
+Rainfly now changes with the time of day. From noon it shows tonight's forecast. From 22:00 to sunrise it shows what has changed since 22:00, the weather right now and the rest of the night, on a dark red screen that keeps your eyes used to the dark. In the morning it tells you whether you'll pack a dry tent, and checks last night's 22:00 forecast against Apple Weather's record of the night, check by check. Tonight's forecast comes back at noon, or tap to see it early.
 
-Every check explains itself in plain words. Under each one, Rainfly says what it found tonight and what decided it: dew that won't form because the sky is cloudy or the wind is up, rain that counts because some is forecast to fall even at a low chance, or wind that never comes with rain. Tap a check to see what it looks for and why it matters. The advice under the verdict now says why too.
+If the forecast changes after 22:00 and the rainfly should go on, Rainfly sends you a notification. You can turn it off, and the red screen, in Settings under Overnight.
 
-The dew diary's morning question is now a quick review. Rainfly says what it expected and asks if it was right, with Partly for light dew. Only a wrong forecast asks what you found and where.
+Every check explains itself in plain words, and the dew diary's morning question is a quick review: Rainfly says what it expected and asks if it was right.
 
-Nights far north now work: where the sun sets after midnight, Rainfly finds the right sunset, and under the midnight sun or the polar night it checks from 9 PM until you pack up. A trip camp in another time zone moves on to its next night at its own break camp time.
-
-In Fahrenheit and miles per hour, the checks now use the thresholds Settings shows. Times read correctly on a 24-hour clock, widgets name your location My Location, and coordinates can be typed with a decimal comma.
+Nights far north now work, including the midnight sun, and a trip camp in another time zone follows its own clock. In Fahrenheit and miles per hour the checks use the thresholds Settings shows, and times read correctly on a 24-hour clock.
 """
