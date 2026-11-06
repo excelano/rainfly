@@ -161,3 +161,61 @@ struct MorningCheckSection: View {
         }
     }
 }
+
+/// The dew diary on the morning screen: the review until it is answered, then the answer set
+/// against the forecast, and the suggested dew setting when the diary has one.
+struct MorningDiarySection: View {
+    @Environment(ForecastModel.self) private var model
+    let recorder: DiaryRecorder
+    let night: DiaryNight
+
+    var body: some View {
+        if night.observation == nil {
+            MorningCheckSection(recorder: recorder, night: night)
+        } else {
+            Section {
+                NavigationLink {
+                    DiaryScreen(recorder: recorder)
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(result.title).font(.headline)
+                        Text(result.detail).font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+            } header: {
+                Text("Dew diary")
+            }
+        }
+        if let suggestion = recorder.diary.suggestedDewSpread(settings: model.settings, units: model.preferences.units) {
+            SuggestionSection(suggestion: suggestion, units: model.preferences.units) {
+                model.settings.dewSpreadC = suggestion.suggested.spreadC
+            }
+        }
+    }
+
+    private var result: (title: String, detail: String) {
+        let tally = recorder.diary.tally(settings: model.settings)
+        let record = tally.judged == 0 ? "" : "Rainfly has been right on \(tally.caught + tally.clear) of the \(tally.judged) nights you've checked."
+        guard let observation = night.observation, let judgement = night.judge(settings: model.settings) else {
+            return ("Your answer is saved", record)
+        }
+        switch (observation.kind, judgement.outcome) {
+        case (.notChecked, _): return ("You didn't check this morning", record)
+        case (.rain, _): return ("It rained, so this night doesn't count for dew", record)
+        case (.lightDew, _): return ("You found light dew", "Light dew doesn't count as right or wrong. \(record)")
+        case (_, .caught?): return ("You found it \(observation.kind == .frost ? "frosty" : "wet"), as expected", record)
+        case (_, .clear?): return ("You found it dry, as expected", record)
+        case (_, .missed?): return ("You found it \(observation.kind == .frost ? "frosty" : "wet"), but Rainfly said no dew", "\(cause(judgement)) \(record)")
+        case (_, .falseAlarm?): return ("You found it dry, but Rainfly expected dew", "\(cause(judgement)) \(record)")
+        case (_, nil): return ("Your answer is saved", record)
+        }
+    }
+
+    private func cause(_ judgement: DiaryJudgement) -> String {
+        switch judgement.cause {
+        case .forecast?: "The forecast got the night wrong, not your dew setting."
+        case .settings?: "The forecast was right, but your dew setting called it wrong."
+        case nil: "Rainfly will know why once Apple Weather's record of the night is in."
+        }
+    }
+}

@@ -36,6 +36,10 @@ enum OvernightAlert {
         return ("Put the rainfly on", "\(text.describe(headline)). At \(decidedAt), Rainfly said it could stay off.")
     }
 
+    static func requestPermission() async {
+        _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
+    }
+
     static func key(_ campName: String, _ date: NightDate) -> String {
         "\(campName)|\(date.year)-\(date.month)-\(date.day)"
     }

@@ -57,6 +57,17 @@ struct SettingsView: View {
             } footer: {
                 Text("Warns overnight when the pressure falls fast and the rainfly is off. \(PressureWatch.status)")
             }
+            Section {
+                Toggle("Tell me if the rainfly should go on", isOn: $model.preferences.overnightAlert)
+                    .onChange(of: model.preferences.overnightAlert) {
+                        if model.preferences.overnightAlert { Task { await OvernightAlert.requestPermission() } }
+                    }
+                Toggle("Red screen at night", isOn: $model.preferences.redTint)
+            } header: {
+                Text("Overnight")
+            } footer: {
+                Text("After 22:00, a notification if the forecast changes and the rainfly should go on. Your watch only lets Rainfly check now and then, so it might come late.")
+            }
             if WCSession.isSupported(), WCSession.default.isCompanionAppInstalled {
                 Section {
                 } footer: {

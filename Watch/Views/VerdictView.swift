@@ -9,16 +9,16 @@ struct VerdictView: View {
 
     var body: some View {
         TimelineView(.everyMinute) { context in
+            let now = Self.now(context.date)
             if let night = model.night, let verdict = model.verdict {
+                let text = VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units)
                 NavigationLink {
                     DetailView()
                 } label: {
-                    VerdictContent(
-                        text: VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units),
-                        now: context.date
-                    )
+                    VerdictContent(lines: lines(text, at: now), text: text, now: now)
                 }
                 .buttonStyle(.plain)
+                .overnightStyle(isOvernight: model.window?.phase(at: now) == .overnight, red: model.preferences.redTint)
             } else if model.isRefreshing {
                 ProgressView("Checking the sky")
             } else {
@@ -46,31 +46,81 @@ struct VerdictView: View {
     }
 }
 
+/// What the main screen says, for the part of the night it is in.
+struct VerdictLines {
+    let flyOn: Bool
+    let caption: String
+    let headline: String
+    let reason: String
+    var warning: String?
+    var notes: [String] = []
+}
+
+extension VerdictView {
+    private func lines(_ text: VerdictText, at now: Date) -> VerdictLines {
+        let night = text.night
+        switch NightWindow(night, packByMinutes: text.settings.packByMinutes).phase(at: now) {
+        case .evening:
+            return VerdictLines(
+                flyOn: text.verdict.flyOn, caption: text.periodLabel(at: now), headline: text.headline, reason: text.reason,
+                warning: text.beforeTonightText(at: now), notes: text.notes
+            )
+        case .overnight:
+            let overnight = OvernightText(text: text, decided: model.decided ?? night)
+            let current = model.current.map { overnight.now($0).title }
+            return VerdictLines(
+                flyOn: text.verdict.flyOn, caption: overnight.caption, headline: text.headline, reason: overnight.reason,
+                notes: [overnight.note, current.map { "Right now: \($0.lowercased())" }].compactMap { $0 }
+            )
+        case .morning:
+            let morning = MorningText(
+                decided: model.decided ?? night, beforeMorning: model.beforeMorning, latest: night,
+                settings: text.settings, units: text.units, alerted: model.wasAlerted
+            )
+            return VerdictLines(
+                flyOn: morning.packing != .dryNight, caption: morning.caption, headline: morning.headline, reason: morning.reason,
+                warning: morning.rainAhead(at: now), notes: [morning.advice, morning.lastNightTitle].compactMap { $0 }
+            )
+        }
+    }
+
+    /// The device's time, or the one a Debug demo sets.
+    private static func now(_ date: Date) -> Date {
+        #if DEBUG
+        Demo.now ?? date
+        #else
+        date
+        #endif
+    }
+}
+
 private struct VerdictContent: View {
+    let lines: VerdictLines
     let text: VerdictText
     let now: Date
 
     var body: some View {
         ScrollView {
             VStack(spacing: 4) {
-                TentGlyph(flyOn: text.verdict.flyOn)
+                TentGlyph(flyOn: lines.flyOn)
                     .frame(height: 52)
-                    .foregroundStyle(text.verdict.flyOn ? Color.accentColor : .secondary)
-                Text(text.periodLabel(at: now).uppercased())
+                    .foregroundStyle(lines.flyOn ? Color.accentColor : .secondary)
+                Text(lines.caption.uppercased())
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
-                Text(text.headline)
+                    .multilineTextAlignment(.center)
+                Text(lines.headline)
                     .font(.title2.bold())
-                Text(text.reason)
+                Text(lines.reason)
                     .font(.footnote)
                     .multilineTextAlignment(.center)
-                if let beforeTonight = text.beforeTonightText(at: now) {
-                    Text(beforeTonight)
+                if let warning = lines.warning {
+                    Text(warning)
                         .font(.footnote)
                         .foregroundStyle(.orange)
                         .multilineTextAlignment(.center)
                 }
-                ForEach(text.notes, id: \.self) { note in
+                ForEach(lines.notes, id: \.self) { note in
                     Text(note)
                         .font(.footnote)
                         .foregroundStyle(.secondary)

@@ -26,6 +26,9 @@ struct MorningText {
 
     private var decidedVerdict: Verdict { FlyEngine.evaluate(decided, settings: settings) }
 
+    /// When tonight's forecast takes over: "12:00".
+    var handoverTime: String { text.clock(window.handover) }
+
     /// "This morning · pack up 08:00".
     var caption: String { "This morning · pack up \(text.clock(window.packBy))" }
 
@@ -166,7 +169,7 @@ struct MorningText {
             let expectedLow = NightWindow(decided, packByMinutes: settings.packByMinutes).low
             let actualLow = window.low
             guard let expectedLow, let actualLow else { return "No hours to compare." }
-            let below = check.happened == nil ? ", so it never got below your \(text.coldLimit)" : ""
+            let below = check.happened == nil ? ", so it never got below your \(text.coldLimit)" : ", below your \(text.coldLimit)"
             return "Rainfly expected a low of \(text.low(expectedLow)). It got down to \(text.low(actualLow))\(below)."
         }
     }

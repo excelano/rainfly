@@ -106,7 +106,7 @@ extension DiaryScreen {
     }
 }
 
-private struct SuggestionSection: View {
+struct SuggestionSection: View {
     let suggestion: SpreadSuggestion
     let units: DisplayUnits
     let apply: () -> Void

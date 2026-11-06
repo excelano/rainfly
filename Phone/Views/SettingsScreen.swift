@@ -89,6 +89,17 @@ struct SettingsScreen: View {
                 Text("Warns overnight when the pressure falls fast and the rainfly is off. Your \(UIDevice.current.model) gets only occasional time in the background, so this is a rough check. While your watch has its own pressure alert on, this \(UIDevice.current.model) stays quiet and the watch warns. \(PressureWatch.status)")
             }
             Section {
+                Toggle("Tell me if the rainfly should go on", isOn: $model.preferences.overnightAlert)
+                    .onChange(of: model.preferences.overnightAlert) {
+                        if model.preferences.overnightAlert { Task { await OvernightAlert.requestPermission() } }
+                    }
+                Toggle("Red screen at night", isOn: $model.preferences.redTint)
+            } header: {
+                Text("Overnight")
+            } footer: {
+                Text("After 22:00, Rainfly sends you a notification if the forecast changes and the rainfly should go on. It follows your notification settings. Your \(UIDevice.current.model) only lets Rainfly check now and then while the app is closed, so the notification might come late. While your watch has this on, the watch sends it instead. The red screen keeps your eyes used to the dark.")
+            }
+            Section {
                 Button("Show the welcome again") { welcomed = false }
             }
             if WCSession.isSupported(), WCSession.default.isWatchAppInstalled {

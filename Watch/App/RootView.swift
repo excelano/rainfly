@@ -37,7 +37,7 @@ struct RootView: View {
             }
         }
         .onChange(of: model.verdict?.flyOn, initial: true) {
-            if model.verdict?.flyOn == false, model.preferences.pressureWatch, !isDemo {
+            if model.verdict?.flyOn == false, model.preferences.watchesNight, !isDemo {
                 Task { await PressureWatch.requestPermission() }
             }
         }

@@ -12,16 +12,35 @@ struct VerdictScreen: View {
 
     var body: some View {
         TimelineView(.everyMinute) { context in
-            if let night = model.night, let verdict = model.verdict {
-                NightView(
-                    text: VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units),
-                    now: context.date,
-                    attribution: model.attribution,
-                    problem: model.problem
-                ) {
-                    if model.preferences.dewDiary, let recorder,
-                       let night = recorder.diary.awaitingObservation(now: context.date, campName: model.camps.campName) {
-                        MorningCheckSection(recorder: recorder, night: night)
+            let now = Self.now(context.date)
+            if let night = model.night, let verdict = model.verdict, let window = model.window {
+                let text = VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units)
+                switch window.phase(at: now) {
+                case .evening:
+                    NightView(text: text, now: now, attribution: model.attribution, problem: model.problem) {
+                        if model.preferences.dewDiary, let recorder,
+                           let night = recorder.diary.awaitingObservation(now: now, campName: model.camps.campName) {
+                            MorningCheckSection(recorder: recorder, night: night)
+                        }
+                    }
+                case .overnight:
+                    OvernightView(
+                        overnight: OvernightText(text: text, decided: model.decided ?? night),
+                        current: model.current, pressure: pressure, now: now,
+                        attribution: model.attribution, problem: model.problem
+                    )
+                case .morning:
+                    MorningView(
+                        morning: MorningText(
+                            decided: model.decided ?? night, beforeMorning: model.beforeMorning, latest: night,
+                            settings: model.settings, units: model.preferences.units, alerted: model.wasAlerted
+                        ),
+                        now: now, attribution: model.attribution, problem: model.problem
+                    ) {
+                        if model.preferences.dewDiary, let recorder,
+                           let diaryNight = recorder.diary.nights.last(where: { $0.campName == model.campName && $0.date == model.date }) {
+                            MorningDiarySection(recorder: recorder, night: diaryNight)
+                        }
                     }
                 }
             } else if model.isRefreshing {
@@ -40,6 +59,7 @@ struct VerdictScreen: View {
             }
         }
         .refreshable { await model.refresh() }
+        .overnightStyle(isOvernight: model.window?.phase(at: AppClock.now) == .overnight, red: model.preferences.redTint)
         .navigationTitle(CampLocation.title(model.campName))
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -65,5 +85,20 @@ struct VerdictScreen: View {
                 }
             }
         }
+    }
+
+    /// The device's time, or the one a Debug demo sets.
+    private static func now(_ date: Date) -> Date {
+        #if DEBUG
+        Demo.now ?? date
+        #else
+        date
+        #endif
+    }
+
+    /// The pressure's trend from the overnight readings, when they cover an hour or more.
+    private var pressure: String? {
+        guard model.preferences.pressureWatch else { return nil }
+        return PressureWatch.live().store.load()?.trend.map(OvernightText.pressure)
     }
 }
