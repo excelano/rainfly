@@ -63,7 +63,7 @@ extension VerdictView {
         case .evening:
             return VerdictLines(
                 flyOn: text.verdict.flyOn, caption: text.periodLabel(at: now), headline: text.headline, reason: text.reason,
-                warning: text.beforeTonightText(at: now), notes: text.notes
+                warning: text.beforeTonightText(at: now), notes: text.notes(at: now)
             )
         case .overnight:
             let overnight = OvernightText(text: text, decided: model.decided ?? night)

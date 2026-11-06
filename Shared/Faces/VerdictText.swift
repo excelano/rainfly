@@ -70,7 +70,8 @@ struct VerdictText {
     }
 
     /// The advice under the reason, in the order the main screen shows it.
-    var notes: [String] {
+    /// The advice under the reason as seen at `now`, which names the morning the tent dries.
+    func notes(at now: Date) -> [String] {
         var notes: [String] = []
         switch night.polar {
         case .midnightSun?: notes.append("The sun stays up all night here")
@@ -80,11 +81,28 @@ struct VerdictText {
         if verdict.ventAdvice { notes.append(ventNote) }
         if verdict.bagWarning != nil { notes.append("Wear layers: it gets colder than your sleeping bag is rated for") }
         if let dryBy = verdict.dryBy {
-            notes.append("Dry by ~\(clock(dryBy))")
+            notes.append("Dry around \(clock(dryBy)) \(day(of: dryBy, from: now))")
         } else if verdict.firing(.dew) != nil || verdict.firing(.frost) != nil {
-            notes.append("Won't dry by noon")
+            notes.append("Won't dry before noon \(day(of: night.sunrise, from: now))")
         }
         return notes
+    }
+
+    /// The morning `date` falls on, seen from `now` at the camp: "this morning", "tomorrow" or
+    /// "on Wednesday".
+    func day(of date: Date, from now: Date) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = night.location.timeZone
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: calendar.startOfDay(for: date)).day ?? 0
+        switch days {
+        case ...0: return "this morning"
+        case 1: return "tomorrow"
+        default:
+            var style = Date.FormatStyle().weekday(.wide)
+            style.timeZone = night.location.timeZone
+            style.locale = locale
+            return "on \(date.formatted(style))"
+        }
     }
 
     private var ventNote: String {

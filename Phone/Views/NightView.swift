@@ -32,7 +32,7 @@ struct NightView<Extra: View>: View {
             Section {
                 VerdictHeader(
                     text: text, period: period ?? text.periodLabel(at: now),
-                    beforeTonight: period == nil ? text.beforeTonightText(at: now) : nil
+                    beforeTonight: period == nil ? text.beforeTonightText(at: now) : nil, notes: text.notes(at: now)
                 )
             }
             .listRowBackground(Color.clear)
@@ -83,6 +83,7 @@ private struct VerdictHeader: View {
     let text: VerdictText
     let period: String
     let beforeTonight: String?
+    let notes: [String]
 
     var body: some View {
         VStack(spacing: 8) {
@@ -100,7 +101,7 @@ private struct VerdictHeader: View {
                 Label(beforeTonight, systemImage: "cloud.rain")
                     .foregroundStyle(.orange)
             }
-            ForEach(text.notes, id: \.self) { note in
+            ForEach(notes, id: \.self) { note in
                 Text(note)
                     .foregroundStyle(.secondary)
             }

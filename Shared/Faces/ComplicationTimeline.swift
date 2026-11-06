@@ -26,7 +26,7 @@ struct ComplicationFace: Equatable, Sendable {
     /// For the watch face and widget galleries.
     static let sample = ComplicationFace(
         flyOn: true, headline: "Rainfly on tonight", detail: "Dew likely by 4 AM", inline: "Rainfly on · Dew 4 AM",
-        dryTime: nil, fetchedAt: nil, camp: "Lost Lake", notes: ["Open the vents: it's a damp night", "Dry by ~8:40 AM"]
+        dryTime: nil, fetchedAt: nil, camp: "Lost Lake", notes: ["Open the vents: it's a damp night", "Dry around 8:40 AM tomorrow"]
     )
 }
 
@@ -50,7 +50,7 @@ extension ComplicationFace {
             self.init(
                 flyOn: text.verdict.flyOn, headline: text.headline, detail: overnight.reason,
                 inline: overnight.brief ?? text.verdict.headline.map { "Rainfly on · \(text.brief($0))" } ?? text.headline,
-                dryTime: nil, fetchedAt: night.fetchedAt, camp: night.location.title, notes: text.notes
+                dryTime: nil, fetchedAt: night.fetchedAt, camp: night.location.title, notes: text.notes(at: date)
             )
         case .morning:
             let morning = MorningText(
@@ -74,13 +74,13 @@ extension ComplicationFace {
             self.init(
                 flyOn: verdict.flyOn, headline: headline, detail: ahead,
                 inline: "\(brief), before tonight", dryTime: nil,
-                fetchedAt: text.night.fetchedAt, camp: text.night.location.title, notes: [text.reason] + text.notes
+                fetchedAt: text.night.fetchedAt, camp: text.night.location.title, notes: [text.reason] + text.notes(at: date)
             )
         } else {
             self.init(
                 flyOn: verdict.flyOn, headline: headline, detail: text.reason,
                 inline: verdict.headline.map { "Rainfly on · \(text.brief($0))" } ?? headline, dryTime: nil,
-                fetchedAt: text.night.fetchedAt, camp: text.night.location.title, notes: text.notes
+                fetchedAt: text.night.fetchedAt, camp: text.night.location.title, notes: text.notes(at: date)
             )
         }
     }

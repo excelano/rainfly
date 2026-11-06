@@ -74,7 +74,7 @@ struct VerdictTextTests {
         let words = text(F.night())
         #expect(words.headline == "Rainfly off")
         #expect(words.reason == "Clear, dry, mild.")
-        #expect(words.notes.isEmpty)
+        #expect(words.notes(at: F.at(0, 21)).isEmpty)
     }
 
     @Test func reasonsNameTheHeadlineAndItsTime() {
@@ -149,12 +149,14 @@ struct VerdictTextTests {
         settings.bagRatingC = 15
         let words = text(F.dewyNight { F.hour($0, temp: 15, dewPoint: 5) }, settings)
         #expect(plain(words.reason) == "Dew likely by 8 PM")
-        #expect(words.notes.map(plain) == ["Open the vents: it's a damp, still night", "Wear layers: it gets colder than your sleeping bag is rated for", "Dry by ~6:45 AM"])
+        #expect(words.notes(at: F.at(0, 21)).map(plain) == ["Open the vents: it's a damp, still night", "Wear layers: it gets colder than your sleeping bag is rated for", "Dry around 6:45 AM tomorrow"])
+        #expect(words.notes(at: F.at(1, 2)).last.map(plain) == "Dry around 6:45 AM this morning")
+        #expect(words.notes(at: F.at(-1, 21)).last.map(plain) == "Dry around 6:45 AM on Thursday")
     }
 
     @Test func notesForDewThatStaysWet() {
         let words = text(F.dewyNight { F.hour($0, temp: 10, dewPoint: 9.5, cloud: 1, wind: 0) })
-        #expect(words.notes == ["Open the vents: it's a damp, still night", "Won't dry by noon"])
+        #expect(words.notes(at: F.at(0, 21)) == ["Open the vents: it's a damp, still night", "Won't dry before noon tomorrow"])
     }
 
     @Test func briefAndCompactTimes() {

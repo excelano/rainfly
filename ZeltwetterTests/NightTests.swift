@@ -82,7 +82,7 @@ struct NightWindowEndTests {
             night: polar, verdict: FlyEngine.evaluate(polar, settings: Settings()), settings: Settings(),
             units: DisplayUnits(fahrenheit: false, mph: false), locale: Locale(identifier: "en_US")
         )
-        #expect(text.notes.first == "The sun stays up all night here")
+        #expect(text.notes(at: F.at(0, 20)).first == "The sun stays up all night here")
         #expect(text.rule(.rain).replacingOccurrences(of: "\u{202F}", with: " ").hasPrefix("If any hour from 9 PM to 6 AM has"))
     }
 }
