@@ -82,17 +82,67 @@ struct VerdictTextTests {
         #expect(plain(coldF.reason) == "Below 50° by 8 PM: the rainfly holds warmth")
     }
 
+    @Test func dewAndFrostSayWhatDecidedThem() {
+        let dew = text(F.night { F.hour($0, temp: 12, dewPoint: 10, wind: 1) })
+        #expect(plain(dew.summary(.dew)) == "At 8 PM the air is 2.0° from its dew point, with a clear sky and little wind, so dew will form.")
+        #expect(dew.summary(.frost) == "Frost would form, but it's above freezing, so it will be dew instead.")
+
+        let frost = text(F.night { F.hour($0, temp: -2, dewPoint: -4, wind: 1) })
+        #expect(frost.summary(.dew) == "Dew would form, but it's below freezing, so it will be frost instead.")
+
+        let cloudy = text(F.night { F.hour($0, temp: 12, dewPoint: 10, cloud: 0.8, wind: 1) })
+        #expect(cloudy.summary(.dew) == "The air gets within 2.0° of its dew point, but it's cloudy then. Clouds keep the tent from cooling down, so dew won't form.")
+        let windy = text(F.night { F.hour($0, temp: 12, dewPoint: 10, wind: 4) })
+        #expect(windy.summary(.dew) == "The air gets within 2.0° of its dew point, but it's windy then. Wind keeps the tent from cooling down, so dew won't form.")
+        let both = text(F.night { d in F.hour(d, temp: 12, dewPoint: 10, cloud: d < F.at(1, 0) ? 0.8 : 0.1, wind: d < F.at(1, 0) ? 1 : 4) })
+        #expect(both.summary(.dew) == "The air gets within 2.0° of its dew point, but whenever it does, it's either cloudy or windy, so dew won't form.")
+
+        let dry = text(F.night())
+        #expect(dry.summary(.dew) == "The air stays at least 10.0° from its dew point. It has to get within 3.0° for dew.")
+        #expect(dew.rule(.dew) == "If, in the same hour, the air gets within 3.0° of its dew point, the sky is less than 30% cloudy, the wind is under 3.0 m/s, and it's above freezing, the rainfly goes on.")
+    }
+
+    @Test func rainSaysWhetherTheChanceOrTheRainDecidedIt() {
+        let likely = text(F.night { d in F.hour(d, chance: d == F.at(1, 2) ? 0.35 : 0) })
+        #expect(plain(likely.summary(.rain)) == "35% chance of rain at 2 AM. That's at or above your 20%.")
+        let drizzle = text(F.night { d in F.hour(d, chance: 0.1, amount: d == F.at(1, 2) ? 0.2 : 0) })
+        #expect(plain(drizzle.reason) == "Rain forecast after 2 AM")
+        #expect(plain(drizzle.summary(.rain)) == "The chance is only 10%, but some rain is forecast to fall at 2 AM, so it counts.")
+        let dry = text(F.night { F.hour($0, chance: 0.1) })
+        #expect(dry.summary(.rain) == "The highest chance overnight is 10%. It has to reach 20%.")
+        #expect(dry.summary(.morningRain) == "The highest chance before you pack up is 10%. It has to reach 20%.")
+        #expect(text(F.night()).summary(.rain) == "No rain is forecast overnight.")
+    }
+
+    @Test func windWithRainSaysWhichWasMissing() {
+        let both = text(F.night { d in F.hour(d, wind: d == F.at(1, 1) ? 10 : 4, chance: d == F.at(1, 1) ? 0.15 : 0) })
+        #expect(plain(both.summary(.windRain)) == "Wind up to 10.0 m/s with a 15% chance of rain at 1 AM. Both are at or over your limits.")
+        let dry = text(F.night { F.hour($0, wind: 10) })
+        #expect(dry.summary(.windRain) == "Wind gets up to 10.0 m/s, but the chance of rain stays under 10% whenever it's that windy.")
+        let calm = text(F.night())
+        #expect(calm.summary(.windRain) == "Wind stays at 4.0 m/s or less. It has to go over 8.0 m/s.")
+    }
+
+    @Test func stormsAndColdSayWhatTheyFound() {
+        let storm = text(F.night { d in F.hour(d, storm: d == F.at(0, 23)) })
+        #expect(plain(storm.summary(.storm)) == "A thunderstorm is forecast at 11 PM.")
+        #expect(text(F.night()).summary(.storm) == "No thunderstorms are forecast.")
+        let cold = text(F.night { d in F.hour(d, temp: d < F.at(1, 3) ? 12 : 7, dewPoint: 0) })
+        #expect(plain(cold.summary(.cold)) == "It gets colder than 10° by 3 AM and drops to 7°.")
+        #expect(text(F.night()).summary(.cold) == "The lowest it gets is 15°. It has to drop below 10°.")
+    }
+
     @Test func notesForDewThatDries() {
         var settings = Settings()
         settings.bagRatingC = 15
         let words = text(F.dewyNight { F.hour($0, temp: 15, dewPoint: 5) }, settings)
         #expect(plain(words.reason) == "Dew likely by 8 PM")
-        #expect(words.notes.map(plain) == ["Open the vents", "Below your bag rating: wear layers", "Dry by ~6:45 AM"])
+        #expect(words.notes.map(plain) == ["Open the vents: it's a damp, still night", "Wear layers: it gets colder than your sleeping bag is rated for", "Dry by ~6:45 AM"])
     }
 
     @Test func notesForDewThatStaysWet() {
         let words = text(F.dewyNight { F.hour($0, temp: 10, dewPoint: 9.5, cloud: 1, wind: 0) })
-        #expect(words.notes == ["Open the vents", "Won't dry by noon"])
+        #expect(words.notes == ["Open the vents: it's a damp, still night", "Won't dry by noon"])
     }
 
     @Test func briefAndCompactTimes() {
@@ -126,7 +176,7 @@ struct VerdictTextTests {
         #expect(words.low(9.6) == "9.6°")
         #expect(words.low(10.3) == "10.3°")
         #expect(words.low(12.4) == "12°")
-        #expect(words.summary(.dew).hasSuffix("Rainfly on at 2.5° or below, clear and calm"))
+        #expect(words.summary(.dew).hasSuffix("It has to get within 2.5° for dew."))
     }
 
     @Test func forecastAgeAndStaleness() {

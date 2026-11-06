@@ -57,7 +57,7 @@ struct NightView<Extra: View>: View {
                     LabeledContent("Closest dew-point gap", value: text.spread(spread))
                 }
                 if let chance = window.maxPrecipChance {
-                    LabeledContent("Highest rain chance", value: text.percent(chance))
+                    LabeledContent("Highest rain chance to break camp", value: text.percent(chance))
                 }
             }
             Section {

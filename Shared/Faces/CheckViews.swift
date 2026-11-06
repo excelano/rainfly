@@ -19,10 +19,12 @@ struct CheckRow: View {
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
+            #if os(iOS)
             if let firing {
                 Text(text.clock(firing.at))
                     .monospacedDigit()
             }
+            #endif
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(firing == nil ? text.clearName(trigger) : VerdictText.name(trigger))
@@ -61,16 +63,16 @@ struct CheckDetail<Thresholds: View>: View {
             Section {
                 CheckRow(trigger: trigger, text: text)
             }
-            Section("Why it matters") {
-                Text(VerdictText.why(trigger))
-            }
-            Section("When it puts the rainfly on") {
+            Section("What it checks") {
                 Text(text.rule(trigger))
                 if trigger != .storm {
                     NavigationLink("Change the thresholds") {
                         thresholds
                     }
                 }
+            }
+            Section("Why it matters") {
+                Text(VerdictText.why(trigger))
             }
         }
         .navigationTitle(VerdictText.name(trigger))

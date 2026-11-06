@@ -26,7 +26,7 @@ struct ComplicationFace: Equatable, Sendable {
     /// For the watch face and widget galleries.
     static let sample = ComplicationFace(
         flyOn: true, headline: "Rainfly on", detail: "Dew likely by 4 AM", inline: "Rainfly on · Dew 4 AM",
-        dryTime: nil, fetchedAt: nil, camp: "Lost Lake", notes: ["Open the vents", "Dry by ~8:40 AM"]
+        dryTime: nil, fetchedAt: nil, camp: "Lost Lake", notes: ["Open the vents: it's a damp night", "Dry by ~8:40 AM"]
     )
 }
 

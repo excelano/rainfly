@@ -28,8 +28,8 @@ struct VerdictText {
     /// The advice under the reason, in the order the main screen shows it.
     var notes: [String] {
         var notes: [String] = []
-        if verdict.ventAdvice { notes.append("Open the vents") }
-        if verdict.bagWarning != nil { notes.append("Below your bag rating: wear layers") }
+        if verdict.ventAdvice { notes.append(ventNote) }
+        if verdict.bagWarning != nil { notes.append("Wear layers: it gets colder than your sleeping bag is rated for") }
         if let dryBy = verdict.dryBy {
             notes.append("Dry by ~\(clock(dryBy))")
         } else if verdict.firing(.dew) != nil || verdict.firing(.frost) != nil {
@@ -38,15 +38,28 @@ struct VerdictText {
         return notes
     }
 
+    private var ventNote: String {
+        let hours = NightWindow(night, packByMinutes: settings.packByMinutes).nightHours
+        let damp = hours.contains { $0.humidity >= settings.ventHumidity }
+        let still = hours.contains { $0.windMS < settings.calmWindMS }
+        return switch (damp, still) {
+        case (true, true): "Open the vents: it's a damp, still night"
+        case (true, false): "Open the vents: it's a damp night"
+        default: "Open the vents: there's little wind to dry the tent"
+        }
+    }
+
     func describe(_ firing: Firing) -> String {
         let time = clock(firing.at)
         return switch firing.trigger {
         case .storm: "Storms possible at \(time)"
-        case .rain: "Rain \(chance(at: firing.at)) after \(time)"
+        case .rain: precipChance(at: firing.at) < settings.rainChance ? "Rain forecast after \(time)" : "Rain \(chance(at: firing.at)) after \(time)"
         case .windRain: "Wind with rain \(chance(at: firing.at)) at \(time)"
         case .frost: "Frost likely by \(time)"
         case .dew: "Dew likely by \(time)"
-        case .morningRain: "Morning rain \(chance(at: firing.at)) at \(time)"
+        case .morningRain:
+            precipChance(at: firing.at) < settings.morningRainChance
+                ? "Morning rain forecast at \(time)" : "Morning rain \(chance(at: firing.at)) at \(time)"
         case .cold: "Below \(coldLimit) by \(time): the rainfly holds warmth"
         }
     }
@@ -80,50 +93,113 @@ struct VerdictText {
         }
     }
 
+    /// Tonight's result for a check in a sentence or two, naming what decided it.
     func summary(_ trigger: Trigger) -> String {
         let window = NightWindow(night, packByMinutes: settings.packByMinutes)
-        let chance = { (hours: [HourSample], threshold: Double) in
-            hours.map(\.precipChance).max().map { "Highest \(percent($0)) · Rainfly on at \(percent(threshold)) or above" }
-        }
-        return switch trigger {
-        case .storm: verdict.firing(.storm).map { "Forecast at \(clock($0.at))" } ?? "None forecast"
-        case .rain: chance(window.nightHours, settings.rainChance) ?? "No forecast hours"
-        case .morningRain: chance(window.morningHours, settings.morningRainChance) ?? "Break camp is before sunrise"
+        let firing = verdict.firing(trigger)
+        switch trigger {
+        case .storm:
+            return firing.map { "A thunderstorm is forecast at \(clock($0.at))." } ?? "No thunderstorms are forecast."
+        case .rain:
+            return rainSummary(firing, window.nightHours, threshold: settings.rainChance, period: "overnight")
+                ?? "No forecast hours."
+        case .morningRain:
+            return rainSummary(firing, window.morningHours, threshold: settings.morningRainChance, period: "before you pack up")
+                ?? "You pack up before sunrise."
         case .windRain:
-            (window.nightHours.map { max($0.windMS, $0.gustMS ?? 0) }.max().map { "Strongest \(wind($0)) · " } ?? "")
-                + "Rainfly on above \(windRainLimit) with rain at \(percent(settings.windRainChance)) or above"
+            return windRainSummary(firing, window.nightHours) ?? "No forecast hours."
         case .dew, .frost:
-            (window.closestSpread.map { "Closest gap \(spread($0)) · " } ?? "")
-                + "Rainfly on at \(spreadLimit) or below, clear and calm"
+            return spreadSummary(trigger, firing, window) ?? "No forecast hours."
         case .cold:
-            (window.low.map { "Low \(low($0)) · " } ?? "") + "Rainfly on below \(coldLimit)"
+            guard let lowest = window.low else { return "No forecast hours." }
+            if let firing {
+                return "It gets colder than \(coldLimit) by \(clock(firing.at)) and drops to \(low(lowest))."
+            }
+            return "The lowest it gets is \(low(lowest)). It has to drop below \(coldLimit)."
         }
     }
 
+    private func rainSummary(_ firing: Firing?, _ hours: [HourSample], threshold: Double, period: String) -> String? {
+        guard let highest = hours.map(\.precipChance).max() else { return nil }
+        guard let firing, let hour = hour(at: firing.at) else {
+            return highest == 0
+                ? "No rain is forecast \(period)."
+                : "The highest chance \(period) is \(percent(highest)). It has to reach \(percent(threshold))."
+        }
+        if hour.precipChance < threshold {
+            return "The chance is only \(percent(hour.precipChance)), but some rain is forecast to fall at \(clock(hour.date)), so it counts."
+        }
+        return "\(percent(hour.precipChance)) chance of rain at \(clock(hour.date)). That's at or above your \(percent(threshold))."
+    }
+
+    private func windRainSummary(_ firing: Firing?, _ hours: [HourSample]) -> String? {
+        let gusting = { (hour: HourSample) in max(hour.windMS, hour.gustMS ?? 0) }
+        guard let strongest = hours.map(gusting).max() else { return nil }
+        if let firing, let hour = hour(at: firing.at) {
+            return "Wind up to \(wind(gusting(hour))) with a \(percent(hour.precipChance)) chance of rain at \(clock(hour.date)). Both are at or over your limits."
+        }
+        if strongest > settings.windRainMS {
+            return "Wind gets up to \(wind(strongest)), but the chance of rain stays under \(percent(settings.windRainChance)) whenever it's that windy."
+        }
+        return "Wind stays at \(wind(strongest)) or less. It has to go over \(windRainLimit)."
+    }
+
+    /// Dew and frost need the gap, a clear sky, calm air and the right side of freezing in
+    /// the same hour, so a miss names the one that was missing.
+    private func spreadSummary(_ trigger: Trigger, _ firing: Firing?, _ window: NightWindow) -> String? {
+        guard let closest = window.closestSpread else { return nil }
+        let wet = trigger == .dew ? "dew" : "frost"
+        if let firing, let hour = hour(at: firing.at) {
+            return "At \(clock(hour.date)) the air is \(spread(hour.spreadC)) from its dew point, with a clear sky and little wind, so \(wet) will form."
+        }
+        let close = window.nightHours.filter { $0.spreadC <= settings.dewSpreadC }
+        guard !close.isEmpty else {
+            return "The air stays at least \(spread(closest)) from its dew point. It has to get within \(spreadLimit) for \(wet)."
+        }
+        let isCloudy = { (hour: HourSample) in hour.cloudCover >= settings.clearSky }
+        let isWindy = { (hour: HourSample) in hour.windMS >= settings.calmWindMS }
+        if close.contains(where: { !isCloudy($0) && !isWindy($0) }) {
+            return trigger == .dew
+                ? "Dew would form, but it's below freezing, so it will be frost instead."
+                : "Frost would form, but it's above freezing, so it will be dew instead."
+        }
+        let within = "The air gets within \(spread(closest)) of its dew point"
+        switch (close.contains(where: isCloudy), close.contains(where: isWindy)) {
+        case (true, false):
+            return "\(within), but it's cloudy then. Clouds keep the tent from cooling down, so \(wet) won't form."
+        case (false, true):
+            return "\(within), but it's windy then. Wind keeps the tent from cooling down, so \(wet) won't form."
+        default:
+            return "\(within), but whenever it does, it's either cloudy or windy, so \(wet) won't form."
+        }
+    }
+
+    /// What the check looks for, in the words of the settings it uses.
     func rule(_ trigger: Trigger) -> String {
-        let gap = "the gap between the air and its dew point is \(spreadLimit) or below"
-        let sky = "cloud cover below \(percent(settings.clearSky)) and wind below \(Quantity.calmWind(units).text(settings.calmWindMS))"
         let packBy = clock(NightWindow(night, packByMinutes: settings.packByMinutes).packBy)
+        let calm = Quantity.calmWind(units).text(settings.calmWindMS)
+        let condenses = "If, in the same hour, the air gets within \(spreadLimit) of its dew point, the sky is less than \(percent(settings.clearSky)) cloudy, the wind is under \(calm)"
+        let anyRain = "chance of rain, or any rain at all is forecast to fall, the rainfly goes on."
         return switch trigger {
-        case .storm: "Rainfly on when any hour of the night, or before you break camp, is forecast as a thunderstorm, whatever its chance of rain."
-        case .rain: "Rainfly on when any hour of the night has a chance of rain of \(percent(settings.rainChance)) or above, or rain is forecast to fall."
-        case .windRain: "Rainfly on when the wind or its gusts go above \(windRainLimit) in an hour with a chance of rain of \(percent(settings.windRainChance)) or above."
-        case .frost: "Rainfly on when \(gap), with \(sky), at or below freezing."
-        case .dew: "Rainfly on when \(gap), with \(sky), above freezing."
-        case .morningRain: "Rainfly on when an hour between sunrise and \(packBy) has a chance of rain of \(percent(settings.morningRainChance)) or above."
-        case .cold: "Rainfly on when the night drops below \(coldLimit)."
+        case .storm: "If a thunderstorm is forecast any time from sunset until you pack up, the rainfly goes on, even if the chance of rain is small."
+        case .rain: "If any hour from sunset to sunrise has a \(percent(settings.rainChance)) or higher \(anyRain)"
+        case .windRain: "If, in the same hour, the wind or its gusts go over \(windRainLimit) and the chance of rain is \(percent(settings.windRainChance)) or more, the rainfly goes on."
+        case .frost: "\(condenses), and it's at or below freezing, the rainfly goes on."
+        case .dew: "\(condenses), and it's above freezing, the rainfly goes on."
+        case .morningRain: "If any hour from sunrise until you pack up at \(packBy) has a \(percent(settings.morningRainChance)) or higher \(anyRain)"
+        case .cold: "If the temperature drops below \(coldLimit) during the night, the rainfly goes on."
         }
     }
 
     static func why(_ trigger: Trigger) -> String {
         switch trigger {
-        case .storm: "Thunderstorms bring sudden downpours and gusts, often with little warning, so a storm in the forecast counts even when the chance of rain is low."
-        case .rain: "Rain falls straight through the mesh of an inner tent and soaks what is inside."
-        case .windRain: "Wind drives rain sideways under any gap, so on a windy night a smaller chance of rain than the rain check needs is enough."
-        case .frost: "On a clear, calm night the tent cools below the air, and moisture freezes onto it. The rainfly takes the frost, and the inner tent stays dry."
-        case .dew: "On a clear, calm night the tent cools below the air, and dew settles on it and soaks through mesh. The rainfly takes the dew, and the inner tent stays dry."
-        case .morningRain: "Rain before you break camp means packing a wet tent. With the rainfly on, the inner tent packs dry."
-        case .cold: "The rainfly holds a layer of warmer air around the inner tent and blocks the breeze, keeping the tent a few degrees warmer."
+        case .storm: "Thunderstorms can bring heavy rain and strong wind with almost no warning."
+        case .rain: "Rain falls straight through the mesh of the inner tent."
+        case .windRain: "Wind blows rain in sideways, so even a small chance of rain can soak the tent."
+        case .frost: "Frost is what dew becomes below freezing. On a clear, calm night your tent cools below the air around it, and ice forms on it. When it melts, the water gets through mesh, so the rainfly catches it instead."
+        case .dew: "The dew point is the temperature where air has to let go of some of its water. On a clear, calm night your tent cools below the air around it, and water collects on it, like on a cold can of soda. Water gets through mesh, so the rainfly catches it instead."
+        case .morningRain: "Rain before you pack up means packing a wet tent."
+        case .cold: "The rainfly traps a layer of warmer air and blocks the wind, so the tent stays a few degrees warmer."
         }
     }
 
@@ -202,7 +278,15 @@ struct VerdictText {
     }
 
     private func chance(at date: Date) -> String {
-        percent(night.hours.first { $0.date == date }?.precipChance ?? 0)
+        percent(precipChance(at: date))
+    }
+
+    private func precipChance(at date: Date) -> Double {
+        hour(at: date)?.precipChance ?? 0
+    }
+
+    private func hour(at date: Date) -> HourSample? {
+        night.hours.first { $0.date == date }
     }
 
     enum Staleness { case fresh, aging, stale }
