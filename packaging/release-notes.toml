@@ -2,13 +2,15 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "1.1.1"
+version = "1.1.2"
 
 [locales."en-us"]
 whats-new = """
+Every check now explains itself in plain words. Under each one, Rainfly says what it found tonight and what decided it: dew that won't form because the sky is cloudy or the wind is up, rain that counts because some is forecast to fall even at a low chance, or wind that never comes with rain. Tap a check to see what it looks for and why it matters. The advice under the verdict now says why too, such as opening the vents on a damp, still night.
+
+In Fahrenheit and miles per hour, the checks now use the thresholds Settings shows, so a dew-point gap of 5° is checked as 5°.
+
 Times read correctly on a 24-hour clock: Dew likely by 23:00, not by 23.
 
-In Fahrenheit and miles per hour, the checks now use the thresholds Settings shows, so a dew-point gap of 5° is checked as 5°. Each check writes its threshold as Settings does, and a forecast value close to it keeps a decimal, so the numbers no longer seem to contradict the verdict.
-
-Widgets name your location My Location and redraw as soon as a change arrives from your other device. A camp you tap while a forecast is loading now gets its own forecast. Coordinates can be typed with a decimal comma, downloaded forecasts give their age in days once they are two days old, and the dew diary writes times as the main screen does and says which kind of morning it still needs for a suggestion.
+Widgets name your location My Location and redraw as soon as a change arrives from your other device. A camp you tap while a forecast is loading now gets its own forecast. Coordinates can be typed with a decimal comma, downloaded forecasts give their age in days once they are two days old, and the dew diary says which kind of morning it still needs for a suggestion.
 """
