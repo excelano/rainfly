@@ -15,7 +15,8 @@ thresholds the camper had set), and prints how each dew spread would have done o
 open-sky nights, on the forecasts and on the history.
 
 The development environment is read unless --production is given. The server-to-server
-key is ~/.config/zeltwetter/cloudkit-key.pem and its key ID ~/.config/zeltwetter/cloudkit-key-id.
+key is ~/.config/zeltwetter/cloudkit-key.pem; CloudKit gives it an ID in each environment, kept in
+~/.config/zeltwetter/cloudkit-key-id-development and cloudkit-key-id-production.
 <dir> defaults to the current directory.
 """
 
@@ -50,7 +51,7 @@ struct DewDiaryTool {
         }
 
         let config = FileManager.default.homeDirectoryForCurrentUser.appending(path: ".config/zeltwetter")
-        let keyID = try String(contentsOf: config.appending(path: "cloudkit-key-id"), encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines)
+        let keyID = try String(contentsOf: config.appending(path: "cloudkit-key-id-\(environment)"), encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines)
         let key = try P256.Signing.PrivateKey(pemRepresentation: String(contentsOf: config.appending(path: "cloudkit-key.pem"), encoding: .utf8))
         let records = try await CloudKit(keyID: keyID, key: key, environment: environment).diaryNights()
 
