@@ -180,7 +180,7 @@ struct ChecksSettingsScreen: View {
             } header: {
                 Text("Dew and frost")
             } footer: {
-                Text("Rainfly on when the dew-point gap, the cloud cover and the wind are all within these in the same hour. At or below freezing it is frost.")
+                Text("Rainfly on when the dew-point gap, the cloud cover and the wind are all within these in the same hour. At \(Quantity.cold(units).text(FlyEngine.frostAirC)) or colder it is frost, since the tent cools below the air.")
             }
             Section {
                 QuantityStepper(quantity: .cold(units), value: $model.settings.coldC)

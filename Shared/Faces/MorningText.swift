@@ -181,7 +181,10 @@ struct MorningText {
         case .cloudy?: "it was cloudy whenever the air got close to its dew point"
         case .windy?: "it was windy whenever the air got close to its dew point"
         case .cloudyOrWindy?: "it was cloudy or windy whenever the air got close to its dew point"
-        case .otherSideOfFreezing?: trigger == .dew ? "it was below freezing, so it was frost instead" : "it stayed above freezing, so it was dew instead"
+        case .otherSideOfFrostLine?:
+            trigger == .dew
+                ? "the air got down to \(text.frostLine), so it was frost instead"
+                : "the air stayed warmer than \(text.frostLine), so it was dew instead"
         case nil: "no hours for the night"
         }
     }
@@ -193,7 +196,7 @@ struct MorningText {
         case .cloudy?: "clouds all night"
         case .windy?: "wind all night"
         case .cloudyOrWindy?: "clouds or wind all night"
-        case .otherSideOfFreezing?: trigger == .dew ? "it to freeze" : "it to stay above freezing"
+        case .otherSideOfFrostLine?: trigger == .dew ? "the air to get down to \(text.frostLine)" : "the air to stay warmer than \(text.frostLine)"
         }
     }
 

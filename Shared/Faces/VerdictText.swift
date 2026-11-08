@@ -211,7 +211,7 @@ struct VerdictText {
         return "Wind stays at \(wind(strongest)) or less. It has to go over \(windRainLimit)."
     }
 
-    /// Dew and frost need the gap, a clear sky, calm air and the right side of freezing in
+    /// Dew and frost need the gap, a clear sky, calm air and the right side of the frost line in
     /// the same hour, so a miss names the one that was missing.
     private func spreadSummary(_ trigger: Trigger, _ firing: Firing?, _ window: NightWindow) -> String? {
         guard let closest = window.closestSpread else { return nil }
@@ -223,10 +223,10 @@ struct VerdictText {
         return switch SpreadMiss.of(trigger, hours: window.nightHours, settings: settings) {
         case .tooDry?, nil:
             "The air stays at least \(spread(closest)) from its dew point. It has to get within \(spreadLimit) for \(wet)."
-        case .otherSideOfFreezing?:
+        case .otherSideOfFrostLine?:
             trigger == .dew
-                ? "Dew would form, but it's below freezing, so it will be frost instead."
-                : "Frost would form, but it's above freezing, so it will be dew instead."
+                ? "Dew would form, but the air is \(frostLine) or colder, so it will be frost instead."
+                : "Frost would form, but the air stays warmer than \(frostLine), so it will be dew instead."
         case .cloudy?: "\(within), but it's cloudy then. Clouds keep the tent from cooling down, so \(wet) won't form."
         case .windy?: "\(within), but it's windy then. Wind keeps the tent from cooling down, so \(wet) won't form."
         case .cloudyOrWindy?: "\(within), but whenever it does, it's either cloudy or windy, so \(wet) won't form."
@@ -244,8 +244,8 @@ struct VerdictText {
         case .storm: "If a thunderstorm is forecast any time from \(sunset) until you pack up, the rainfly goes on, even if the chance of rain is small."
         case .rain: "If any hour from \(sunset) to \(sunrise) has a \(percent(settings.rainChance)) or higher \(anyRain)"
         case .windRain: "If, in the same hour, the wind or its gusts go over \(windRainLimit) and the chance of rain is \(percent(settings.windRainChance)) or more, the rainfly goes on."
-        case .frost: "\(condenses), and it's at or below freezing, the rainfly goes on."
-        case .dew: "\(condenses), and it's above freezing, the rainfly goes on."
+        case .frost: "\(condenses), and the air is \(frostLine) or colder, the rainfly goes on."
+        case .dew: "\(condenses), and the air is warmer than \(frostLine), the rainfly goes on."
         case .morningRain: "If any hour from \(sunrise) until you pack up at \(packBy) has a \(percent(settings.morningRainChance)) or higher \(anyRain)"
         case .cold: "If the temperature drops below \(coldLimit) during the night, the rainfly goes on."
         }
@@ -340,6 +340,7 @@ struct VerdictText {
     }
 
     var coldLimit: String { Quantity.cold(units).text(settings.coldC) }
+    var frostLine: String { Quantity.cold(units).text(FlyEngine.frostAirC) }
     var spreadLimit: String { Quantity.dewSpread(units).text(settings.dewSpreadC) }
     var windRainLimit: String { Quantity.windRain(units).text(settings.windRainMS) }
 

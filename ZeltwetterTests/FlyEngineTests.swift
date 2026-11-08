@@ -70,6 +70,16 @@ struct FlyEngineTests {
         #expect(verdict.firing(.dew) == nil)
     }
 
+    @Test func frostStartsTwoDegreesAboveFreezing() {
+        let atLine = evaluate(F.night { F.hour($0, temp: 2, dewPoint: 0, cloud: 0.1, wind: 1) })
+        #expect(atLine.firing(.frost) != nil)
+        #expect(atLine.firing(.dew) == nil)
+
+        let above = evaluate(F.night { F.hour($0, temp: 2.5, dewPoint: 0.5, cloud: 0.1, wind: 1) })
+        #expect(above.firing(.dew) != nil)
+        #expect(above.firing(.frost) == nil)
+    }
+
     @Test func nineDegreeLowIsColdOnly() {
         let verdict = evaluate(F.night { d in F.hour(d, temp: d == F.at(1, 4) ? 9 : 14, dewPoint: 0) })
         #expect(verdict.firings == [Firing(trigger: .cold, at: F.at(1, 4))])

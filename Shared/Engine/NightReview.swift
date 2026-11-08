@@ -9,8 +9,8 @@ enum SpreadMiss: Equatable, Sendable {
     /// The air never got close enough to its dew point; the closest gap it reached.
     case tooDry(closestC: Double)
     case cloudy, windy, cloudyOrWindy
-    /// Clear and calm with the gap reached, but on the other side of freezing.
-    case otherSideOfFreezing
+    /// Clear and calm with the gap reached, but on the other side of the frost line.
+    case otherSideOfFrostLine
 
     /// Nil when the night has no hours or the check would fire.
     static func of(_ trigger: Trigger, hours: [HourSample], settings: Settings) -> SpreadMiss? {
@@ -21,8 +21,8 @@ enum SpreadMiss: Equatable, Sendable {
         let isWindy = { (hour: HourSample) in hour.windMS >= settings.calmWindMS }
         let open = close.filter { !isCloudy($0) && !isWindy($0) }
         if !open.isEmpty {
-            let rightSide = open.contains { trigger == .dew ? $0.tempC > 0 : $0.tempC <= 0 }
-            return rightSide ? nil : .otherSideOfFreezing
+            let rightSide = open.contains { FlyEngine.isFrostAir($0.tempC) == (trigger == .frost) }
+            return rightSide ? nil : .otherSideOfFrostLine
         }
         switch (close.contains(where: isCloudy), close.contains(where: isWindy)) {
         case (true, false): return .cloudy

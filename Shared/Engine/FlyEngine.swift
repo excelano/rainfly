@@ -8,6 +8,12 @@ import Foundation
 /// firing puts the fly on. Storms are tested across the night and the morning, rain and
 /// morning rain each in their own part, and every other trigger across the night only.
 enum FlyEngine {
+    /// The air temperature at or under which condensation is frost. A clear, calm night cools
+    /// the tent a few degrees below the air, so the tent freezes before the air does.
+    static let frostAirC = 2.0
+
+    static func isFrostAir(_ tempC: Double) -> Bool { tempC <= frostAirC }
+
     static func evaluate(_ night: NightForecast, settings: Settings, dryByModel: DryByModel = DryByModel()) -> Verdict {
         let window = NightWindow(night, packByMinutes: settings.packByMinutes)
         let nightHours = window.nightHours
@@ -30,8 +36,8 @@ enum FlyEngine {
         record(.rain, in: nightHours) { rains($0, chance: s.rainChance) }
         record(.morningRain, in: morningHours) { rains($0, chance: s.morningRainChance) }
         record(.windRain, in: nightHours) { max($0.windMS, $0.gustMS ?? 0) > s.windRainMS && $0.precipChance >= s.windRainChance }
-        record(.dew, in: nightHours) { condenses($0) && $0.tempC > 0 }
-        record(.frost, in: nightHours) { condenses($0) && $0.tempC <= 0 }
+        record(.dew, in: nightHours) { condenses($0) && !isFrostAir($0.tempC) }
+        record(.frost, in: nightHours) { condenses($0) && isFrostAir($0.tempC) }
         record(.cold, in: nightHours) { $0.tempC < s.coldC }
 
         let firings = earliest

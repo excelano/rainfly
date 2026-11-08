@@ -97,10 +97,10 @@ struct VerdictTextTests {
     @Test func dewAndFrostSayWhatDecidedThem() {
         let dew = text(F.night { F.hour($0, temp: 12, dewPoint: 10, wind: 1) })
         #expect(plain(dew.summary(.dew)) == "At 8 PM the air is 2.0° from its dew point, with a clear sky and little wind, so dew will form.")
-        #expect(dew.summary(.frost) == "Frost would form, but it's above freezing, so it will be dew instead.")
+        #expect(dew.summary(.frost) == "Frost would form, but the air stays warmer than 2°, so it will be dew instead.")
 
         let frost = text(F.night { F.hour($0, temp: -2, dewPoint: -4, wind: 1) })
-        #expect(frost.summary(.dew) == "Dew would form, but it's below freezing, so it will be frost instead.")
+        #expect(frost.summary(.dew) == "Dew would form, but the air is 2° or colder, so it will be frost instead.")
 
         let cloudy = text(F.night { F.hour($0, temp: 12, dewPoint: 10, cloud: 0.8, wind: 1) })
         #expect(cloudy.summary(.dew) == "The air gets within 2.0° of its dew point, but it's cloudy then. Clouds keep the tent from cooling down, so dew won't form.")
@@ -111,7 +111,7 @@ struct VerdictTextTests {
 
         let dry = text(F.night())
         #expect(dry.summary(.dew) == "The air stays at least 10.0° from its dew point. It has to get within 3.0° for dew.")
-        #expect(dew.rule(.dew) == "If, in the same hour, the air gets within 3.0° of its dew point, the sky is less than 30% cloudy, the wind is under 3.0 m/s, and it's above freezing, the rainfly goes on.")
+        #expect(dew.rule(.dew) == "If, in the same hour, the air gets within 3.0° of its dew point, the sky is less than 30% cloudy, the wind is under 3.0 m/s, and the air is warmer than 2°, the rainfly goes on.")
     }
 
     @Test func rainSaysWhetherTheChanceOrTheRainDecidedIt() {

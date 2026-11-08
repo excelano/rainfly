@@ -79,7 +79,7 @@ struct OvernightText {
         }
         let cloudy = current.cloudCover >= settings.clearSky, windy = current.windMS >= settings.calmWindMS
         if !cloudy && !windy {
-            let wet = current.tempC > 0 ? "Dew" : "Frost"
+            let wet = FlyEngine.isFrostAir(current.tempC) ? "Frost" : "Dew"
             return ("\(wet) is forming", "The air is only \(gap) from its dew point, the sky is clear and there's almost no wind.")
         }
         let blocker = cloudy && windy ? "clouds and wind keep" : cloudy ? "clouds keep" : "wind keeps"

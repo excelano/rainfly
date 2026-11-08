@@ -144,7 +144,7 @@ struct ChecksSettingsView: View {
             } header: {
                 Text("Dew and frost")
             } footer: {
-                Text("All three in the same hour. Below freezing it is frost.")
+                Text("All three in the same hour. At \(Quantity.cold(units).text(FlyEngine.frostAirC)) or colder it is frost.")
             }
             Section {
                 QuantityRow(quantity: .cold(units), value: $model.settings.coldC)

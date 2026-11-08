@@ -56,7 +56,7 @@ struct NightReviewTests {
         let hours = { (night: NightForecast) in NightWindow(night, packByMinutes: 8 * 60).nightHours }
         #expect(SpreadMiss.of(.dew, hours: hours(cloudy), settings: Settings()) == .cloudy)
         #expect(SpreadMiss.of(.dew, hours: hours(dewy), settings: Settings()) == nil)
-        #expect(SpreadMiss.of(.frost, hours: hours(dewy), settings: Settings()) == .otherSideOfFreezing)
+        #expect(SpreadMiss.of(.frost, hours: hours(dewy), settings: Settings()) == .otherSideOfFrostLine)
         #expect(SpreadMiss.of(.dew, hours: hours(F.night()), settings: Settings()) == .tooDry(closestC: 10))
     }
 }
