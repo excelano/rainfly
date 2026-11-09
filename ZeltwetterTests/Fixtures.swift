@@ -27,6 +27,7 @@ enum Fixture {
         dewPoint: Double = 5,
         humidity: Double = 0.5,
         cloud: Double = 0.1,
+        layers: CloudLayers? = nil,
         wind: Double = 4,
         gust: Double? = nil,
         chance: Double = 0,
@@ -35,7 +36,7 @@ enum Fixture {
     ) -> HourSample {
         HourSample(
             date: date, tempC: temp, dewPointC: dewPoint, humidity: humidity, cloudCover: cloud,
-            windMS: wind, gustMS: gust, precipChance: chance, precipAmountMM: amount, isThunderstorm: storm
+            cloudLayers: layers, windMS: wind, gustMS: gust, precipChance: chance, precipAmountMM: amount, isThunderstorm: storm
         )
     }
 

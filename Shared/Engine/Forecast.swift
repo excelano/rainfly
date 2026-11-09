@@ -43,6 +43,8 @@ struct HourSample: Codable, Equatable, Sendable {
     let dewPointC: Double
     let humidity: Double          // 0...1
     let cloudCover: Double        // 0...1
+    /// Nil before iOS 18 and watchOS 11, which first report it, and in hours saved without it.
+    var cloudLayers: CloudLayers? = nil
     let windMS: Double
     let gustMS: Double?
     let precipChance: Double      // 0...1
@@ -50,6 +52,14 @@ struct HourSample: Codable, Equatable, Sendable {
     let isThunderstorm: Bool
 
     var spreadC: Double { tempC - dewPointC }
+}
+
+/// The share of the sky covered at each height, each 0...1. Low cloud holds the night's
+/// warmth in; thin high cloud barely does.
+struct CloudLayers: Codable, Equatable, Sendable {
+    let low: Double
+    let medium: Double
+    let high: Double
 }
 
 struct NightForecast: Codable, Equatable, Sendable {

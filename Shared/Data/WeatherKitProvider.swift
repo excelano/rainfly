@@ -68,12 +68,19 @@ struct WeatherKitProvider: ForecastProvider {
             dewPointC: hour.dewPoint.converted(to: .celsius).value,
             humidity: hour.humidity,
             cloudCover: hour.cloudCover,
+            cloudLayers: cloudLayers(hour),
             windMS: hour.wind.speed.converted(to: .metersPerSecond).value,
             gustMS: hour.wind.gust?.converted(to: .metersPerSecond).value,
             precipChance: hour.precipitationChance,
             precipAmountMM: hour.precipitationAmount.converted(to: .millimeters).value,
             isThunderstorm: stormConditions.contains(hour.condition)
         )
+    }
+
+    private static func cloudLayers(_ hour: HourWeather) -> CloudLayers? {
+        guard #available(iOS 18, watchOS 11, *) else { return nil }
+        let layers = hour.cloudCoverByAltitude
+        return CloudLayers(low: layers.low, medium: layers.medium, high: layers.high)
     }
 
     private static let stormConditions: Set<WeatherCondition> = [

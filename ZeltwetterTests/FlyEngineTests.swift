@@ -255,7 +255,10 @@ struct FlyEngineTests {
     }
 
     @Test func forecastAndVerdictSurviveCodable() throws {
-        let night = F.night { d in F.hour(d, gust: d == F.at(1, 1) ? 11 : nil, chance: 0.3, storm: d == F.at(1, 2)) }
+        let layers = CloudLayers(low: 0.1, medium: 0.2, high: 0.6)
+        let night = F.night { d in
+            F.hour(d, layers: d == F.at(0, 22) ? layers : nil, gust: d == F.at(1, 1) ? 11 : nil, chance: 0.3, storm: d == F.at(1, 2))
+        }
         let decodedNight = try JSONDecoder().decode(NightForecast.self, from: JSONEncoder().encode(night))
         #expect(decodedNight == night)
 
@@ -266,5 +269,12 @@ struct FlyEngineTests {
         #expect(verdict.dryBy != nil)
         let decodedVerdict = try JSONDecoder().decode(Verdict.self, from: JSONEncoder().encode(verdict))
         #expect(decodedVerdict == verdict)
+    }
+
+    @Test func anHourSavedWithoutCloudLayersStillReads() throws {
+        let hour = F.hour(F.at(0, 22))
+        let saved = try JSONEncoder().encode(hour)
+        #expect(!String(decoding: saved, as: UTF8.self).contains("cloudLayers"))
+        #expect(try JSONDecoder().decode(HourSample.self, from: saved) == hour)
     }
 }
