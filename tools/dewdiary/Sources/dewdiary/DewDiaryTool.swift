@@ -12,7 +12,8 @@ Reads every dew diary night shared with Excelano from the CloudKit container
 iCloud.com.excelano.zeltwetter, writes <dir>/nights.json (the records as CloudKit returned
 them) and <dir>/nights.csv (a row a night, judged by the app's own engine with the
 thresholds the camper had set), and prints how each dew spread would have done on the
-open-sky nights, on the forecasts and on the history.
+open-sky nights, on the forecasts and on the history, and how cloud limits that loosen
+as the air nears its dew point would have done.
 
 The development environment is read unless --production is given. The server-to-server
 key is ~/.config/zeltwetter/cloudkit-key.pem; CloudKit gives it an ID in each environment, kept in
@@ -66,5 +67,6 @@ struct DewDiaryTool {
         print("\(records.count) records from \(diaries == 1 ? "1 diary" : "\(diaries) diaries") in \(environment), written to \(out.path)")
         if records.count > nights.count { print("\(records.count - nights.count) records could not be read and are only in nights.json") }
         print(Report.sweep(nights))
+        print(Report.cloudSweep(nights))
     }
 }
