@@ -26,7 +26,7 @@ struct VerdictScreen: View {
                 case .overnight:
                     OvernightView(
                         overnight: OvernightText(text: text, decided: model.decided ?? night, decidedSettings: model.decidedSettings),
-                        current: model.current, pressure: pressure, now: now,
+                        current: model.current, pressure: pressure(at: now), now: now,
                         attribution: model.attribution, problem: model.problem
                     )
                 case .morning:
@@ -97,9 +97,9 @@ struct VerdictScreen: View {
         #endif
     }
 
-    /// The pressure's trend from the overnight readings, when they cover an hour or more.
-    private var pressure: String? {
+    /// The pressure's trend from tonight's recent readings, when they cover an hour or more.
+    private func pressure(at now: Date) -> String? {
         guard model.preferences.pressureWatch else { return nil }
-        return PressureWatch.live().store.load()?.trend.map(OvernightText.pressure)
+        return PressureWatch.live().store.load()?.trend(at: now).map(OvernightText.pressure)
     }
 }

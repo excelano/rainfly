@@ -188,7 +188,8 @@ struct OvernightTextTests {
         for (offset, hPa) in [(0.0, 1015.0), (3600.0, 1014.6), (7200.0, 1014.2), (10_800.0, 1014.0)] {
             log.record(PressureSample(date: F.at(0, 23).addingTimeInterval(offset), hPa: hPa))
         }
-        let trend = log.trend!
+        let trend = log.trend(at: F.at(1, 2, 30))!
+        #expect(log.trend(at: F.at(1, 4)) == nil)
         #expect(trend.trend == .falling)
         #expect(OvernightText.pressure(trend) == "Dropping slowly over the last 3 hours")
     }

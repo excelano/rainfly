@@ -13,6 +13,8 @@ struct PressureSample: Codable, Equatable, Sendable {
 struct PressureLog: Codable, Equatable, Sendable {
     static let kept: TimeInterval = 12 * 3600
     static let span: TimeInterval = 3 * 3600
+    /// How old the newest reading can be and still describe the pressure now.
+    static let fresh: TimeInterval = 90 * 60
     static let fallHPa = 1.5
 
     private(set) var samples: [PressureSample] = []
@@ -35,10 +37,10 @@ struct PressureLog: Codable, Equatable, Sendable {
 
     enum Trend: Equatable, Sendable { case fallingFast, falling, steady, rising }
 
-    /// How the pressure has moved over the `span` before the newest reading, when the readings
-    /// cover at least an hour of it.
-    var trend: (trend: Trend, hours: Int)? {
-        guard let latest = samples.last else { return nil }
+    /// How the pressure has moved over the `span` before the newest reading, when that reading
+    /// is fresh at `now` and the readings cover at least an hour of the span.
+    func trend(at now: Date) -> (trend: Trend, hours: Int)? {
+        guard let latest = samples.last, latest.date >= now.addingTimeInterval(-Self.fresh) else { return nil }
         let earlier = samples.filter { $0.date >= latest.date.addingTimeInterval(-Self.span) && $0.date < latest.date }
         guard let first = earlier.first, latest.date.timeIntervalSince(first.date) >= 3600 else { return nil }
         let change = latest.hPa - (earlier.map(\.hPa).max() ?? first.hPa)
