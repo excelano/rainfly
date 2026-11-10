@@ -62,8 +62,13 @@ struct MorningView<Diary: View>: View {
                 NavigationLink {
                     UpcomingNightView()
                 } label: {
-                    Text("Tonight's forecast at \(morning.handoverTime)")
-                        .foregroundStyle(Color.accentColor)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Tonight's forecast")
+                            .foregroundStyle(Color.accentColor)
+                        Text("Shown here from \(morning.handoverTime)")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             Section {
