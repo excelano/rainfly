@@ -235,14 +235,15 @@ struct VerdictText {
 
     /// What the check looks for, in the words of the settings it uses.
     func rule(_ trigger: Trigger) -> String {
-        let packBy = clock(NightWindow(night, packByMinutes: settings.packByMinutes).packBy)
+        let window = NightWindow(night, packByMinutes: settings.packByMinutes)
+        let packBy = clock(window.packBy)
         let calm = Quantity.calmWind(units).text(settings.calmWindMS)
         let condenses = "If, in the same hour, the air gets within \(spreadLimit) of its dew point, the sky is less than \(percent(settings.clearSky)) cloudy, the wind is under \(calm)"
         let anyRain = "chance of rain, or any rain at all is forecast to fall, the rainfly goes on."
         let (sunset, sunrise) = night.polar == nil ? ("sunset", "sunrise") : (clock(night.sunset), clock(night.sunrise))
         return switch trigger {
         case .storm: "If a thunderstorm is forecast any time from \(sunset) until you pack up, the rainfly goes on, even if the chance of rain is small."
-        case .rain: "If any hour from \(sunset) to \(sunrise) has a \(percent(settings.rainChance)) or higher \(anyRain)"
+        case .rain: "If any hour from \(sunset) until \(window.packBy < night.sunrise ? "you pack up at \(packBy)" : sunrise) has a \(percent(settings.rainChance)) or higher \(anyRain)"
         case .windRain: "If, in the same hour, the wind or its gusts go over \(windRainLimit) and the chance of rain is \(percent(settings.windRainChance)) or more, the rainfly goes on."
         case .frost: "\(condenses), and the air is \(frostLine) or colder, the rainfly goes on."
         case .dew: "\(condenses), and the air is warmer than \(frostLine), the rainfly goes on."

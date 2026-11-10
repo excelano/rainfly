@@ -83,7 +83,17 @@ struct NightWindowEndTests {
             units: DisplayUnits(fahrenheit: false, mph: false), locale: Locale(identifier: "en_US")
         )
         #expect(text.notes(at: F.at(0, 20)).first == "The sun stays up all night here")
-        #expect(text.rule(.rain).replacingOccurrences(of: "\u{202F}", with: " ").hasPrefix("If any hour from 9 PM to 6 AM has"))
+        #expect(text.rule(.rain).replacingOccurrences(of: "\u{202F}", with: " ").hasPrefix("If any hour from 9 PM until 6 AM has"))
+    }
+
+    @Test func theRainRuleEndsAtPackUpWhenThatComesBeforeSunrise() {
+        var early = Settings()
+        early.packByMinutes = 5 * 60
+        let text = VerdictText(
+            night: F.night(), verdict: FlyEngine.evaluate(F.night(), settings: early), settings: early,
+            units: DisplayUnits(fahrenheit: false, mph: false), locale: Locale(identifier: "en_US")
+        )
+        #expect(text.rule(.rain).replacingOccurrences(of: "\u{202F}", with: " ").hasPrefix("If any hour from sunset until you pack up at 5 AM has"))
     }
 }
 
