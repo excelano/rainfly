@@ -184,7 +184,7 @@ struct MorningText {
             let expectedLow = NightWindow(decided, packByMinutes: decidedSettings.packByMinutes).low
             let actualLow = NightWindow(latest, packByMinutes: decidedSettings.packByMinutes).low
             guard let expectedLow, let actualLow else { return "No hours to compare." }
-            let below = check.happened == nil ? ", so it never got below your \(decidedText.coldLimit)" : ", below your \(decidedText.coldLimit)"
+            let below = check.happened == nil ? ", so it never got below the \(decidedText.coldLimit) limit" : ", below the \(decidedText.coldLimit) limit"
             return "Rainfly expected a low of \(text.low(expectedLow)). It got down to \(text.low(actualLow))\(below)."
         }
     }

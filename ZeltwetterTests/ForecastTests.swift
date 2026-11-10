@@ -80,7 +80,7 @@ struct VerdictTextTests {
     @Test func reasonsNameTheHeadlineAndItsTime() {
         let rain = text(F.night { d in F.hour(d, chance: d == F.at(1, 2) ? 0.35 : 0) })
         #expect(rain.headline == "Rainfly on")
-        #expect(plain(rain.reason) == "Rain 35% after 2 AM")
+        #expect(plain(rain.reason) == "Rain 35% at 2 AM")
 
         let storm = text(F.night { d in F.hour(d, storm: d == F.at(0, 23)) })
         #expect(plain(storm.reason) == "Storms possible at 11 PM")
@@ -116,9 +116,9 @@ struct VerdictTextTests {
 
     @Test func rainSaysWhetherTheChanceOrTheRainDecidedIt() {
         let likely = text(F.night { d in F.hour(d, chance: d == F.at(1, 2) ? 0.35 : 0) })
-        #expect(plain(likely.summary(.rain)) == "35% chance of rain at 2 AM. That's at or above your 20%.")
+        #expect(plain(likely.summary(.rain)) == "35% chance of rain at 2 AM. That's at or above the 20% limit.")
         let drizzle = text(F.night { d in F.hour(d, chance: 0.1, amount: d == F.at(1, 2) ? 0.2 : 0) })
-        #expect(plain(drizzle.reason) == "Rain forecast after 2 AM")
+        #expect(plain(drizzle.reason) == "Rain forecast at 2 AM")
         #expect(plain(drizzle.summary(.rain)) == "The chance is only 10%, but some rain is forecast to fall at 2 AM, so it counts.")
         let dry = text(F.night { F.hour($0, chance: 0.1) })
         #expect(dry.summary(.rain) == "The highest chance overnight is 10%. It has to reach 20%.")
@@ -128,7 +128,7 @@ struct VerdictTextTests {
 
     @Test func windWithRainSaysWhichWasMissing() {
         let both = text(F.night { d in F.hour(d, wind: d == F.at(1, 1) ? 10 : 4, chance: d == F.at(1, 1) ? 0.15 : 0) })
-        #expect(plain(both.summary(.windRain)) == "Wind up to 10.0 m/s with a 15% chance of rain at 1 AM. Both are at or over your limits.")
+        #expect(plain(both.summary(.windRain)) == "Wind up to 10.0 m/s with a 15% chance of rain at 1 AM. Both are at or over the limits.")
         let dry = text(F.night { F.hour($0, wind: 10) })
         #expect(dry.summary(.windRain) == "Wind gets up to 10.0 m/s, but the chance of rain stays under 10% whenever it's that windy.")
         let calm = text(F.night())

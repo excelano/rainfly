@@ -22,7 +22,7 @@ struct DiaryScreen: View {
                     LabeledContent("No dew forecast, none found", value: "\(tally.clear)")
                     LabeledContent("Dew found, not forecast", value: "\(tally.missed)")
                     LabeledContent("Dew forecast, none found", value: "\(tally.falseAlarms)")
-                    LabeledContent("Light dew", value: tally.lightDew == 0 ? "0" : "\(tally.lightDew), \(tally.lightDewFlagged) forecast as dew")
+                    LabeledContent("Light dew", value: lightDew(tally))
                 } header: {
                     Text("How the forecast did")
                 } footer: {
@@ -103,6 +103,16 @@ extension DiaryScreen {
                 : "\(nights) open-sky nights so far, all wet. A suggestion also needs a dry morning."
         }
         return "\(nights) of \(DewDiary.suggestionNights) open-sky nights so far, \(counts.wet) wet and \(counts.dry) dry. A suggestion needs at least \(DewDiary.suggestionNights), with both wet and dry mornings."
+    }
+
+    private func lightDew(_ tally: DiaryTally) -> String {
+        let count = tally.lightDew, flagged = tally.lightDewFlagged
+        return switch flagged {
+        case _ where count == 0: "0"
+        case 0: "\(count), dew not forecast"
+        case count: count == 1 ? "1, dew forecast" : "\(count), dew forecast on all"
+        default: "\(count), dew forecast on \(flagged)"
+        }
     }
 }
 

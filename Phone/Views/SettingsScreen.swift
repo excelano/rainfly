@@ -97,7 +97,7 @@ struct SettingsScreen: View {
             } header: {
                 Text("Overnight")
             } footer: {
-                Text("After 22:00, Rainfly sends you a notification if the forecast changes and the rainfly should go on. It follows your notification settings. Your \(UIDevice.current.model) only lets Rainfly check now and then while the app is closed, so the notification might come late. While your watch has this on, the watch sends it instead. The red screen keeps your eyes used to the dark.")
+                Text("After \(VerdictText.anchorClock), Rainfly sends you a notification if the forecast changes and the rainfly should go on. It follows your notification settings. Your \(UIDevice.current.model) only lets Rainfly check now and then while the app is closed, so the notification might come late. While your watch has this on, the watch sends it instead. The red screen keeps your eyes used to the dark.")
             }
             Section {
                 Button("Show the welcome again") { welcomed = false }

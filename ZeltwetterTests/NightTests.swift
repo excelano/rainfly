@@ -165,7 +165,7 @@ struct BeforeTonightTests {
 
     @Test func theNightIsNamedBeforeSunset() {
         let words = text()
-        #expect(plain(words.periodLabel(at: F.at(0, 9))) == "Tonight · sunset 8:30 PM to 8 AM")
+        #expect(plain(words.periodLabel(at: F.at(0, 9))) == "Tonight · sunset 8:30 PM, pack up 8 AM")
         #expect(words.periodLabel(at: F.at(0, 21)) == "Tonight")
         #expect(words.periodLabel(at: F.at(1, 7)) == "This morning")
         #expect(words.headline(at: F.at(0, 9)) == "Rainfly off tonight")

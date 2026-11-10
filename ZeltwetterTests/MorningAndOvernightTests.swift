@@ -159,14 +159,14 @@ struct OvernightTextTests {
     @Test func the22CallKeepsItsOwnChanceOfRain() {
         let rainAt1 = { (chance: Double) in F.night { d in F.hour(d, chance: d == F.at(1, 1) ? chance : 0) } }
         let words = overnight(decided: fetched(rainAt1(0.4), at: F.at(0, 21)), latest: fetched(F.night(), at: F.at(1, 0, 30)))
-        #expect(plain(words.note) == "At 10 PM, Rainfly said on: rain 40% after 1 AM")
+        #expect(plain(words.note) == "At 10 PM, Rainfly said on: rain 40% at 1 AM")
     }
 
     @Test func aChangeSince22IsNamed() {
         let rainLater = F.night { d in F.hour(d, temp: 12, dewPoint: 10, wind: 1, chance: d == F.at(1, 5) ? 0.4 : 0) }
         let words = overnight(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(rainLater, at: F.at(1, 2)))
         #expect(words.hasChanged)
-        #expect(plain(words.reason) == "New since 10 PM: rain 40% after 5 AM")
+        #expect(plain(words.reason) == "New since 10 PM: rain 40% at 5 AM")
         #expect(plain(words.note) == "At 10 PM, Rainfly said on: dew likely by 8 PM")
         #expect(plain(words.brief) == "New: rain 5 AM")
     }

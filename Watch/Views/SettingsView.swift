@@ -66,7 +66,7 @@ struct SettingsView: View {
             } header: {
                 Text("Overnight")
             } footer: {
-                Text("After 22:00, a notification if the forecast changes and the rainfly should go on. Your watch only lets Rainfly check now and then, so it might come late.")
+                Text("After \(VerdictText.anchorClock), a notification if the forecast changes and the rainfly should go on. Your watch only lets Rainfly check now and then, so it might come late.")
             }
             if WCSession.isSupported(), WCSession.default.isCompanionAppInstalled {
                 Section {

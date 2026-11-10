@@ -26,7 +26,7 @@ struct VerdictText {
         guard period == "Tonight", now < night.sunset else { return period }
         let packBy = NightWindow(night, packByMinutes: settings.packByMinutes).packBy
         let start = night.polar == nil ? "sunset \(clock(night.sunset))" : clock(night.sunset)
-        return "\(period) · \(start) to \(clock(packBy))"
+        return "\(period) · \(start), pack up \(clock(packBy))"
     }
 
     /// The first hour from `now` to sunset with a storm or rain the night's checks would
@@ -120,7 +120,7 @@ struct VerdictText {
         let time = clock(firing.at)
         return switch firing.trigger {
         case .storm: "Storms possible at \(time)"
-        case .rain: precipChance(at: firing.at) < settings.rainChance ? "Rain forecast after \(time)" : "Rain \(chance(at: firing.at)) after \(time)"
+        case .rain: precipChance(at: firing.at) < settings.rainChance ? "Rain forecast at \(time)" : "Rain \(chance(at: firing.at)) at \(time)"
         case .windRain: "Wind with rain \(chance(at: firing.at)) at \(time)"
         case .frost: "Frost likely by \(time)"
         case .dew: "Dew likely by \(time)"
@@ -196,14 +196,14 @@ struct VerdictText {
         if hour.precipChance < threshold {
             return "The chance is only \(percent(hour.precipChance)), but some rain is forecast to fall at \(clock(hour.date)), so it counts."
         }
-        return "\(percent(hour.precipChance)) chance of rain at \(clock(hour.date)). That's at or above your \(percent(threshold))."
+        return "\(percent(hour.precipChance)) chance of rain at \(clock(hour.date)). That's at or above the \(percent(threshold)) limit."
     }
 
     private func windRainSummary(_ firing: Firing?, _ hours: [HourSample]) -> String? {
         let gusting = { (hour: HourSample) in max(hour.windMS, hour.gustMS ?? 0) }
         guard let strongest = hours.map(gusting).max() else { return nil }
         if let firing, let hour = hour(at: firing.at) {
-            return "Wind up to \(wind(gusting(hour))) with a \(percent(hour.precipChance)) chance of rain at \(clock(hour.date)). Both are at or over your limits."
+            return "Wind up to \(wind(gusting(hour))) with a \(percent(hour.precipChance)) chance of rain at \(clock(hour.date)). Both are at or over the limits."
         }
         if strongest > settings.windRainMS {
             return "Wind gets up to \(wind(strongest)), but the chance of rain stays under \(percent(settings.windRainChance)) whenever it's that windy."
@@ -288,6 +288,11 @@ struct VerdictText {
 
     /// "4 AM" on the hour, "8:40 AM" otherwise. A 24-hour clock always keeps the minutes,
     /// since an hour alone reads as a bare number: "23:00", not "23".
+    static var anchorClock: String {
+        let anchor = Calendar.current.date(bySettingHour: NightWindow.anchorHour, minute: 0, second: 0, of: .now) ?? .now
+        return clock(anchor, in: .current)
+    }
+
     static func clock(_ date: Date, in timeZone: TimeZone, locale: Locale = .current) -> String {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
