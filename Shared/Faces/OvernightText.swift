@@ -11,7 +11,6 @@ struct OvernightText {
     let text: VerdictText
     /// The forecast the night is judged against, fixed at 22:00.
     let decided: NightForecast
-    /// The settings in force at 22:00, which made the call the night is judged against.
     let decidedSettings: Settings
 
     private var decidedText: VerdictText {

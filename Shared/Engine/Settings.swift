@@ -48,8 +48,6 @@ extension Settings {
     }
 }
 
-/// When the settings changed, so a forecast decided in the past is judged with the settings
-/// that decided it rather than today's.
 struct SettingsLog: Codable, Equatable, Sendable {
     struct Change: Codable, Equatable, Sendable {
         let at: Date
@@ -58,8 +56,6 @@ struct SettingsLog: Codable, Equatable, Sendable {
 
     private(set) var changes: [Change] = []
 
-    /// The first change also keeps what it replaced, as the settings from before the log began.
-    /// Changes within a minute of the last one, as while a slider moves, fold into it.
     mutating func record(_ settings: Settings, replacing old: Settings, at date: Date) {
         if changes.isEmpty { changes.append(Change(at: .distantPast, settings: old)) }
         if let last = changes.indices.last, last > 0, date.timeIntervalSince(changes[last].at) < 60 {
@@ -69,7 +65,6 @@ struct SettingsLog: Codable, Equatable, Sendable {
         }
     }
 
-    /// Nil when the settings have never changed since the log began.
     func settings(at date: Date) -> Settings? {
         changes.last { $0.at <= date }?.settings
     }

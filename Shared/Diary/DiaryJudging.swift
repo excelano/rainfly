@@ -66,7 +66,6 @@ struct DiaryJudgement: Equatable {
 
     let predicted: Bool
     let firing: Firing?
-    /// The first rain or storm the forecast fired, which the dew judgement leaves out.
     let rain: Firing?
     let closestSpread: Double?
     var outcome: Outcome?

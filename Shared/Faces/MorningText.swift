@@ -14,7 +14,6 @@ struct MorningText {
     /// The latest fetch, which becomes the record two hours after sunrise.
     let latest: NightForecast
     let settings: Settings
-    /// The settings in force at 22:00, which made the call the night is judged against.
     let decidedSettings: Settings
     let units: DisplayUnits
     var alerted = false
@@ -99,8 +98,6 @@ struct MorningText {
 
     private var rained: Bool { rainedAt != nil }
 
-    /// The first hour rain fell, overnight or in the morning hours the latest fetch has
-    /// already seen; a later hour's amount is still a forecast.
     private var rainedAt: Date? {
         let seen = window.morningHours.filter { $0.date < latest.fetchedAt }
         return (window.nightHours + seen).first { $0.precipAmountMM > 0 }?.date

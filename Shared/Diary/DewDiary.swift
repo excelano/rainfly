@@ -165,7 +165,6 @@ struct DiaryNight: Codable, Equatable {
         pitched.map(NightWindow.decidedAt)
     }
 
-    /// Judged with the settings in force when the call was made, not today's.
     func judge(settingsAt: (Date) -> Settings) -> DiaryJudgement? {
         guard let pitched, let decidedAt else { return nil }
         return DiaryJudging.judge(pitched, history: history, found: observation?.kind, settings: settingsAt(decidedAt))

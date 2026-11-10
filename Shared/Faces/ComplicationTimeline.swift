@@ -34,7 +34,6 @@ struct ComplicationFace: Equatable, Sendable {
 struct NightFetches: Equatable, Sendable {
     let latest: NightForecast
     var decided: NightForecast?
-    /// The settings in force when `decided` was decided; nil stands for today's.
     var decidedSettings: Settings?
     var beforeMorning: NightForecast?
 }

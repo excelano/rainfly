@@ -13,7 +13,6 @@ struct PressureSample: Codable, Equatable, Sendable {
 struct PressureLog: Codable, Equatable, Sendable {
     static let kept: TimeInterval = 12 * 3600
     static let span: TimeInterval = 3 * 3600
-    /// How old the newest reading can be and still describe the pressure now.
     static let fresh: TimeInterval = 90 * 60
     static let fallHPa = 1.5
 

@@ -88,7 +88,6 @@ struct SettingsStore {
         load("settingsLog") ?? SettingsLog()
     }
 
-    /// The settings in force at `date`, as a forecast decided then was judged with.
     func settings(at date: Date) -> Settings {
         settingsLog.settings(at: date) ?? settings
     }
