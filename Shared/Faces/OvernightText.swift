@@ -46,8 +46,10 @@ struct OvernightText {
         return text.reason
     }
 
-    /// What Rainfly said at 22:00 when the forecast has moved, or that it hasn't.
-    var note: String {
+    /// What Rainfly said at 22:00 when the forecast has moved, or that it hasn't; nil while the
+    /// latest forecast is the only one, with nothing earlier to compare.
+    var note: String? {
+        guard decided.fetchedAt != text.night.fetchedAt else { return nil }
         guard hasChanged else { return "Same as the \(decidedAt) forecast" }
         let said = "At \(decidedAt), Rainfly said \(decidedVerdict.flyOn ? "on" : "off")"
         return decidedVerdict.headline.map { "\(said): \(Self.lowered(decidedText.describe($0)))" } ?? said

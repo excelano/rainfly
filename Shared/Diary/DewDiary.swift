@@ -155,12 +155,12 @@ struct DiaryNight: Codable, Equatable {
     /// Set once the night has been shared with Excelano.
     var shared: SharedMark?
 
-    /// The forecast that decided the fly: the last one fetched by 22:00, or else the first.
+    /// The forecast that decided the fly: the last one fetched by 22:00, or else the first;
+    /// nil when the first came after sunrise, too late to decide anything.
     var pitched: NightForecast? {
-        NightWindow.decided(forecasts)
+        NightWindow.decided(forecasts).flatMap { $0.fetchedAt < $0.sunrise ? $0 : nil }
     }
 
-    /// When the pitched forecast's call was made, which says which settings made it.
     var decidedAt: Date? {
         pitched.map(NightWindow.decidedAt)
     }

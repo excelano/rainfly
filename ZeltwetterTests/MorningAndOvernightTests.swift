@@ -89,6 +89,11 @@ struct MorningTextTests {
         #expect(coming.headline == "Dry night")
     }
 
+    @Test func aFirstForecastAfterSunriseMadeNoCall() {
+        #expect(!morning(decided: fetched(dewy, at: F.at(1, 7)), latest: fetched(dewy, at: F.at(1, 7))).madeACall)
+        #expect(morning(decided: fetched(dewy, at: F.at(1, 2)), latest: fetched(dewy, at: F.at(1, 7))).madeACall)
+    }
+
     @Test func aRightNightReadsRight() {
         let words = morning(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 8)))
         #expect(plain(words.lastNightTitle) == "At 10 PM, Rainfly said on")
@@ -164,6 +169,11 @@ struct OvernightTextTests {
         #expect(plain(words.reason) == "New since 10 PM: rain 40% after 5 AM")
         #expect(plain(words.note) == "At 10 PM, Rainfly said on: dew likely by 8 PM")
         #expect(plain(words.brief) == "New: rain 5 AM")
+    }
+
+    @Test func aSingleForecastHasNothingToCompare() {
+        let only = fetched(dewy, at: F.at(1, 1, 50))
+        #expect(overnight(decided: only, latest: only).note == nil)
     }
 
     @Test func noChangeSaysSo() {

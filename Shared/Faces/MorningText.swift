@@ -108,6 +108,10 @@ struct MorningText {
         text.clock(NightWindow.decidedAt(decided))
     }
 
+    var madeACall: Bool {
+        decided.fetchedAt < decided.sunrise
+    }
+
     /// "At 22:00, Rainfly said on".
     var lastNightTitle: String {
         "At \(decidedAt), Rainfly said \(decidedVerdict.flyOn ? "on" : "off")"

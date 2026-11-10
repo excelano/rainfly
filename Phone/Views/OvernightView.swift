@@ -28,8 +28,10 @@ struct OvernightView: View {
                     Text(overnight.reason)
                         .font(.title3)
                         .fontWeight(overnight.hasChanged ? .semibold : .regular)
-                    Text(overnight.note)
-                        .foregroundStyle(.secondary)
+                    if let note = overnight.note {
+                        Text(note)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
