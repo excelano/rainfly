@@ -80,6 +80,15 @@ struct MorningTextTests {
         #expect(plain(words.lastNightTitle) == "At 10 PM, Rainfly said off")
     }
 
+    @Test func rainAfterSunriseWetsTheTentOnceItHasFallen() {
+        let morningRain = F.night { d in F.hour(d, amount: d == F.at(1, 6) ? 0.5 : 0) }
+        let fallen = morning(decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(morningRain, at: F.at(1, 7, 30)))
+        #expect(fallen.headline == "Packing wet")
+        #expect(fallen.reason == "It rained this morning, so the rainfly is wet")
+        let coming = morning(decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(morningRain, at: F.at(1, 5, 50)))
+        #expect(coming.headline == "Dry night")
+    }
+
     @Test func aRightNightReadsRight() {
         let words = morning(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 8)))
         #expect(plain(words.lastNightTitle) == "At 10 PM, Rainfly said on")

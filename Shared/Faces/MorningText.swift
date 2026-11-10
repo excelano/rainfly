@@ -63,7 +63,7 @@ struct MorningText {
     }
 
     var reason: String {
-        if rained { return "It rained last night, so the rainfly is wet" }
+        if let rainedAt { return "It rained \(rainedAt < latest.sunrise ? "last night" : "this morning"), so the rainfly is wet" }
         guard isWet else { return "No dew, frost or rain on the tent last night" }
         guard let dryBy = text.verdict.dryBy else { return "It won't be dry before noon" }
         let at = "It should be dry around \(text.clock(dryBy))"
@@ -97,8 +97,13 @@ struct MorningText {
         rained || text.verdict.firing(.dew) != nil || text.verdict.firing(.frost) != nil
     }
 
-    private var rained: Bool {
-        window.nightHours.contains { $0.precipAmountMM > 0 }
+    private var rained: Bool { rainedAt != nil }
+
+    /// The first hour rain fell, overnight or in the morning hours the latest fetch has
+    /// already seen; a later hour's amount is still a forecast.
+    private var rainedAt: Date? {
+        let seen = window.morningHours.filter { $0.date < latest.fetchedAt }
+        return (window.nightHours + seen).first { $0.precipAmountMM > 0 }?.date
     }
 
     /// When the night was judged from: 22:00, or the first fetch when it came later.
