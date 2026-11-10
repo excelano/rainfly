@@ -11,11 +11,20 @@ struct OvernightText {
     let text: VerdictText
     /// The forecast the night is judged against, fixed at 22:00.
     let decided: NightForecast
+    /// The settings in force at 22:00, which made the call the night is judged against.
+    let decidedSettings: Settings
 
-    private var decidedVerdict: Verdict { FlyEngine.evaluate(decided, settings: text.settings) }
+    private var decidedText: VerdictText {
+        VerdictText(
+            night: decided, verdict: FlyEngine.evaluate(decided, settings: decidedSettings),
+            settings: decidedSettings, units: text.units, locale: text.locale
+        )
+    }
+
+    private var decidedVerdict: Verdict { decidedText.verdict }
 
     private var decidedAt: String {
-        text.clock(max(decided.fetchedAt, NightWindow.anchor(of: decided)))
+        text.clock(NightWindow.decidedAt(decided))
     }
 
     /// "Overnight · updated 02:10".
@@ -42,7 +51,7 @@ struct OvernightText {
     var note: String {
         guard hasChanged else { return "Same as the \(decidedAt) forecast" }
         let said = "At \(decidedAt), Rainfly said \(decidedVerdict.flyOn ? "on" : "off")"
-        return decidedVerdict.headline.map { "\(said): \(Self.lowered(text.describe($0)))" } ?? said
+        return decidedVerdict.headline.map { "\(said): \(Self.lowered(decidedText.describe($0)))" } ?? said
     }
 
     /// For the inline complication: "New: rain 05:00".

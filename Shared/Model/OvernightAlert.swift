@@ -16,7 +16,10 @@ enum OvernightAlert {
     static func check(_ model: ForecastModel, quiet: Bool = false, now: Date = .now) async -> Bool {
         guard model.preferences.overnightAlert, !model.wasAlerted,
               let night = model.night, let verdict = model.verdict, let decided = model.decided,
-              let message = message(night: night, verdict: verdict, decided: decided, settings: model.settings, units: model.preferences.units, at: now)
+              let message = message(
+                  night: night, verdict: verdict, decided: decided, decidedSettings: model.decidedSettings,
+                  settings: model.settings, units: model.preferences.units, at: now
+              )
         else { return false }
         model.markAlerted()
         if !quiet { await post(message) }
@@ -25,14 +28,15 @@ enum OvernightAlert {
 
     /// The alert's text when the forecast has gone from off to on overnight, nil otherwise.
     static func message(
-        night: NightForecast, verdict: Verdict, decided: NightForecast, settings: Settings, units: DisplayUnits, at now: Date
+        night: NightForecast, verdict: Verdict, decided: NightForecast, decidedSettings: Settings, settings: Settings,
+        units: DisplayUnits, at now: Date
     ) -> (title: String, body: String)? {
         let window = NightWindow(night, packByMinutes: settings.packByMinutes)
         guard window.phase(at: now) == .overnight, verdict.flyOn,
-              !FlyEngine.evaluate(decided, settings: settings).flyOn, let headline = verdict.headline
+              !FlyEngine.evaluate(decided, settings: decidedSettings).flyOn, let headline = verdict.headline
         else { return nil }
         let text = VerdictText(night: night, verdict: verdict, settings: settings, units: units)
-        let decidedAt = text.clock(max(decided.fetchedAt, NightWindow.anchor(of: decided)))
+        let decidedAt = text.clock(NightWindow.decidedAt(decided))
         return ("Put the rainfly on", "\(text.describe(headline)). At \(decidedAt), Rainfly said it could stay off.")
     }
 

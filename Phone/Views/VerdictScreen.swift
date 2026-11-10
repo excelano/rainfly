@@ -25,7 +25,7 @@ struct VerdictScreen: View {
                     }
                 case .overnight:
                     OvernightView(
-                        overnight: OvernightText(text: text, decided: model.decided ?? night),
+                        overnight: OvernightText(text: text, decided: model.decided ?? night, decidedSettings: model.decidedSettings),
                         current: model.current, pressure: pressure, now: now,
                         attribution: model.attribution, problem: model.problem
                     )
@@ -33,7 +33,8 @@ struct VerdictScreen: View {
                     MorningView(
                         morning: MorningText(
                             decided: model.decided ?? night, beforeMorning: model.beforeMorning, latest: night,
-                            settings: model.settings, units: model.preferences.units, alerted: model.wasAlerted
+                            settings: model.settings, decidedSettings: model.decidedSettings, units: model.preferences.units,
+                            alerted: model.wasAlerted
                         ),
                         now: now, attribution: model.attribution, problem: model.problem
                     ) {

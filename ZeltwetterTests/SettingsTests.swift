@@ -6,6 +6,8 @@ import Foundation
 import Testing
 @testable import Zeltwetter_Watch_App
 
+private typealias F = Fixture
+
 struct SettingsTests {
     @Test func savedSettingsMissingAFieldKeepTheDefault() throws {
         let saved = Data(#"{"rainChance":0.4,"packByMinutes":540}"#.utf8)
@@ -14,6 +16,21 @@ struct SettingsTests {
         expected.rainChance = 0.4
         expected.packByMinutes = 540
         #expect(settings == expected)
+    }
+
+    @Test func theLogGivesTheSettingsInForceAtATime() {
+        var log = SettingsLog()
+        let original = Settings()
+        #expect(log.settings(at: F.at(0, 22)) == nil)
+        var wider = original
+        wider.dewSpreadC = 5
+        log.record(wider, replacing: original, at: F.at(1, 8))
+        var widest = wider
+        widest.dewSpreadC = 6
+        log.record(widest, replacing: wider, at: F.at(1, 8).addingTimeInterval(30))
+        #expect(log.changes.count == 2)
+        #expect(log.settings(at: F.at(0, 22)) == original)
+        #expect(log.settings(at: F.at(1, 9)) == widest)
     }
 
     @Test func settingsRoundTrip() throws {

@@ -14,7 +14,7 @@ struct DiaryScreen: View {
     var body: some View {
         let settings = model.settings
         let units = model.preferences.units
-        let tally = recorder.diary.tally(settings: settings)
+        let tally = recorder.diary.tally(settingsAt: model.settings(at:))
         List {
             if tally.judged + tally.lightDew > 0 {
                 Section {
@@ -51,7 +51,7 @@ struct DiaryScreen: View {
                     Button {
                         answering = night
                     } label: {
-                        NightRow(night: night, judgement: night.judge(settings: settings), units: units)
+                        NightRow(night: night, judgement: night.judge(settingsAt: model.settings(at:)), units: units)
                     }
                     .tint(.primary)
                 }

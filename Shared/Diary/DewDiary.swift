@@ -67,10 +67,10 @@ struct DewDiary: Codable, Equatable {
         }
     }
 
-    func tally(settings: Settings) -> DiaryTally {
+    func tally(settingsAt: (Date) -> Settings) -> DiaryTally {
         var tally = DiaryTally()
         for night in nights {
-            guard let kind = night.observation?.kind, let judgement = night.judge(settings: settings) else { continue }
+            guard let kind = night.observation?.kind, let judgement = night.judge(settingsAt: settingsAt) else { continue }
             switch (judgement.outcome, kind) {
             case (.caught?, _): tally.caught += 1
             case (.clear?, _): tally.clear += 1
@@ -160,8 +160,15 @@ struct DiaryNight: Codable, Equatable {
         NightWindow.decided(forecasts)
     }
 
-    func judge(settings: Settings) -> DiaryJudgement? {
-        pitched.map { DiaryJudging.judge($0, history: history, found: observation?.kind, settings: settings) }
+    /// When the pitched forecast's call was made, which says which settings made it.
+    var decidedAt: Date? {
+        pitched.map(NightWindow.decidedAt)
+    }
+
+    /// Judged with the settings in force when the call was made, not today's.
+    func judge(settingsAt: (Date) -> Settings) -> DiaryJudgement? {
+        guard let pitched, let decidedAt else { return nil }
+        return DiaryJudging.judge(pitched, history: history, found: observation?.kind, settings: settingsAt(decidedAt))
     }
 }
 
@@ -192,10 +199,11 @@ struct SpreadSuggestion: Equatable {
 extension DewDiary {
     /// One row a night for checking the diary from a Mac: what was found, what the forecast
     /// said when the fly went on or not, and what the same checks make of the history.
-    func report(settings: Settings) -> String {
+    func report(settingsAt: (Date) -> Settings) -> String {
         var rows = ["night,camp,found,open_sky,forecast_wet,forecast_at,forecast_spread,history_wet,history_at,history_spread,forecasts"]
         for night in nights.sorted(by: { ($0.date, $0.campName) < ($1.date, $1.campName) }) {
-            guard let pitched = night.pitched else { continue }
+            guard let pitched = night.pitched, let decidedAt = night.decidedAt else { continue }
+            let settings = settingsAt(decidedAt)
             let forecast = Self.wetness(pitched, settings: settings)
             let history = night.history.map { Self.wetness($0, settings: settings) }
             let date = String(format: "%04d-%02d-%02d", night.date.year, night.date.month, night.date.day)

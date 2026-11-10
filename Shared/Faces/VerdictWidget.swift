@@ -32,7 +32,9 @@ struct VerdictProvider: TimelineProvider {
         let camps = Store.camps.load() ?? Camps()
         return ComplicationTimeline.entries(now: now, settings: settings, units: store.preferences.units) { date in
             let night = camps.night(at: date)
-            return cache.fetches(at: camps.campName(on: night), on: night)
+            guard var fetches = cache.fetches(at: camps.campName(on: night), on: night) else { return nil }
+            fetches.decidedSettings = fetches.decided.map { store.settings(at: NightWindow.decidedAt($0)) }
+            return fetches
         }
         .map { VerdictEntry(date: $0.date, face: $0.face) }
     }

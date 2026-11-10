@@ -34,6 +34,8 @@ struct ComplicationFace: Equatable, Sendable {
 struct NightFetches: Equatable, Sendable {
     let latest: NightForecast
     var decided: NightForecast?
+    /// The settings in force when `decided` was decided; nil stands for today's.
+    var decidedSettings: Settings?
     var beforeMorning: NightForecast?
 }
 
@@ -46,7 +48,7 @@ extension ComplicationFace {
         case .evening:
             self.init(evening: text, at: date)
         case .overnight:
-            let overnight = OvernightText(text: text, decided: fetches?.decided ?? night)
+            let overnight = OvernightText(text: text, decided: fetches?.decided ?? night, decidedSettings: fetches?.decidedSettings ?? text.settings)
             self.init(
                 flyOn: text.verdict.flyOn, headline: text.headline, detail: overnight.reason,
                 inline: overnight.brief ?? text.verdict.headline.map { "Rainfly on · \(text.brief($0))" } ?? text.headline,
@@ -55,7 +57,7 @@ extension ComplicationFace {
         case .morning:
             let morning = MorningText(
                 decided: fetches?.decided ?? night, beforeMorning: fetches?.beforeMorning, latest: night,
-                settings: text.settings, units: text.units, locale: text.locale
+                settings: text.settings, decidedSettings: fetches?.decidedSettings ?? text.settings, units: text.units, locale: text.locale
             )
             let dryTime = morning.dryBy.map(text.compactClock)
             self.init(

@@ -17,7 +17,7 @@ struct DiaryAnswerRows: View {
 
     /// Nil when no forecast was kept for the night, which leaves nothing to review.
     private var judgement: DiaryJudgement? {
-        night.judge(settings: model.settings)
+        night.judge(settingsAt: model.settings(at:))
     }
 
     var body: some View {
@@ -216,9 +216,9 @@ struct MorningDiarySection: View {
     }
 
     private var result: (title: String, detail: String) {
-        let tally = recorder.diary.tally(settings: model.settings)
+        let tally = recorder.diary.tally(settingsAt: model.settings(at:))
         let record = tally.judged == 0 ? "" : "Rainfly has been right on \(tally.caught + tally.clear) of the \(tally.judged) nights you've checked."
-        guard let observation = night.observation, let judgement = night.judge(settings: model.settings) else {
+        guard let observation = night.observation, let judgement = night.judge(settingsAt: model.settings(at:)) else {
             return ("Your answer is saved", record)
         }
         switch (observation.kind, judgement.outcome) {

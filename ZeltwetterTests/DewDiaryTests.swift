@@ -104,7 +104,7 @@ struct DewDiaryJudgingTests {
         diary.record(night("A", spread: 2, fetchedAt: F.at(0, 21, 30)))
         diary.record(night("A", spread: 8, fetchedAt: F.at(0, 23)))
         #expect(diary.nights[0].pitched?.fetchedAt == F.at(0, 21, 30))
-        #expect(diary.nights[0].judge(settings: Settings())?.predicted == true)
+        #expect(diary.nights[0].judge(settingsAt: { _ in Settings() })?.predicted == true)
     }
 
     @Test func outcomesFollowWhatWasFound() {
@@ -118,7 +118,7 @@ struct DewDiaryJudgingTests {
             (night("light dry", spread: 8), .lightDew, true),
             (night("rain", spread: 2), .rain, true),
         ])
-        let outcome = { (camp: String) in diary.nights.first { $0.campName == camp }?.judge(settings: Settings())?.outcome }
+        let outcome = { (camp: String) in diary.nights.first { $0.campName == camp }?.judge(settingsAt: { _ in Settings() })?.outcome }
         #expect(outcome("caught") == .caught)
         #expect(outcome("frost") == .caught)
         #expect(outcome("clear") == .clear)
@@ -126,26 +126,26 @@ struct DewDiaryJudgingTests {
         #expect(outcome("alarm") == .falseAlarm)
         #expect(outcome("light") == nil)
         #expect(outcome("rain") == nil)
-        #expect(diary.tally(settings: Settings()) == DiaryTally(caught: 2, clear: 1, missed: 1, falseAlarms: 1, lightDew: 2, lightDewFlagged: 1))
+        #expect(diary.tally(settingsAt: { _ in Settings() }) == DiaryTally(caught: 2, clear: 1, missed: 1, falseAlarms: 1, lightDew: 2, lightDewFlagged: 1))
     }
 
     @Test func aRainForecastIsKeptBesideTheDewCall() {
         var rainy = DewDiary()
         rainy.record(F.night { F.hour($0, chance: 0.9) })
-        let judgement = rainy.nights[0].judge(settings: Settings())
+        let judgement = rainy.nights[0].judge(settingsAt: { _ in Settings() })
         #expect(judgement?.rain?.trigger == .rain)
         #expect(judgement?.predicted == false)
-        #expect(diary([(night("dew", spread: 2), .wet, true)]).nights[0].judge(settings: Settings())?.rain == nil)
+        #expect(diary([(night("dew", spread: 2), .wet, true)]).nights[0].judge(settingsAt: { _ in Settings() })?.rain == nil)
     }
 
     @Test func theHistoryTellsWhichSideMissed() {
         let forecast = night("A", spread: 8)
         var missed = diary([(forecast, .wet, true)])
-        #expect(missed.nights[0].judge(settings: Settings())?.cause == nil)
+        #expect(missed.nights[0].judge(settingsAt: { _ in Settings() })?.cause == nil)
         missed.setHistory(night("A", spread: 2), campName: "A", on: missed.nights[0].date)
-        #expect(missed.nights[0].judge(settings: Settings())?.cause == .forecast)
+        #expect(missed.nights[0].judge(settingsAt: { _ in Settings() })?.cause == .forecast)
         missed.setHistory(night("A", spread: 8), campName: "A", on: missed.nights[0].date)
-        #expect(missed.nights[0].judge(settings: Settings())?.cause == .settings)
+        #expect(missed.nights[0].judge(settingsAt: { _ in Settings() })?.cause == .settings)
     }
 }
 
@@ -200,7 +200,7 @@ struct DewDiaryReportTests {
     @Test func theReportComparesTheForecastWithTheHistory() {
         var diary = diary([(night("A", spread: 8), .wet, true)])
         diary.setHistory(night("A", spread: 2), campName: "A", on: diary.nights[0].date)
-        let rows = diary.report(settings: Settings()).split(separator: "\n").map { $0.split(separator: ",", omittingEmptySubsequences: false).map(String.init) }
+        let rows = diary.report(settingsAt: { _ in Settings() }).split(separator: "\n").map { $0.split(separator: ",", omittingEmptySubsequences: false).map(String.init) }
         #expect(rows.count == 2)
         let row = Dictionary(uniqueKeysWithValues: zip(rows[0], rows[1]))
         #expect(row["found"] == "wet")

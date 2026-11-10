@@ -62,8 +62,22 @@ struct NightReviewTests {
 }
 
 struct MorningTextTests {
-    private func morning(decided: NightForecast, beforeMorning: NightForecast? = nil, latest: NightForecast, alerted: Bool = false) -> MorningText {
-        MorningText(decided: decided, beforeMorning: beforeMorning, latest: latest, settings: Settings(), units: metric, alerted: alerted, locale: english)
+    private func morning(
+        decided: NightForecast, beforeMorning: NightForecast? = nil, latest: NightForecast, alerted: Bool = false,
+        settings: Settings = Settings(), decidedSettings: Settings = Settings()
+    ) -> MorningText {
+        MorningText(
+            decided: decided, beforeMorning: beforeMorning, latest: latest, settings: settings, decidedSettings: decidedSettings,
+            units: metric, alerted: alerted, locale: english
+        )
+    }
+
+    @Test func lastNightIsTheCallMadeWithThatNightsSettings() {
+        var wider = Settings()
+        wider.dewSpreadC = 5
+        let nearly = F.night { F.hour($0, temp: 12, dewPoint: 8, wind: 1) }
+        let words = morning(decided: fetched(nearly, at: F.at(0, 21)), latest: fetched(nearly, at: F.at(1, 8)), settings: wider)
+        #expect(plain(words.lastNightTitle) == "At 10 PM, Rainfly said off")
     }
 
     @Test func aRightNightReadsRight() {
@@ -124,8 +138,14 @@ struct OvernightTextTests {
     private func overnight(decided: NightForecast, latest: NightForecast) -> OvernightText {
         OvernightText(
             text: VerdictText(night: latest, verdict: FlyEngine.evaluate(latest, settings: Settings()), settings: Settings(), units: metric, locale: english),
-            decided: decided
+            decided: decided, decidedSettings: Settings()
         )
+    }
+
+    @Test func the22CallKeepsItsOwnChanceOfRain() {
+        let rainAt1 = { (chance: Double) in F.night { d in F.hour(d, chance: d == F.at(1, 1) ? chance : 0) } }
+        let words = overnight(decided: fetched(rainAt1(0.4), at: F.at(0, 21)), latest: fetched(F.night(), at: F.at(1, 0, 30)))
+        #expect(plain(words.note) == "At 10 PM, Rainfly said on: rain 40% after 1 AM")
     }
 
     @Test func aChangeSince22IsNamed() {
@@ -170,7 +190,7 @@ struct OvernightAlertTests {
     private func message(decided: NightForecast, latest: NightForecast, at now: Date) -> (title: String, body: String)? {
         OvernightAlert.message(
             night: latest, verdict: FlyEngine.evaluate(latest, settings: Settings()), decided: decided,
-            settings: Settings(), units: metric, at: now
+            decidedSettings: Settings(), settings: Settings(), units: metric, at: now
         )
     }
 

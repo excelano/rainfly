@@ -14,6 +14,8 @@ struct MorningText {
     /// The latest fetch, which becomes the record two hours after sunrise.
     let latest: NightForecast
     let settings: Settings
+    /// The settings in force at 22:00, which made the call the night is judged against.
+    let decidedSettings: Settings
     let units: DisplayUnits
     var alerted = false
     var locale = Locale.current
@@ -24,7 +26,14 @@ struct MorningText {
 
     private var window: NightWindow { NightWindow(latest, packByMinutes: settings.packByMinutes) }
 
-    private var decidedVerdict: Verdict { FlyEngine.evaluate(decided, settings: settings) }
+    private var decidedText: VerdictText {
+        VerdictText(
+            night: decided, verdict: FlyEngine.evaluate(decided, settings: decidedSettings),
+            settings: decidedSettings, units: units, locale: locale
+        )
+    }
+
+    private var decidedVerdict: Verdict { decidedText.verdict }
 
     /// When tonight's forecast takes over: "12:00".
     var handoverTime: String { text.clock(window.handover) }
@@ -94,7 +103,7 @@ struct MorningText {
 
     /// When the night was judged from: 22:00, or the first fetch when it came later.
     var decidedAt: String {
-        text.clock(max(decided.fetchedAt, NightWindow.anchor(of: decided)))
+        text.clock(NightWindow.decidedAt(decided))
     }
 
     /// "At 22:00, Rainfly said on".
@@ -105,7 +114,7 @@ struct MorningText {
     /// Why it said so, or how the forecast changed before sunrise.
     var lastNightDetail: String {
         if let beforeMorning {
-            let overnight = FlyEngine.evaluate(beforeMorning, settings: settings)
+            let overnight = FlyEngine.evaluate(beforeMorning, settings: decidedSettings)
             if overnight.flyOn != decidedVerdict.flyOn {
                 let by = "By \(text.clock(beforeMorning.fetchedAt)) the forecast changed to"
                 guard overnight.flyOn else { return "\(by) off." }
@@ -123,7 +132,7 @@ struct MorningText {
 
     /// Nil until WeatherKit's record of the night is in.
     var review: NightReview? {
-        NightReview.isRecord(latest) ? NightReview(decided: decided, record: latest, settings: settings) : nil
+        NightReview.isRecord(latest) ? NightReview(decided: decided, record: latest, settings: decidedSettings) : nil
     }
 
     /// Shown in place of the checks while the record is not in yet.
@@ -139,7 +148,7 @@ struct MorningText {
             let wet = check.trigger == .dew ? "dew" : "frost"
             let happened: String
             if let firing = check.happened, let hour = latest.hours.first(where: { $0.date == firing.at }) {
-                happened = "\(record) the air got within \(text.spread(hour.spreadC)) of its dew point at \(text.clock(firing.at)), with a clear sky and little wind"
+                happened = "\(record) the air got within \(decidedText.spread(hour.spreadC)) of its dew point at \(text.clock(firing.at)), with a clear sky and little wind"
             } else {
                 happened = "\(record) \(missed(check.trigger, in: latest))"
             }
@@ -151,7 +160,7 @@ struct MorningText {
         case .rain, .morningRain:
             let hours = check.trigger == .rain ? \NightWindow.nightHours : \NightWindow.morningHours
             let chance = { (night: NightForecast) in
-                NightWindow(night, packByMinutes: settings.packByMinutes)[keyPath: hours].map(\.precipChance).max() ?? 0
+                NightWindow(night, packByMinutes: decidedSettings.packByMinutes)[keyPath: hours].map(\.precipChance).max() ?? 0
             }
             var said = "At \(decidedAt) the chance was \(text.percent(chance(decided)))."
             if let beforeMorning, chance(beforeMorning) >= chance(decided) + 0.1 {
@@ -166,37 +175,37 @@ struct MorningText {
             let said = check.expected.map { "Rainfly expected wind with rain at \(text.clock($0.at))." } ?? "Rainfly didn't expect wind with rain."
             return said + (check.happened.map { " \(record) wind with rain at \(text.clock($0.at))." } ?? " \(record) the wind and the rain never came together.")
         case .cold:
-            let expectedLow = NightWindow(decided, packByMinutes: settings.packByMinutes).low
-            let actualLow = window.low
+            let expectedLow = NightWindow(decided, packByMinutes: decidedSettings.packByMinutes).low
+            let actualLow = NightWindow(latest, packByMinutes: decidedSettings.packByMinutes).low
             guard let expectedLow, let actualLow else { return "No hours to compare." }
-            let below = check.happened == nil ? ", so it never got below your \(text.coldLimit)" : ", below your \(text.coldLimit)"
+            let below = check.happened == nil ? ", so it never got below your \(decidedText.coldLimit)" : ", below your \(decidedText.coldLimit)"
             return "Rainfly expected a low of \(text.low(expectedLow)). It got down to \(text.low(actualLow))\(below)."
         }
     }
 
     private func missed(_ trigger: Trigger, in night: NightForecast) -> String {
-        let hours = NightWindow(night, packByMinutes: settings.packByMinutes).nightHours
-        return switch SpreadMiss.of(trigger, hours: hours, settings: settings) {
-        case .tooDry(let closest)?: "the air stayed at least \(text.spread(closest)) from its dew point"
+        let hours = NightWindow(night, packByMinutes: decidedSettings.packByMinutes).nightHours
+        return switch SpreadMiss.of(trigger, hours: hours, settings: decidedSettings) {
+        case .tooDry(let closest)?: "the air stayed at least \(decidedText.spread(closest)) from its dew point"
         case .cloudy?: "it was cloudy whenever the air got close to its dew point"
         case .windy?: "it was windy whenever the air got close to its dew point"
         case .cloudyOrWindy?: "it was cloudy or windy whenever the air got close to its dew point"
         case .otherSideOfFrostLine?:
             trigger == .dew
-                ? "the air got down to \(text.frostLine), so it was frost instead"
-                : "the air stayed warmer than \(text.frostLine), so it was dew instead"
+                ? "the air got down to \(decidedText.frostLine), so it was frost instead"
+                : "the air stayed warmer than \(decidedText.frostLine), so it was dew instead"
         case nil: "no hours for the night"
         }
     }
 
     private func expectedMiss(_ trigger: Trigger) -> String {
-        let hours = NightWindow(decided, packByMinutes: settings.packByMinutes).nightHours
-        return switch SpreadMiss.of(trigger, hours: hours, settings: settings) {
+        let hours = NightWindow(decided, packByMinutes: decidedSettings.packByMinutes).nightHours
+        return switch SpreadMiss.of(trigger, hours: hours, settings: decidedSettings) {
         case .tooDry?, nil: "the air to stay too dry"
         case .cloudy?: "clouds all night"
         case .windy?: "wind all night"
         case .cloudyOrWindy?: "clouds or wind all night"
-        case .otherSideOfFrostLine?: trigger == .dew ? "the air to get down to \(text.frostLine)" : "the air to stay warmer than \(text.frostLine)"
+        case .otherSideOfFrostLine?: trigger == .dew ? "the air to get down to \(decidedText.frostLine)" : "the air to stay warmer than \(decidedText.frostLine)"
         }
     }
 

@@ -65,7 +65,7 @@ final class DiaryRecorder {
         let diaryID = preferences.diaryID ?? UUID()
         if preferences.diaryID == nil { model.preferences.diaryID = diaryID }
         let due = diary.needingShare().compactMap { night in
-            SharedNight(night, diaryID: diaryID, settings: model.settings, appVersion: Self.appVersion).map { (night, $0) }
+            SharedNight(night, diaryID: diaryID, settings: night.decidedAt.map(model.settings(at:)) ?? model.settings, appVersion: Self.appVersion).map { (night, $0) }
         }
         guard !due.isEmpty else { return }
         isSharing = true
@@ -133,7 +133,7 @@ final class DiaryRecorder {
         #if DEBUG
         let report = store.url.deletingLastPathComponent().appending(path: "dewdiary-report.csv")
         do {
-            try diary.report(settings: model.settings).write(to: report, atomically: true, encoding: .utf8)
+            try diary.report(settingsAt: model.settings(at:)).write(to: report, atomically: true, encoding: .utf8)
         } catch {
             logger.error("Writing the report failed: \(error, privacy: .public)")
         }

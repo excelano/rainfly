@@ -64,6 +64,11 @@ struct NightWindow: Sendable {
         return sorted.last { $0.fetchedAt <= anchor(of: first) } ?? first
     }
 
+    /// When the decided forecast's call was made: the anchor, or the fetch when it came later.
+    static func decidedAt(_ decided: NightForecast) -> Date {
+        max(decided.fetchedAt, anchor(of: decided))
+    }
+
     /// The last forecast fetched before sunrise, which shows how the forecast moved overnight.
     static func beforeMorning(_ fetches: [NightForecast]) -> NightForecast? {
         fetches.filter { $0.fetchedAt < $0.sunrise }.max { $0.fetchedAt < $1.fetchedAt }
