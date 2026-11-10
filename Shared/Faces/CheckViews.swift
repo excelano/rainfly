@@ -45,7 +45,7 @@ struct CheckIcon: View {
     var body: some View {
         Image(systemName: VerdictText.symbol(trigger))
             .symbolVariant(expected ? .fill : .none)
-            .symbolRenderingMode(expected ? .multicolor : .monochrome)
+            .symbolRenderingMode(expected ? .hierarchical : .monochrome)
             .foregroundStyle(expected ? Color.accentColor : .secondary)
             .font(.title3)
             .frame(width: 30)
