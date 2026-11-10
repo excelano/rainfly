@@ -155,7 +155,7 @@ struct VerdictWidgetView: View {
     @ViewBuilder
     private var glyph: some View {
         switch face.flyOn {
-        case true?: TentGlyph(flyOn: true).foregroundStyle(Self.green)
+        case true?: TentGlyph(flyOn: true).foregroundStyle(face.muted ? AnyShapeStyle(.secondary) : AnyShapeStyle(Self.green))
         case false?: TentGlyph(flyOn: false)
         case nil: TentGlyph(flyOn: false).foregroundStyle(.secondary)
         }

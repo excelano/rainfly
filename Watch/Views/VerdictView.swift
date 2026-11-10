@@ -54,6 +54,7 @@ struct VerdictLines {
     let reason: String
     var warning: String?
     var notes: [String] = []
+    var muted = false
 }
 
 extension VerdictView {
@@ -79,7 +80,8 @@ extension VerdictView {
             )
             return VerdictLines(
                 flyOn: morning.packing != .dryNight, caption: morning.caption, headline: morning.headline, reason: morning.reason,
-                warning: morning.rainAhead(at: now), notes: [morning.advice, morning.lastNightTitle].compactMap { $0 }
+                warning: morning.rainAhead(at: now), notes: [morning.advice, morning.madeACall ? morning.lastNightTitle : nil].compactMap { $0 },
+                muted: morning.packing == .dryToPack
             )
         }
     }
@@ -104,7 +106,7 @@ private struct VerdictContent: View {
             VStack(spacing: 4) {
                 TentGlyph(flyOn: lines.flyOn)
                     .frame(height: 52)
-                    .foregroundStyle(lines.flyOn ? Color.accentColor : .secondary)
+                    .foregroundStyle(lines.flyOn && !lines.muted ? Color.accentColor : .secondary)
                 Text(lines.caption.uppercased())
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)

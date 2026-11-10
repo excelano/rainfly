@@ -17,6 +17,7 @@ struct ComplicationFace: Equatable, Sendable {
     /// The night's camp and the advice under the reason, for the phone's larger widgets.
     var camp: String?
     var notes: [String] = []
+    var muted = false
 
     static let noForecast = ComplicationFace(
         flyOn: nil, headline: "No forecast", detail: "Open Rainfly with a signal", inline: "Rainfly: no forecast",
@@ -63,7 +64,7 @@ extension ComplicationFace {
                 flyOn: morning.packing != .dryNight, headline: morning.headline, detail: morning.reason,
                 inline: dryTime.map { "\(morning.headline) · dry \($0)" } ?? morning.headline, dryTime: dryTime,
                 fetchedAt: night.fetchedAt, camp: night.location.title,
-                notes: [morning.rainAhead(at: date), morning.advice].compactMap { $0 }
+                notes: [morning.rainAhead(at: date), morning.advice].compactMap { $0 }, muted: morning.packing == .dryToPack
             )
         }
     }
