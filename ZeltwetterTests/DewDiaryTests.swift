@@ -129,6 +129,15 @@ struct DewDiaryJudgingTests {
         #expect(diary.tally(settings: Settings()) == DiaryTally(caught: 2, clear: 1, missed: 1, falseAlarms: 1, lightDew: 2, lightDewFlagged: 1))
     }
 
+    @Test func aRainForecastIsKeptBesideTheDewCall() {
+        var rainy = DewDiary()
+        rainy.record(F.night { F.hour($0, chance: 0.9) })
+        let judgement = rainy.nights[0].judge(settings: Settings())
+        #expect(judgement?.rain?.trigger == .rain)
+        #expect(judgement?.predicted == false)
+        #expect(diary([(night("dew", spread: 2), .wet, true)]).nights[0].judge(settings: Settings())?.rain == nil)
+    }
+
     @Test func theHistoryTellsWhichSideMissed() {
         let forecast = night("A", spread: 8)
         var missed = diary([(forecast, .wet, true)])

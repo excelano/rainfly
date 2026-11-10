@@ -9,6 +9,13 @@ enum Trigger: String, Codable, CaseIterable, Sendable {
     case storm, rain, windRain, frost, dew, morningRain, cold
 
     var priority: Int { Self.allCases.firstIndex(of: self)! }
+
+    var isRain: Bool {
+        switch self {
+        case .storm, .rain, .windRain, .morningRain: true
+        case .frost, .dew, .cold: false
+        }
+    }
 }
 
 /// A trigger and the earliest hour it fires.

@@ -14,7 +14,7 @@ enum DiaryJudging {
         let firing = verdict.firing(.frost) ?? verdict.firing(.dew)
         let predicted = firing != nil
         var judgement = DiaryJudgement(
-            predicted: predicted, firing: firing,
+            predicted: predicted, firing: firing, rain: verdict.firings.first { $0.trigger.isRain },
             closestSpread: NightWindow(pitched, packByMinutes: settings.packByMinutes).closestSpread
         )
         guard let found = kind?.foundMoisture else { return judgement }
@@ -66,6 +66,8 @@ struct DiaryJudgement: Equatable {
 
     let predicted: Bool
     let firing: Firing?
+    /// The first rain or storm the forecast fired, which the dew judgement leaves out.
+    let rain: Firing?
     let closestSpread: Double?
     var outcome: Outcome?
     var cause: Cause?

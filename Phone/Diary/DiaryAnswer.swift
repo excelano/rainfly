@@ -4,14 +4,15 @@
 
 import SwiftUI
 
-/// The morning review: what Rainfly expected, and whether it was right. Only a wrong
-/// forecast asks what was found and where.
+/// The morning review: what Rainfly expected, and whether it was right. A night forecast to
+/// rain asks about the rain first; only a wrong dew forecast asks what was found and where.
 struct DiaryAnswerRows: View {
     @Environment(ForecastModel.self) private var model
     let recorder: DiaryRecorder
     let night: DiaryNight
     var answered: () -> Void = {}
     @State private var correcting = false
+    @State private var rainAnswered = false
     @State private var found: DewObservation.Kind?
 
     /// Nil when no forecast was kept for the night, which leaves nothing to review.
@@ -34,6 +35,14 @@ struct DiaryAnswerRows: View {
                 LabeledContent("Under cover") { Text("trees, a roof or an awning") }
             }
             Button("Back") { self.found = nil }
+        } else if let judgement, let rain = judgement.rain, !rainAnswered, !correcting {
+            Text(Self.rainExpectation(rain, in: night))
+                .font(.headline)
+            answer("Yes, it rained", chosen: night.observation?.kind == .rain) { record(.rain, openSky: openSky) }
+            answer("No, it didn't rain", chosen: night.observation.map { ![.rain, .notChecked].contains($0.kind) } ?? false) {
+                rainAnswered = true
+            }
+            answer(DewObservation.Kind.notChecked) { record(.notChecked, openSky: openSky) }
         } else if let judgement, !correcting {
             Text(Self.expectation(judgement.firing, in: night))
                 .font(.headline)
@@ -44,8 +53,13 @@ struct DiaryAnswerRows: View {
                 record(.lightDew, openSky: recorder.diary.lastOpenSky(before: night.date))
             }
             answer("No, it was wrong", chosen: isCorrection(judgement)) { correcting = true }
-            answer(DewObservation.Kind.rain) { record(.rain, openSky: openSky) }
+            if judgement.rain == nil {
+                answer(DewObservation.Kind.rain) { record(.rain, openSky: openSky) }
+            }
             answer(DewObservation.Kind.notChecked) { record(.notChecked, openSky: openSky) }
+            if judgement.rain != nil {
+                Button("Back") { rainAnswered = false }
+            }
         } else {
             Text("What did you find?")
                 .font(.headline)
@@ -103,6 +117,7 @@ struct DiaryAnswerRows: View {
         recorder.observe(kind, openSky: openSky, night: night)
         found = nil
         correcting = false
+        rainAnswered = false
         answered()
     }
 
@@ -117,8 +132,15 @@ struct DiaryAnswerRows: View {
 
     static func expectation(_ expected: Firing?, in night: DiaryNight) -> String {
         guard let expected else { return "Rainfly expected no dew or frost. Was it right?" }
-        let time = VerdictText.clock(expected.at, in: night.forecasts.first?.location.timeZone ?? .current)
-        return "Rainfly expected \(expected.trigger == .frost ? "frost" : "dew") by \(time). Was it right?"
+        return "Rainfly expected \(expected.trigger == .frost ? "frost" : "dew") by \(clock(expected, in: night)). Was it right?"
+    }
+
+    static func rainExpectation(_ rain: Firing, in night: DiaryNight) -> String {
+        "Rainfly expected \(rain.trigger == .storm ? "a storm" : "rain") by \(clock(rain, in: night)). Did it rain?"
+    }
+
+    static func clock(_ firing: Firing, in night: DiaryNight) -> String {
+        VerdictText.clock(firing.at, in: night.forecasts.first?.location.timeZone ?? .current)
     }
 }
 
@@ -201,7 +223,8 @@ struct MorningDiarySection: View {
         }
         switch (observation.kind, judgement.outcome) {
         case (.notChecked, _): return ("You didn't check this morning", record)
-        case (.rain, _): return ("It rained, so this night doesn't count for dew", record)
+        case (.rain, _) where judgement.rain == nil: return ("It rained, so this night doesn't count for dew", record)
+        case (.rain, _): return ("It rained, as expected", "Rain nights don't count for dew. \(record)")
         case (.lightDew, _): return ("You found light dew", "Light dew doesn't count as right or wrong. \(record)")
         case (_, .caught?): return ("You found it \(observation.kind == .frost ? "frosty" : "wet"), as expected", record)
         case (_, .clear?): return ("You found it dry, as expected", record)

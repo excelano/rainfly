@@ -171,7 +171,14 @@ private struct NightRow: View {
     private var forecast: String {
         guard let judgement else { return "No forecast kept" }
         let spread = judgement.closestSpread.map { ", closest gap \(Quantity.dewSpread(units).format(units.temperatureSpan($0)))" } ?? ""
-        let call = judgement.firing.map { "\($0.trigger == .frost ? "frost" : "dew") by \(VerdictText.clock($0.at, in: night.forecasts.first?.location.timeZone ?? .current))" } ?? "dry"
+        let dew = judgement.firing.map { "\($0.trigger == .frost ? "frost" : "dew") by \(DiaryAnswerRows.clock($0, in: night))" }
+        let rain = judgement.rain.map { "\($0.trigger == .storm ? "storm" : "rain") by \(DiaryAnswerRows.clock($0, in: night))" }
+        let call = switch (rain, dew) {
+        case let (rain?, dew?): "\(rain), \(dew)"
+        case let (rain?, nil): "\(rain), no dew"
+        case let (nil, dew?): dew
+        case (nil, nil): "dry"
+        }
         return "Forecast: \(call)\(spread)"
     }
 
