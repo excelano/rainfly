@@ -50,6 +50,7 @@ struct Camps: Codable, Equatable, Sendable {
     }
 
     mutating func show(_ campName: String, on date: NightDate) {
+        if trip.contains(where: { $0.date == date }) { plan(campName, on: date) }
         shown = TripNight(date: date, campName: campName)
     }
 

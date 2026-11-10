@@ -70,8 +70,20 @@ struct CampsTests {
         #expect(camps.campName(on: july1) == ridge.name)
         #expect(camps.campName(on: july1.adding(days: 1)) == ridge.name)
         #expect(camps.campName(on: july1.adding(days: 2)) == lake.name)
-        #expect(camps.trip.map(\.campName) == [lake.name, lake.name])
         camps.remove(named: ridge.name)
+        #expect(camps.campName(on: july1.adding(days: 1)) == CampLocation.hereName)
+    }
+
+    @Test func showingACampOnATripNightChangesTheTrip() {
+        var camps = Camps()
+        camps.add(lake)
+        camps.add(ridge)
+        camps.plan(lake.name, on: july1)
+        camps.plan(lake.name, on: july1.adding(days: 1))
+        camps.show(ridge.name, on: july1)
+        #expect(camps.trip.map(\.campName) == [ridge.name, lake.name])
+        camps.show(CampLocation.hereName, on: july1.adding(days: 1))
+        #expect(camps.trip.map(\.campName) == [ridge.name])
         #expect(camps.campName(on: july1.adding(days: 1)) == CampLocation.hereName)
     }
 
@@ -193,12 +205,12 @@ struct TripModelTests {
         #expect(cache.night(at: hut.name, on: tonight.adding(days: 1)) != nil)
     }
 
-    @Test func showingACampLeavesTheTripAlone() async {
+    @Test func showingACampChangesTonightOnTheTrip() async {
         let provider = FakeProvider(fetchedAt: afternoon)
         let model = model(provider, camps: trip([(lake, 0), (ridge, 1)]))
         await model.show(CampLocation.hereName, now: afternoon)
         #expect(model.campName == CampLocation.hereName)
-        #expect(model.camps.trip.map(\.campName) == [lake.name, ridge.name])
+        #expect(model.camps.trip.map(\.campName) == [ridge.name])
         await model.show(ridge.name, now: afternoon)
         #expect(model.night?.location == ridge)
     }
