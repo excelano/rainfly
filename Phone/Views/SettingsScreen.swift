@@ -78,7 +78,7 @@ struct SettingsScreen: View {
                     }
                 }
             } footer: {
-                Text("Each morning, tell Rainfly whether its dew forecast was right about something left under the sky, and see how it does at your campsites. The reminder comes half an hour before you pack up.")
+                Text("Each morning, tell Rainfly whether its dew forecast was right about something left under the sky, and see how it does at your campsites. The reminder comes half an hour before you pack up, or a quarter of an hour after sunrise when that is later.")
             }
             Section {
                 Toggle("Pressure alert", isOn: $model.preferences.pressureWatch)
