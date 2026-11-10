@@ -217,7 +217,7 @@ struct MorningDiarySection: View {
 
     private var result: (title: String, detail: String) {
         let tally = recorder.diary.tally(settingsAt: model.settings(at:))
-        let record = tally.judged == 0 ? "" : "Rainfly has been right on \(tally.caught + tally.clear) of the \(tally.judged) nights you've checked."
+        let record = tally.judged == 0 ? "" : "Rainfly has been right on \(tally.caught + tally.clear) of the \(tally.judged) mornings you found dry, wet or frosty."
         guard let observation = night.observation, let judgement = night.judge(settingsAt: model.settings(at:)) else {
             return ("Your answer is saved", record)
         }
