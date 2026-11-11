@@ -1,6 +1,6 @@
 # Rainfly
 
-Rainfly answers one question at camp: should the rainfly go on tonight? It reads the night's forecast for your campsite and gives a yes or no with the reason, such as "Dew likely by 4 AM" or "Rain 35% after 2 AM", watches for changes through the night, and in the morning says whether the tent packs dry and how the forecast did. It runs on iPhone and on Apple Watch, each a complete app without the other, with no account, no ads and no analytics.
+Rainfly answers one question at camp: should the rainfly go on tonight? It reads the night's forecast for your campsite and gives a yes or no with the reason, such as "Dew likely by 4 AM" or "Rain 35% after 2 AM", watches for changes through the night, and in the morning says whether the tent packs dry and how the forecast did. It runs on iPhone, iPad and Apple Watch, the phone and the watch each a complete app without the other, with no account, no ads and no analytics.
 
 It is deliberately narrow. There is no radar, no weather map, no hourly chart and no week ahead, only what tonight means for your gear.
 
@@ -28,7 +28,7 @@ The rule engine in `Shared/Engine` uses Foundation alone and is covered by the t
 
 ## Privacy
 
-Rainfly sends a camp's position to Apple's WeatherKit for its forecast, and to Apple's map service when a camp is added or searched for. It reads your location while it is on screen, with permission, and the barometer during the night when the pressure alert is on. Forecasts, camps, the trip, settings, recent pressure readings and the dew diary stay on your devices, passing between your iPhone and your watch over WatchConnectivity when both apps are installed. The one exception is a shared dew diary, whose answered nights go to Excelano's CloudKit database as described above. The privacy policy is at https://excelano.com/legal/#rainfly.
+Rainfly sends a camp's position only to Apple's weather and map services, and answered dew diary nights only to Excelano's CloudKit database while sharing is on. [SECURITY.md](SECURITY.md#what-rainfly-can-access) says what it reads and sends, and [What Rainfly stores](SECURITY.md#what-rainfly-stores) what it keeps. The privacy policy is at https://excelano.com/legal/#rainfly.
 
 ## License
 
