@@ -116,6 +116,15 @@ struct MorningTextTests {
         #expect(plain(words.explain(dew)) == "At 10 PM Rainfly expected clouds all night, so no dew. Apple Weather's record shows the air got within 2.0° of its dew point at 2 AM, with a clear sky and little wind.")
     }
 
+    @Test func anHourPastAt22IsNotAChangeOvernight() {
+        let rainedAt20 = F.night { d in F.hour(d, temp: 12, dewPoint: 10, cloud: 0.8, wind: 1, amount: d == F.at(0, 20) ? 0.5 : 0) }
+        let words = morning(
+            decided: fetched(cloudy, at: F.at(0, 21)), beforeMorning: fetched(rainedAt20, at: F.at(1, 5)),
+            latest: fetched(rainedAt20, at: F.at(1, 8))
+        )
+        #expect(plain(words.lastNightDetail) == "It expected a clear, dry night.")
+    }
+
     @Test func theReviewWaitsForTheRecord() {
         let words = morning(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 6)))
         #expect(words.review == nil)
@@ -149,10 +158,12 @@ struct MorningTextTests {
 }
 
 struct OvernightTextTests {
-    private func overnight(decided: NightForecast, latest: NightForecast) -> OvernightText {
+    private func overnight(
+        decided: NightForecast, latest: NightForecast, at now: Date? = nil, current: CurrentConditions? = nil
+    ) -> OvernightText {
         OvernightText(
             text: VerdictText(night: latest, verdict: FlyEngine.evaluate(latest, settings: Settings()), settings: Settings(), units: metric, locale: english),
-            decided: decided, decidedSettings: Settings()
+            decided: decided, decidedSettings: Settings(), now: now ?? latest.fetchedAt, current: current
         )
     }
 
@@ -168,7 +179,7 @@ struct OvernightTextTests {
         #expect(words.hasChanged)
         #expect(plain(words.reason) == "New since 10 PM: rain 40% at 5 AM")
         #expect(plain(words.note) == "At 10 PM, Rainfly said on: dew likely by 8 PM")
-        #expect(plain(words.brief) == "New: rain 5 AM")
+        #expect(plain(words.inline) == "New: rain 5 AM")
     }
 
     @Test func aSingleForecastHasNothingToCompare() {
@@ -177,10 +188,42 @@ struct OvernightTextTests {
     }
 
     @Test func noChangeSaysSo() {
-        let words = overnight(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 2)))
+        let words = overnight(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 2)), at: F.at(1, 2, 10))
         #expect(!words.hasChanged)
         #expect(plain(words.note) == "Same as the 10 PM forecast")
-        #expect(words.hoursAhead(at: F.at(1, 2, 10)).map(\.date) == [F.at(1, 2), F.at(1, 3), F.at(1, 4), F.at(1, 5)])
+        #expect(words.hoursAhead.map(\.date) == [F.at(1, 2), F.at(1, 3), F.at(1, 4), F.at(1, 5)])
+    }
+
+    @Test func rainInAnHourAlreadyPastIsNotNew() {
+        let rainedAt20 = F.night { d in F.hour(d, temp: 12, dewPoint: 10, wind: 1, amount: d == F.at(0, 20) ? 0.5 : 0) }
+        let words = overnight(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(rainedAt20, at: F.at(1, 2)))
+        #expect(!words.hasChanged)
+        #expect(words.headline == "Rainfly on")
+        #expect(plain(words.reason) == "The rainfly is wet from rain at 8 PM")
+        #expect(words.ahead.verdict.firing(.rain) == nil)
+        #expect(plain(words.inline) == "Rainfly on · Dew 2 AM")
+    }
+
+    @Test func aWetRainflyStaysOnUntilItHasDried() {
+        let rainAt23 = { (wind: Double) in F.night { d in F.hour(d, wind: wind, amount: d == F.at(0, 23) ? 1 : 0) } }
+        let breezy = fetched(rainAt23(4), at: F.at(0, 21))
+        let wet = overnight(decided: breezy, latest: breezy, at: F.at(1, 0, 30))
+        #expect(wet.headline == "Rainfly on")
+        #expect(plain(wet.reason) == "The rainfly is wet from rain at 11 PM")
+        let dried = overnight(decided: breezy, latest: breezy, at: F.at(1, 2, 30))
+        #expect(dried.headline == "Rainfly off")
+        #expect(dried.reason == "Nothing more expected tonight")
+        let still = fetched(rainAt23(1), at: F.at(0, 21))
+        #expect(overnight(decided: still, latest: still, at: F.at(1, 5)).headline == "Rainfly on")
+    }
+
+    @Test func rainRightNowWetsTheRainfly() {
+        let dry = fetched(F.night(), at: F.at(0, 21))
+        let raining = CurrentConditions(date: F.at(1, 3, 15), tempC: 15, dewPointC: 5, cloudCover: 0.9, windMS: 4, isRaining: true)
+        let words = overnight(decided: dry, latest: dry, at: F.at(1, 3, 20), current: raining)
+        #expect(words.headline == "Rainfly on")
+        #expect(plain(words.reason) == "The rainfly is wet from rain at 3:15 AM")
+        #expect(overnight(decided: dry, latest: dry, at: F.at(1, 3, 20)).headline == "Rainfly off")
     }
 
     @Test func rightNowNamesWhatIsHappening() {
@@ -209,8 +252,7 @@ struct OvernightTextTests {
 struct OvernightAlertTests {
     private func message(decided: NightForecast, latest: NightForecast, at now: Date) -> (title: String, body: String)? {
         OvernightAlert.message(
-            night: latest, verdict: FlyEngine.evaluate(latest, settings: Settings()), decided: decided,
-            decidedSettings: Settings(), settings: Settings(), units: metric, at: now
+            night: latest, decided: decided, decidedSettings: Settings(), settings: Settings(), units: metric, at: now
         )
     }
 
@@ -224,5 +266,7 @@ struct OvernightAlertTests {
         #expect(message(decided: fetched(cloudy, at: F.at(0, 21)), latest: fetched(cloudyThenClear, at: F.at(0, 21)), at: F.at(0, 21)) == nil)
         #expect(message(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 1)), at: F.at(1, 1)) == nil)
         #expect(message(decided: fetched(cloudy, at: F.at(0, 21)), latest: fetched(cloudy, at: F.at(1, 1)), at: F.at(1, 1)) == nil)
+        let rainedAt20 = F.night { d in F.hour(d, temp: 12, dewPoint: 10, cloud: 0.8, wind: 1, amount: d == F.at(0, 20) ? 0.5 : 0) }
+        #expect(message(decided: fetched(cloudy, at: F.at(0, 21)), latest: fetched(rainedAt20, at: F.at(1, 1)), at: F.at(1, 1)) == nil)
     }
 }

@@ -12,6 +12,28 @@ struct OvernightText {
     /// The forecast the night is judged against, fixed at 22:00.
     let decided: NightForecast
     let decidedSettings: Settings
+    let now: Date
+    let ahead: VerdictText
+    private let added: Firing?
+    private let dropped: Firing?
+    private let wet: WetFly?
+
+    init(text: VerdictText, decided: NightForecast, decidedSettings: Settings, now: Date, current: CurrentConditions? = nil) {
+        self.text = text
+        self.decided = decided
+        self.decidedSettings = decidedSettings
+        self.now = now
+        let ahead = text.ahead(of: now)
+        let decidedAhead = FlyEngine.evaluate(decided, settings: decidedSettings, from: now)
+        self.ahead = ahead
+        added = ahead.verdict.firings.first { decidedAhead.firing($0.trigger) == nil }
+        dropped = decidedAhead.firings.first { ahead.verdict.firing($0.trigger) == nil }
+        wet = WetFly.at(now, night: text.night, current: current, settings: text.settings)
+    }
+
+    var flyOn: Bool { ahead.verdict.flyOn || wet != nil }
+
+    var headline: String { flyOn ? "Rainfly on" : "Rainfly off" }
 
     private var decidedText: VerdictText {
         VerdictText(
@@ -29,21 +51,31 @@ struct OvernightText {
     /// "Overnight · updated 02:10".
     var caption: String { "Overnight · updated \(text.clock(text.night.fetchedAt))" }
 
-    private var added: Firing? {
-        text.verdict.firings.first { decidedVerdict.firing($0.trigger) == nil }
-    }
-
-    private var dropped: Firing? {
-        decidedVerdict.firings.first { text.verdict.firing($0.trigger) == nil }
-    }
-
     var hasChanged: Bool { added != nil || dropped != nil }
 
-    /// What is new since 22:00, or the verdict's own reason when nothing is.
+    var change: String? {
+        if let added { return "New since \(decidedAt): \(Self.lowered(ahead.describe(added)))" }
+        if let dropped, wet == nil {
+            return "No longer expected since \(decidedAt): \(VerdictText.name(dropped.trigger).lowercased())"
+        }
+        return nil
+    }
+
     var reason: String {
-        if let added { return "New since \(decidedAt): \(Self.lowered(text.describe(added)))" }
-        if let dropped { return "No longer expected since \(decidedAt): \(VerdictText.name(dropped.trigger).lowercased())" }
-        return text.reason
+        if let change { return change }
+        let next = ahead.verdict.headline
+        if let next, next.trigger.isRain { return ahead.describe(next) }
+        if let wet { return describe(wet) }
+        return next.map(ahead.describe) ?? "Nothing more expected tonight"
+    }
+
+    private func describe(_ wet: WetFly) -> String {
+        let since = text.clock(wet.since)
+        return switch wet.cause {
+        case .frost: "Frost on the rainfly since \(since)"
+        case .dew: "Dew on the rainfly since \(since)"
+        default: "The rainfly is wet from rain at \(since)"
+        }
     }
 
     /// What Rainfly said at 22:00 when the forecast has moved, or that it hasn't; nil while the
@@ -55,13 +87,18 @@ struct OvernightText {
         return decidedVerdict.headline.map { "\(said): \(Self.lowered(decidedText.describe($0)))" } ?? said
     }
 
-    /// For the inline complication: "New: rain 05:00".
-    var brief: String? {
-        added.map { "New: \(Self.lowered(text.brief($0)))" }
+    func notes(at now: Date) -> [String] {
+        ahead.conditionNotes + [text.dryNote(at: now)].compactMap { $0 }
+    }
+
+    var inline: String {
+        if let added { return "New: \(Self.lowered(ahead.brief(added)))" }
+        if let next = ahead.verdict.headline { return "Rainfly on · \(ahead.brief(next))" }
+        return wet == nil ? headline : "Rainfly on · wet"
     }
 
     /// The forecast hours from `now` to sunrise, at most eight.
-    func hoursAhead(at now: Date) -> [HourSample] {
+    var hoursAhead: [HourSample] {
         Array(text.night.hours
             .sorted { $0.date < $1.date }
             .filter { $0.date.addingTimeInterval(3600) > now && $0.date < text.night.sunrise }

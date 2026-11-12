@@ -68,10 +68,12 @@ extension VerdictView {
                 warning: text.beforeTonightText(at: now), notes: text.notes(at: now)
             )
         case .overnight:
-            let overnight = OvernightText(text: text, decided: model.decided ?? night, decidedSettings: model.decidedSettings)
+            let overnight = OvernightText(
+                text: text, decided: model.decided ?? night, decidedSettings: model.decidedSettings, now: now, current: model.current
+            )
             let current = model.current.map { overnight.now($0).title }
             return VerdictLines(
-                flyOn: text.verdict.flyOn, caption: overnight.caption, headline: text.headline, reason: overnight.reason,
+                flyOn: overnight.flyOn, caption: overnight.caption, headline: overnight.headline, reason: overnight.reason,
                 notes: [overnight.note, current.map { "Right now: \($0.lowercased())" }].compactMap { $0 }
             )
         case .morning:

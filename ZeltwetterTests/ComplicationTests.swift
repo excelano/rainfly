@@ -48,7 +48,7 @@ struct ComplicationTimelineTests {
         let timeline = entries(F.dewyNight { F.hour($0, temp: 15, dewPoint: 5) }, now: F.at(0, 21))
         let night = timeline.first { $0.date == F.at(1, 5) }!.face
         #expect(night.flyOn == true)
-        #expect(plain(night.inline).hasPrefix("rainfly on · dew "))
+        #expect(plain(night.inline) == "rainfly on · wet")
         #expect(night.dryTime == nil)
 
         let morning = timeline.first { $0.date == F.sunrise }!.face

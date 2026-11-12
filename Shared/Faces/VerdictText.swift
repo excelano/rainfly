@@ -11,6 +11,16 @@ struct VerdictText {
     let settings: Settings
     let units: DisplayUnits
     var locale = Locale.current
+    var from: Date = .distantPast
+
+    var window: NightWindow { NightWindow(night, packByMinutes: settings.packByMinutes, from: from) }
+
+    func ahead(of now: Date) -> VerdictText {
+        VerdictText(
+            night: night, verdict: FlyEngine.evaluate(night, settings: settings, from: now),
+            settings: settings, units: units, locale: locale, from: now
+        )
+    }
 
     var headline: String { verdict.flyOn ? "Rainfly on" : "Rainfly off" }
 
@@ -24,7 +34,7 @@ struct VerdictText {
     func periodLabel(at now: Date) -> String {
         let period = period(at: now)
         guard period == "Tonight", now < night.sunset else { return period }
-        let packBy = NightWindow(night, packByMinutes: settings.packByMinutes).packBy
+        let packBy = window.packBy
         let start = night.polar == nil ? "sunset \(clock(night.sunset))" : clock(night.sunset)
         return "\(period) · \(start), pack up \(clock(packBy))"
     }
@@ -58,7 +68,7 @@ struct VerdictText {
 
     /// Which part of the night `now` is in, by name.
     func period(at now: Date) -> String {
-        switch NightWindow(night, packByMinutes: settings.packByMinutes).phase(at: now) {
+        switch window.phase(at: now) {
         case .evening: "Tonight"
         case .overnight: "Overnight"
         case .morning: "This morning"
@@ -69,9 +79,12 @@ struct VerdictText {
         verdict.headline.map(describe) ?? "Clear, dry, mild."
     }
 
-    /// The advice under the reason, in the order the main screen shows it.
     /// The advice under the reason as seen at `now`, which names the morning the tent dries.
     func notes(at now: Date) -> [String] {
+        conditionNotes + [dryNote(at: now)].compactMap { $0 }
+    }
+
+    var conditionNotes: [String] {
         var notes: [String] = []
         switch night.polar {
         case .midnightSun?: notes.append("The sun stays up all night here")
@@ -80,12 +93,13 @@ struct VerdictText {
         }
         if verdict.ventAdvice { notes.append(ventNote) }
         if verdict.bagWarning != nil { notes.append("Wear layers: it gets colder than your sleeping bag is rated for") }
-        if let dryBy = verdict.dryBy {
-            notes.append("Dry around \(clock(dryBy)) \(day(of: dryBy, from: now))")
-        } else if verdict.firing(.dew) != nil || verdict.firing(.frost) != nil {
-            notes.append("Won't dry before noon \(day(of: night.sunrise, from: now))")
-        }
         return notes
+    }
+
+    func dryNote(at now: Date) -> String? {
+        if let dryBy = verdict.dryBy { return "Dry around \(clock(dryBy)) \(day(of: dryBy, from: now))" }
+        guard verdict.firing(.dew) != nil || verdict.firing(.frost) != nil else { return nil }
+        return "Won't dry before noon \(day(of: night.sunrise, from: now))"
     }
 
     /// The morning `date` falls on, seen from `now` at the camp: "this morning", "tomorrow" or
@@ -106,7 +120,7 @@ struct VerdictText {
     }
 
     private var ventNote: String {
-        let hours = NightWindow(night, packByMinutes: settings.packByMinutes).nightHours
+        let hours = window.nightHours
         let damp = hours.contains { $0.humidity >= settings.ventHumidity }
         let still = hours.contains { $0.windMS < settings.calmWindMS }
         return switch (damp, still) {
@@ -162,7 +176,6 @@ struct VerdictText {
 
     /// Tonight's result for a check in a sentence or two, naming what decided it.
     func summary(_ trigger: Trigger) -> String {
-        let window = NightWindow(night, packByMinutes: settings.packByMinutes)
         let firing = verdict.firing(trigger)
         switch trigger {
         case .storm:
@@ -235,7 +248,6 @@ struct VerdictText {
 
     /// What the check looks for, in the words of the settings it uses.
     func rule(_ trigger: Trigger) -> String {
-        let window = NightWindow(night, packByMinutes: settings.packByMinutes)
         let packBy = clock(window.packBy)
         let calm = Quantity.calmWind(units).text(settings.calmWindMS)
         let condenses = "If, in the same hour, the air gets within \(spreadLimit) of its dew point, the sky is less than \(percent(settings.clearSky)) cloudy, the wind is under \(calm)"

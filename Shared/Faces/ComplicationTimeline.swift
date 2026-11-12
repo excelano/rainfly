@@ -48,11 +48,12 @@ extension ComplicationFace {
         case .evening:
             self.init(evening: text, at: date)
         case .overnight:
-            let overnight = OvernightText(text: text, decided: fetches?.decided ?? night, decidedSettings: fetches?.decidedSettings ?? text.settings)
+            let overnight = OvernightText(
+                text: text, decided: fetches?.decided ?? night, decidedSettings: fetches?.decidedSettings ?? text.settings, now: date
+            )
             self.init(
-                flyOn: text.verdict.flyOn, headline: text.headline, detail: overnight.reason,
-                inline: overnight.brief ?? text.verdict.headline.map { "Rainfly on · \(text.brief($0))" } ?? text.headline,
-                dryTime: nil, fetchedAt: night.fetchedAt, camp: night.location.title, notes: text.notes(at: date)
+                flyOn: overnight.flyOn, headline: overnight.headline, detail: overnight.reason, inline: overnight.inline,
+                dryTime: nil, fetchedAt: night.fetchedAt, camp: night.location.title, notes: overnight.notes(at: date)
             )
         case .morning:
             let morning = MorningText(

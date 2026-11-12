@@ -20,7 +20,7 @@ struct NightWindow: Sendable {
     let nightHours: [HourSample]
     let morningHours: [HourSample]
 
-    init(_ night: NightForecast, packByMinutes: Int) {
+    init(_ night: NightForecast, packByMinutes: Int, from start: Date = .distantPast) {
         let calendar = Self.localCalendar(for: night.location)
         self.calendar = calendar
         sunset = night.sunset
@@ -30,7 +30,7 @@ struct NightWindow: Sendable {
         ) ?? night.sunrise
         anchor = Self.anchor(of: night)
         handover = calendar.date(bySettingHour: Self.handoverHour, minute: 0, second: 0, of: night.sunrise) ?? night.sunrise
-        let hours = night.hours.sorted { $0.date < $1.date }
+        let hours = night.hours.sorted { $0.date < $1.date }.filter { $0.date.addingTimeInterval(3600) > start }
         let nightEnd = min(night.sunrise, packBy)
         nightHours = hours.filter { $0.date.addingTimeInterval(3600) > night.sunset && $0.date < nightEnd }
         morningHours = hours.filter { [packBy] in $0.date.addingTimeInterval(3600) > night.sunrise && $0.date < packBy }

@@ -24,11 +24,11 @@ struct OvernightView<Diary: View>: View {
                     Text(overnight.caption.uppercased())
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(.secondary)
-                    Text(text.headline)
+                    Text(overnight.headline)
                         .font(.largeTitle.bold())
                     Text(overnight.reason)
                         .font(.title3)
-                        .fontWeight(overnight.hasChanged ? .semibold : .regular)
+                        .fontWeight(overnight.change != nil ? .semibold : .regular)
                     if let note = overnight.note {
                         Text(note)
                             .foregroundStyle(.secondary)
@@ -67,7 +67,7 @@ struct OvernightView<Diary: View>: View {
                 }
             }
             diary
-            let hours = overnight.hoursAhead(at: now)
+            let hours = overnight.hoursAhead
             if !hours.isEmpty {
                 Section {
                     Grid(horizontalSpacing: 6, verticalSpacing: 6) {
@@ -96,11 +96,11 @@ struct OvernightView<Diary: View>: View {
                 }
             }
             Section("Checks") {
-                ForEach(text.checks, id: \.self) { trigger in
+                ForEach(overnight.ahead.checks, id: \.self) { trigger in
                     NavigationLink {
-                        CheckDetail(trigger: trigger, text: text) { ChecksSettingsScreen() }
+                        CheckDetail(trigger: trigger, text: overnight.ahead) { ChecksSettingsScreen() }
                     } label: {
-                        CheckRow(trigger: trigger, text: text)
+                        CheckRow(trigger: trigger, text: overnight.ahead)
                     }
                 }
             }

@@ -25,7 +25,10 @@ struct VerdictScreen: View {
                     }
                 case .overnight:
                     OvernightView(
-                        overnight: OvernightText(text: text, decided: model.decided ?? night, decidedSettings: model.decidedSettings),
+                        overnight: OvernightText(
+                            text: text, decided: model.decided ?? night, decidedSettings: model.decidedSettings,
+                            now: now, current: model.current
+                        ),
                         current: model.current, pressure: pressure(at: now), now: now,
                         attribution: model.attribution, problem: model.problem
                     ) {

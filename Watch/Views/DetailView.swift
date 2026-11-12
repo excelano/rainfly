@@ -9,8 +9,11 @@ struct DetailView: View {
 
     var body: some View {
         List {
-            if let night = model.night, let verdict = model.verdict, let window = model.window {
-                let text = VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units)
+            let now = AppClock.now
+            if let night = model.night, let verdict = model.verdict, let phase = model.window?.phase(at: now) {
+                let wholeNight = VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units)
+                let text = phase == .overnight ? wholeNight.ahead(of: now) : wholeNight
+                let window = text.window
                 Section {
                     ForEach(text.checks, id: \.self) { trigger in
                         NavigationLink {

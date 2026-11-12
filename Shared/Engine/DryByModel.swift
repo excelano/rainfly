@@ -14,6 +14,7 @@ struct DryByModel: Codable, Equatable, Sendable {
     var frostExtra: TimeInterval = 30 * 60
     /// The local hour after which the estimate gives up.
     var cutoffHour = 12
+    var nightDryingTime: TimeInterval = 2 * 60 * 60
 
     func dryBy(_ night: NightForecast, frost: Bool, calendar: Calendar) -> Date? {
         guard let cutoff = calendar.date(bySettingHour: cutoffHour, minute: 0, second: 0, of: night.sunrise) else {
@@ -33,5 +34,9 @@ struct DryByModel: Codable, Equatable, Sendable {
 
     private func dries(_ hour: HourSample) -> Bool {
         hour.spreadC >= minSpreadC && (hour.cloudCover < maxCloudCover || hour.windMS >= minWindMS)
+    }
+
+    func driesAtNight(_ hour: HourSample) -> Bool {
+        hour.spreadC >= minSpreadC && hour.windMS >= minWindMS
     }
 }

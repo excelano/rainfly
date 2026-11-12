@@ -120,8 +120,10 @@ struct MorningText {
     /// Why it said so, or how the forecast changed before sunrise.
     var lastNightDetail: String {
         if let beforeMorning {
-            let overnight = FlyEngine.evaluate(beforeMorning, settings: decidedSettings)
-            if overnight.flyOn != decidedVerdict.flyOn {
+            let from = NightWindow.decidedAt(decided)
+            let overnight = FlyEngine.evaluate(beforeMorning, settings: decidedSettings, from: from)
+            let said = FlyEngine.evaluate(decided, settings: decidedSettings, from: from)
+            if overnight.flyOn != said.flyOn, said.flyOn == decidedVerdict.flyOn {
                 let by = "By \(text.clock(beforeMorning.fetchedAt)) the forecast changed to"
                 guard overnight.flyOn else { return "\(by) off." }
                 let because = overnight.headline.map { " because of \(Self.cause($0.trigger))" } ?? ""

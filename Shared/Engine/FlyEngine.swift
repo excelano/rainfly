@@ -14,8 +14,14 @@ enum FlyEngine {
 
     static func isFrostAir(_ tempC: Double) -> Bool { tempC <= frostAirC }
 
-    static func evaluate(_ night: NightForecast, settings: Settings, dryByModel: DryByModel = DryByModel()) -> Verdict {
-        let window = NightWindow(night, packByMinutes: settings.packByMinutes)
+    static func condenses(spreadC: Double, cloudCover: Double, windMS: Double, settings: Settings) -> Bool {
+        spreadC <= settings.dewSpreadC && cloudCover < settings.clearSky && windMS < settings.calmWindMS
+    }
+
+    static func evaluate(
+        _ night: NightForecast, settings: Settings, from start: Date = .distantPast, dryByModel: DryByModel = DryByModel()
+    ) -> Verdict {
+        let window = NightWindow(night, packByMinutes: settings.packByMinutes, from: start)
         let nightHours = window.nightHours
         let morningHours = window.morningHours
 
@@ -29,7 +35,7 @@ enum FlyEngine {
             hour.precipChance >= chance || hour.precipAmountMM > 0
         }
         func condenses(_ hour: HourSample) -> Bool {
-            hour.spreadC <= s.dewSpreadC && hour.cloudCover < s.clearSky && hour.windMS < s.calmWindMS
+            Self.condenses(spreadC: hour.spreadC, cloudCover: hour.cloudCover, windMS: hour.windMS, settings: s)
         }
 
         record(.storm, in: nightHours + morningHours) { $0.isThunderstorm }
