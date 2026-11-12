@@ -28,7 +28,13 @@ struct VerdictScreen: View {
                         overnight: OvernightText(text: text, decided: model.decided ?? night, decidedSettings: model.decidedSettings),
                         current: model.current, pressure: pressure(at: now), now: now,
                         attribution: model.attribution, problem: model.problem
-                    )
+                    ) {
+                        if model.preferences.dewDiary, let recorder, let date = model.date,
+                           let diaryNight = recorder.diary.night(campName: model.campName, on: date),
+                           let opens = diaryNight.answerOpens, now >= opens {
+                            MorningDiarySection(recorder: recorder, night: diaryNight)
+                        }
+                    }
                 case .morning:
                     MorningView(
                         morning: MorningText(
@@ -38,8 +44,8 @@ struct VerdictScreen: View {
                         ),
                         now: now, attribution: model.attribution, problem: model.problem
                     ) {
-                        if model.preferences.dewDiary, let recorder,
-                           let diaryNight = recorder.diary.nights.last(where: { $0.campName == model.campName && $0.date == model.date }) {
+                        if model.preferences.dewDiary, let recorder, let date = model.date,
+                           let diaryNight = recorder.diary.night(campName: model.campName, on: date) {
                             MorningDiarySection(recorder: recorder, night: diaryNight)
                         }
                     }

@@ -123,7 +123,8 @@ final class DiaryRecorder {
         diary.record(night)
         save()
         let date = ForecastCache.date(of: night)
-        if model.preferences.diaryReminder, date == model.nightDate(), night.location.name == model.camps.campName(on: date) {
+        if model.preferences.diaryReminder, date == model.nightDate(), night.location.name == model.camps.campName(on: date),
+           diary.night(campName: night.location.name, on: date)?.observation == nil {
             Task { await DiaryReminder.schedule(after: night, packByMinutes: model.settings.packByMinutes) }
         }
     }

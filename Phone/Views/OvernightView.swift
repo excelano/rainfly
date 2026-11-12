@@ -5,14 +5,15 @@
 import SwiftUI
 
 /// The night after 22:00: the latest verdict and what has changed since then, the weather
-/// right now, and the hours until sunrise.
-struct OvernightView: View {
+/// right now, the hours until sunrise, and any `diary` section once the morning question opens.
+struct OvernightView<Diary: View>: View {
     let overnight: OvernightText
     let current: CurrentConditions?
     let pressure: String?
     let now: Date
     let attribution: Attribution
     var problem: String?
+    @ViewBuilder var diary: Diary
 
     private var text: VerdictText { overnight.text }
 
@@ -65,6 +66,7 @@ struct OvernightView: View {
                     Text(footer)
                 }
             }
+            diary
             let hours = overnight.hoursAhead(at: now)
             if !hours.isEmpty {
                 Section {

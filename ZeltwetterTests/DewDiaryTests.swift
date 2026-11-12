@@ -60,7 +60,8 @@ struct DewDiaryRecordingTests {
         let forecast = F.night()
         diary.record(forecast)
         let camp = { (_: NightDate) in forecast.location.name }
-        #expect(diary.awaitingObservation(now: forecast.sunrise.addingTimeInterval(-60), campName: camp) == nil)
+        #expect(diary.awaitingObservation(now: forecast.sunrise.addingTimeInterval(-DewDiary.earlyAnswer - 60), campName: camp) == nil)
+        #expect(diary.awaitingObservation(now: forecast.sunrise.addingTimeInterval(-DewDiary.earlyAnswer + 60), campName: camp) != nil)
         let asked = diary.awaitingObservation(now: forecast.sunrise.addingTimeInterval(3600), campName: camp)
         #expect(asked?.campName == forecast.location.name)
         #expect(diary.awaitingObservation(now: forecast.sunrise.addingTimeInterval(3600)) { _ in "Elsewhere" } == nil)

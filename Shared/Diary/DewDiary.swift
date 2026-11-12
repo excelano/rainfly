@@ -21,6 +21,10 @@ struct DewDiary: Codable, Equatable {
         }
     }
 
+    func night(campName: String, on date: NightDate) -> DiaryNight? {
+        index(of: campName, on: date).map { nights[$0] }
+    }
+
     mutating func observe(_ observation: DewObservation, campName: String, on date: NightDate) {
         guard let index = index(of: campName, on: date) else { return }
         nights[index].observation = observation
@@ -44,14 +48,14 @@ struct DewDiary: Codable, Equatable {
         nights.removeAll { $0.campName == campName && $0.date == date }
     }
 
-    /// The night whose morning `now` is in, from sunrise until `answerWindow` after it, at
-    /// the camp `campName` gives for that night, when it has no answer yet.
+    /// The night whose morning `now` is in, from its `answerOpens` until `answerWindow` after
+    /// sunrise, at the camp `campName` gives for that night, when it has no answer yet.
     func awaitingObservation(now: Date, campName: (NightDate) -> String) -> DiaryNight? {
         nights.last { night in
             guard night.campName == campName(night.date), night.observation == nil,
-                  let sunrise = night.forecasts.last?.sunrise
+                  let opens = night.answerOpens, let sunrise = night.forecasts.last?.sunrise
             else { return false }
-            return now >= sunrise && now < sunrise.addingTimeInterval(Self.answerWindow)
+            return now >= opens && now < sunrise.addingTimeInterval(Self.answerWindow)
         }
     }
 
@@ -140,6 +144,7 @@ struct DewDiary: Codable, Equatable {
     }
 
     static let answerWindow: TimeInterval = 14 * 3600
+    static let earlyAnswer: TimeInterval = 2 * 3600
     static let historyDelay = NightReview.recordDelay
     static let settledAfter: TimeInterval = 12 * 3600
     static let historyReach: TimeInterval = 5 * 86_400
@@ -163,6 +168,12 @@ struct DiaryNight: Codable, Equatable {
 
     var decidedAt: Date? {
         pitched.map(NightWindow.decidedAt)
+    }
+
+    /// When the morning question opens: `DewDiary.earlyAnswer` before sunrise, for a camper
+    /// up before the sun.
+    var answerOpens: Date? {
+        forecasts.last.map { $0.sunrise.addingTimeInterval(-DewDiary.earlyAnswer) }
     }
 
     func judge(settingsAt: (Date) -> Settings) -> DiaryJudgement? {

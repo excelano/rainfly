@@ -44,7 +44,7 @@ struct DiaryScreen: View {
             }
             Section {
                 if recorder.diary.nights.isEmpty {
-                    Text("Tonight's forecast goes in when Rainfly fetches it. Tomorrow after sunrise, the main screen asks what you found.")
+                    Text("Tonight's forecast goes in when Rainfly fetches it. From two hours before tomorrow's sunrise, the main screen asks what you found.")
                         .foregroundStyle(.secondary)
                 }
                 ForEach(recorder.diary.nights.reversed(), id: \.id) { night in
