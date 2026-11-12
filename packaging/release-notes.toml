@@ -2,10 +2,12 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "1.3.6"
+version = "1.3.7"
 
 [locales."en-us"]
 whats-new = """
+Tonight's night on the trip list now follows the night the way the main screen does: after 22:00 it looks only at the hours still ahead, and after sunrise it says whether the tent packs dry.
+
 Overnight, Rainfly now looks only at the hours still ahead. A forecast revised for an hour that has already passed no longer shows as new since 22:00, no longer sends the overnight alert, and no longer changes the morning's account of how the forecast moved. The overnight answer also stays on while the rainfly is still wet from rain, dew or frost earlier in the night, and says what wet it.
 
 Drying times now follow how much water the air can still take up, along with sun and wind, so a cold morning dries later than a warm one with the same gap to the dew point, and an overcast morning later than a clear one.
