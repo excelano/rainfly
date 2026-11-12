@@ -2,13 +2,11 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "1.3.4"
+version = "1.3.5"
 
 [locales."en-us"]
 whats-new = """
-When rain was forecast, the dew diary now asks whether it rained before asking about dew, so a rainy night is no longer saved as a dry one. Each night keeps the settings that were in force when Rainfly made its call at 22:00, so applying a suggested dew-point gap no longer changes what Rainfly said on earlier nights, and the overnight screen quotes the chance of rain from 22:00 rather than the latest one.
+If you are up before the sun, the dew diary now asks what you found from two hours before sunrise, right on the overnight screen, and the morning reminder no longer comes once you have answered.
 
-The morning screen counts rain that has fallen since sunrise, and recalls last night's call only when a forecast was fetched before the night was over. Choosing a camp to show tonight also changes tonight on the trip, so the two never name different camps.
-
-On the iPhone, the symbols of the checks that fired now show in full, and on the watch a wet night that dries before you pack up shows a grey tent, as it does on the iPhone. The overnight pressure trend shows only when its readings are recent, and several labels are clearer: the evening caption names your pack-up time, and the reminder's description matches when it comes.
+The red night screen now covers the top of the screen too, so the camp and settings buttons and the camp's name turn red with the rest on the iPhone and the watch. The diary's answer buttons and the watch's tent are also bright enough to read under the red.
 """
