@@ -60,7 +60,6 @@ struct VerdictScreen: View {
             }
         }
         .refreshable { await model.refresh() }
-        .overnightStyle(isOvernight: model.window?.phase(at: AppClock.now) == .overnight, red: model.preferences.redTint)
         .navigationTitle(CampLocation.title(model.campName))
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {

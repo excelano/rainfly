@@ -26,6 +26,7 @@ struct RootView: View {
                 }
                 #endif
         }
+        .overnightStyle(isOvernight: model.window?.phase(at: AppClock.now) == .overnight, red: model.preferences.redTint)
         .task(id: scenePhase) {
             switch scenePhase {
             case .active:

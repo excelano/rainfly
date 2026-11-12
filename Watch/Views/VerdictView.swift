@@ -18,7 +18,6 @@ struct VerdictView: View {
                     VerdictContent(lines: lines(text, at: now), text: text, now: now)
                 }
                 .buttonStyle(.plain)
-                .overnightStyle(isOvernight: model.window?.phase(at: now) == .overnight, red: model.preferences.redTint)
             } else if model.isRefreshing {
                 ProgressView("Checking the sky")
             } else {
@@ -33,6 +32,7 @@ struct VerdictView: View {
                     Image(systemName: "tent")
                 }
                 .accessibilityLabel("Camps")
+                .tint(nil)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink {
@@ -41,6 +41,7 @@ struct VerdictView: View {
                     Image(systemName: "gearshape")
                 }
                 .accessibilityLabel("Settings")
+                .tint(nil)
             }
         }
     }
@@ -106,7 +107,7 @@ private struct VerdictContent: View {
             VStack(spacing: 4) {
                 TentGlyph(flyOn: lines.flyOn)
                     .frame(height: 52)
-                    .foregroundStyle(lines.flyOn && !lines.muted ? Color.accentColor : .secondary)
+                    .foregroundStyle(lines.flyOn && !lines.muted ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
                 Text(lines.caption.uppercased())
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
