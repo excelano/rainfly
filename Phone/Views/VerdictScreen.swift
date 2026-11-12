@@ -97,7 +97,7 @@ struct VerdictScreen: View {
     }
 
     /// The device's time, or the one a Debug demo sets.
-    private static func now(_ date: Date) -> Date {
+    static func now(_ date: Date) -> Date {
         #if DEBUG
         Demo.now ?? date
         #else

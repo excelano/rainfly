@@ -285,6 +285,13 @@ final class ForecastModel {
         return cache.night(at: tripNight.campName, on: tripNight.date)
     }
 
+    func cachedFetches(_ tripNight: TripNight) -> NightFetches? {
+        _ = cacheRevision
+        guard var fetches = cache.fetches(at: tripNight.campName, on: tripNight.date) else { return nil }
+        fetches.decidedSettings = fetches.decided.map { settings(at: NightWindow.decidedAt($0)) }
+        return fetches
+    }
+
     var sharedState: SyncedState {
         SyncedState(camps: camps, settings: settings, units: preferences.units, changedAt: store.changedAt ?? [:])
     }

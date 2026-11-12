@@ -93,14 +93,14 @@ private struct TripSection: View {
     var body: some View {
         Section {
             ForEach(model.camps.trip, id: \.self) { night in
-                if let cached = model.cachedNight(night) {
+                if let fetches = model.cachedFetches(night) {
                     NavigationLink {
-                        TripNightScreen(night: night, forecast: cached)
+                        TripNightScreen(night: night, fetches: fetches)
                     } label: {
-                        TripRow(night: night, forecast: cached)
+                        TripRow(night: night, fetches: fetches)
                     }
                 } else {
-                    TripRow(night: night, forecast: nil)
+                    TripRow(night: night, fetches: nil)
                 }
             }
             .onDelete { offsets in
@@ -139,37 +139,45 @@ private struct TripSection: View {
 private struct TripRow: View {
     @Environment(ForecastModel.self) private var model
     let night: TripNight
-    let forecast: NightForecast?
+    let fetches: NightFetches?
 
     var body: some View {
-        HStack(spacing: 12) {
-            if let text {
-                TentGlyph(flyOn: text.verdict.flyOn)
-                    .frame(width: 32, height: 32)
-                    .foregroundStyle(text.verdict.flyOn ? Color.accentColor : .secondary)
-            } else {
-                Image(systemName: "arrow.down.circle")
-                    .font(.title2)
-                    .frame(width: 32, height: 32)
-                    .foregroundStyle(.secondary)
+        TimelineView(.everyMinute) { context in
+            let now = VerdictScreen.now(context.date)
+            let words = words(at: now)
+            HStack(spacing: 12) {
+                if let words {
+                    TentGlyph(flyOn: words.flyOn)
+                        .frame(width: 32, height: 32)
+                        .foregroundStyle(words.flyOn ? Color.accentColor : .secondary)
+                } else {
+                    Image(systemName: "arrow.down.circle")
+                        .font(.title2)
+                        .frame(width: 32, height: 32)
+                        .foregroundStyle(.secondary)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(TripNightScreen.title(night, tonight: model.nightDate(at: now)))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    Text(night.campName)
+                    Text(words.map { "\($0.headline) · \($0.detail)" } ?? "Not downloaded")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
             }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(TripNightScreen.title(night, tonight: model.nightDate()))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                Text(night.campName)
-                Text(text.map { "\($0.headline) · \($0.reason)" } ?? "Not downloaded")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
+            .accessibilityElement(children: .combine)
         }
-        .accessibilityElement(children: .combine)
     }
 
-    private var text: VerdictText? {
-        forecast.map {
-            VerdictText(night: $0, verdict: FlyEngine.evaluate($0, settings: model.settings), settings: model.settings, units: model.preferences.units)
+    private func words(at now: Date) -> (flyOn: Bool, headline: String, detail: String)? {
+        guard let fetches else { return nil }
+        let text = TripNightScreen.text(fetches.latest, model: model)
+        guard night.date == model.nightDate(at: now), text.window.phase(at: now) != .evening else {
+            return (text.verdict.flyOn, text.headline, text.reason)
         }
+        let face = ComplicationFace(text, at: now, fetches: fetches)
+        return (face.flyOn ?? text.verdict.flyOn, face.headline, face.detail)
     }
 }
 
@@ -177,22 +185,51 @@ private struct TripRow: View {
 private struct TripNightScreen: View {
     @Environment(ForecastModel.self) private var model
     let night: TripNight
-    let forecast: NightForecast
+    let fetches: NightFetches
 
     var body: some View {
         TimelineView(.everyMinute) { context in
-            NightView(
-                text: VerdictText(
-                    night: forecast, verdict: FlyEngine.evaluate(forecast, settings: model.settings),
-                    settings: model.settings, units: model.preferences.units
-                ),
-                now: context.date,
-                attribution: model.attribution,
-                period: night.date == model.nightDate() ? nil : Self.title(night, tonight: model.nightDate())
-            )
+            let now = VerdictScreen.now(context.date)
+            let text = Self.text(fetches.latest, model: model)
+            let tonight = model.nightDate(at: now)
+            if night.date == tonight {
+                let decided = fetches.decided ?? fetches.latest
+                let decidedSettings = fetches.decidedSettings ?? model.settings
+                let shown = night.campName == model.campName
+                switch text.window.phase(at: now) {
+                case .evening:
+                    NightView(text: text, now: now, attribution: model.attribution)
+                case .overnight:
+                    let current = shown ? model.current : nil
+                    OvernightView(
+                        overnight: OvernightText(
+                            text: text, decided: decided, decidedSettings: decidedSettings, now: now, current: current
+                        ),
+                        current: current, pressure: nil, now: now, attribution: model.attribution
+                    ) { EmptyView() }
+                case .morning:
+                    MorningView(
+                        morning: MorningText(
+                            decided: decided, beforeMorning: fetches.beforeMorning, latest: fetches.latest,
+                            settings: model.settings, decidedSettings: decidedSettings, units: model.preferences.units,
+                            alerted: shown && model.wasAlerted
+                        ),
+                        now: now, attribution: model.attribution
+                    ) { EmptyView() }
+                }
+            } else {
+                NightView(text: text, now: now, attribution: model.attribution, period: Self.title(night, tonight: tonight))
+            }
         }
         .navigationTitle(night.campName)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    static func text(_ forecast: NightForecast, model: ForecastModel) -> VerdictText {
+        VerdictText(
+            night: forecast, verdict: FlyEngine.evaluate(forecast, settings: model.settings),
+            settings: model.settings, units: model.preferences.units
+        )
     }
 
     static func title(_ night: TripNight, tonight: NightDate) -> String {
