@@ -210,15 +210,27 @@ struct FlyEngineTests {
         #expect(verdict.dryBy == F.at(1, 9))
     }
 
-    @Test func breezeDriesUnderCloud() {
+    @Test func cloudAndALightBreezeDrySlower() {
         let verdict = evaluate(F.dewyNight { F.hour($0, temp: 15, dewPoint: 5, cloud: 0.9, wind: 2) })
-        #expect(verdict.dryBy == F.at(1, 6, 45))
+        #expect(verdict.dryBy == F.at(1, 9))
     }
 
-    @Test func frostAddsHalfAnHour() {
+    @Test func frostTakesLongerThanDew() {
         let verdict = evaluate(F.dewyNight(temp: -1) { F.hour($0, temp: 8, dewPoint: -2) })
         #expect(verdict.firing(.frost) != nil)
-        #expect(verdict.dryBy == F.at(1, 7, 15))
+        #expect(verdict.dryBy == F.at(1, 8, 15))
+    }
+
+    @Test func aColdMorningDriesSlowerThanAWarmOneAtTheSameGap() {
+        let cold = evaluate(F.dewyNight(temp: 4) { F.hour($0, temp: 5, dewPoint: -5) }).dryBy!
+        let warm = evaluate(F.dewyNight { F.hour($0, temp: 25, dewPoint: 15) }).dryBy!
+        #expect(warm < cold)
+    }
+
+    @Test func dryingTakesTheVapourPressureDeficit() {
+        #expect(abs(DryByModel.vapourPressureDeficit(tempC: 25, dewPointC: 20) - 8.3) < 0.1)
+        #expect(abs(DryByModel.vapourPressureDeficit(tempC: 5, dewPointC: 0) - 2.6) < 0.1)
+        #expect(DryByModel.vapourPressureDeficit(tempC: 5, dewPointC: 6) == 0)
     }
 
     @Test func persistentFogNeverDries() {

@@ -206,11 +206,11 @@ struct OvernightTextTests {
 
     @Test func aWetRainflyStaysOnUntilItHasDried() {
         let rainAt23 = { (wind: Double) in F.night { d in F.hour(d, wind: wind, amount: d == F.at(0, 23) ? 1 : 0) } }
-        let breezy = fetched(rainAt23(4), at: F.at(0, 21))
-        let wet = overnight(decided: breezy, latest: breezy, at: F.at(1, 0, 30))
+        let breezy = fetched(rainAt23(8), at: F.at(0, 21))
+        let wet = overnight(decided: breezy, latest: breezy, at: F.at(1, 2, 30))
         #expect(wet.headline == "Rainfly on")
         #expect(plain(wet.reason) == "The rainfly is wet from rain at 11 PM")
-        let dried = overnight(decided: breezy, latest: breezy, at: F.at(1, 2, 30))
+        let dried = overnight(decided: breezy, latest: breezy, at: F.at(1, 4, 30))
         #expect(dried.headline == "Rainfly off")
         #expect(dried.reason == "Nothing more expected tonight")
         let still = fetched(rainAt23(1), at: F.at(0, 21))

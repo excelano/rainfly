@@ -4,39 +4,53 @@
 
 import Foundation
 
-/// A heuristic for when a tent wet with dew or frost is dry enough to pack: the fly starts
-/// drying in the first hour after sunrise with a wide spread and either sun or a breeze.
 struct DryByModel: Codable, Equatable, Sendable {
-    var minSpreadC = 5.0
-    var maxCloudCover = 0.7
-    var minWindMS = 2.0
-    var dryingTime: TimeInterval = 60 * 60
-    var frostExtra: TimeInterval = 30 * 60
+    var dewToDry = 46.0
+    var frostToDry = 69.0
+    var rainToDry = 92.0
+    var windGain = 0.25
+    var sunGain = 2.0
     /// The local hour after which the estimate gives up.
     var cutoffHour = 12
-    var nightDryingTime: TimeInterval = 2 * 60 * 60
 
     func dryBy(_ night: NightForecast, frost: Bool, calendar: Calendar) -> Date? {
         guard let cutoff = calendar.date(bySettingHour: cutoffHour, minute: 0, second: 0, of: night.sunrise) else {
             return nil
         }
-        let drying = night.hours
-            .sorted { $0.date < $1.date }
-            .first { hour in
-                hour.date.addingTimeInterval(3600) > night.sunrise
-                    && hour.date < cutoff
-                    && dries(hour)
+        let sunlit = night.polar != .polarNight
+        var left = frost ? frostToDry : dewToDry
+        for hour in night.hours.sorted(by: { $0.date < $1.date })
+        where hour.date.addingTimeInterval(3600) > night.sunrise && hour.date < cutoff {
+            let start = max(hour.date, night.sunrise)
+            let hours = min(hour.date.addingTimeInterval(3600), cutoff).timeIntervalSince(start) / 3600
+            let rate = dryingRate(hour, sunlit: sunlit)
+            if rate * hours >= left {
+                let dry = start.addingTimeInterval(left / rate * 3600)
+                return Date(timeIntervalSinceReferenceDate: (dry.timeIntervalSinceReferenceDate / 900).rounded(.up) * 900)
             }
-        guard let drying else { return nil }
-        let start = max(drying.date, night.sunrise)
-        return start.addingTimeInterval(dryingTime + (frost ? frostExtra : 0))
+            left -= rate * hours
+        }
+        return nil
     }
 
-    private func dries(_ hour: HourSample) -> Bool {
-        hour.spreadC >= minSpreadC && (hour.cloudCover < maxCloudCover || hour.windMS >= minWindMS)
+    func toDry(_ cause: Trigger) -> Double {
+        switch cause {
+        case .frost: frostToDry
+        case .dew: dewToDry
+        default: rainToDry
+        }
     }
 
-    func driesAtNight(_ hour: HourSample) -> Bool {
-        hour.spreadC >= minSpreadC && hour.windMS >= minWindMS
+    func dryingRate(_ hour: HourSample, sunlit: Bool) -> Double {
+        let sun = sunlit ? 1 + sunGain * (1 - hour.cloudCover) : 1
+        return Self.vapourPressureDeficit(tempC: hour.tempC, dewPointC: hour.dewPointC) * (1 + windGain * hour.windMS) * sun
+    }
+
+    static func vapourPressureDeficit(tempC: Double, dewPointC: Double) -> Double {
+        max(0, saturationPressure(tempC) - saturationPressure(dewPointC))
+    }
+
+    private static func saturationPressure(_ tempC: Double) -> Double {
+        6.112 * exp(17.62 * tempC / (243.12 + tempC))
     }
 }

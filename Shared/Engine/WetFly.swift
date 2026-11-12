@@ -12,7 +12,7 @@ struct WetFly: Equatable, Sendable {
         dryByModel: DryByModel = DryByModel()
     ) -> WetFly? {
         var wet: WetFly?
-        var drying: TimeInterval = 0
+        var drying = 0.0
         func wetted(by cause: Trigger, at date: Date) {
             if wet.map({ cause.priority < $0.cause.priority }) ?? true { wet = WetFly(cause: cause, since: date) }
             drying = 0
@@ -24,11 +24,9 @@ struct WetFly: Equatable, Sendable {
             if let cause = cause(rained: hour.precipAmountMM > 0, spreadC: hour.spreadC, cloudCover: hour.cloudCover,
                                  windMS: hour.windMS, tempC: hour.tempC, settings: settings) {
                 wetted(by: cause, at: hour.date)
-            } else if wet != nil, dryByModel.driesAtNight(hour) {
-                drying += 3600
-                if drying >= dryByModel.nightDryingTime { wet = nil }
-            } else {
-                drying = 0
+            } else if let current = wet {
+                drying += dryByModel.dryingRate(hour, sunlit: false)
+                if drying >= dryByModel.toDry(current.cause) { wet = nil }
             }
         }
         if let current, current.date <= now,
