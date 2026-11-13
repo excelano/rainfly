@@ -58,10 +58,8 @@ enum FlyEngine {
             bagWarning = BagWarning(lowC: low, ratingC: rating)
         }
 
-        let frost = earliest[.frost] != nil
-        let wet = frost || earliest[.dew] != nil
-        let dryBy = wet ? dryByModel.dryBy(night, frost: frost, calendar: window.calendar) : nil
+        let wet = WetFly.packing(night, packBy: window.packBy, settings: settings, dryByModel: dryByModel)
 
-        return Verdict(flyOn: flyOn, firings: firings, ventAdvice: ventAdvice, bagWarning: bagWarning, dryBy: dryBy)
+        return Verdict(flyOn: flyOn, firings: firings, ventAdvice: ventAdvice, bagWarning: bagWarning, wet: wet)
     }
 }

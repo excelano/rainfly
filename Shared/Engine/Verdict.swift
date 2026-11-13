@@ -35,11 +35,15 @@ struct Verdict: Codable, Equatable, Sendable {
     let firings: [Firing]
     let ventAdvice: Bool
     let bagWarning: BagWarning?
-    let dryBy: Date?
+    let wet: WetFly?
+
+    var dryBy: Date? { wet?.dryBy }
 
     var headline: Firing? { firings.first }
 
     func firing(_ trigger: Trigger) -> Firing? {
         firings.first { $0.trigger == trigger }
     }
+
+    var condensation: Firing? { firing(.frost) ?? firing(.dew) }
 }

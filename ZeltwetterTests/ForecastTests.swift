@@ -149,9 +149,9 @@ struct VerdictTextTests {
         settings.bagRatingC = 15
         let words = text(F.dewyNight { F.hour($0, temp: 15, dewPoint: 5) }, settings)
         #expect(plain(words.reason) == "Dew likely by 8 PM")
-        #expect(words.notes(at: F.at(0, 21)).map(plain) == ["Open the vents: it's a damp, still night", "Wear layers: it gets colder than your sleeping bag is rated for", "Dry around 6:45 AM tomorrow"])
-        #expect(words.notes(at: F.at(1, 2)).last.map(plain) == "Dry around 6:45 AM this morning")
-        #expect(words.notes(at: F.at(-1, 21)).last.map(plain) == "Dry around 6:45 AM on Thursday")
+        #expect(words.notes(at: F.at(0, 21)).map(plain) == ["Open the vents: it's a damp, still night", "Wear layers: it gets colder than your sleeping bag is rated for", "Dry around 6:30 AM tomorrow"])
+        #expect(words.notes(at: F.at(1, 2)).last.map(plain) == "Dry around 6:30 AM this morning")
+        #expect(words.notes(at: F.at(-1, 21)).last.map(plain) == "Dry around 6:30 AM on Thursday")
     }
 
     @Test func notesForDewThatStaysWet() {

@@ -78,6 +78,29 @@ struct MorningTextTests {
         let nearly = F.night { F.hour($0, temp: 12, dewPoint: 8, wind: 1) }
         let words = morning(decided: fetched(nearly, at: F.at(0, 21)), latest: fetched(nearly, at: F.at(1, 8)), settings: wider)
         #expect(plain(words.lastNightTitle) == "At 10 PM, Rainfly said off")
+        #expect(words.headline == "Dry night")
+    }
+
+    @Test func dewTheCallMissedIsNamedUnderLastNight() {
+        let dewFrom3 = F.night { d in
+            d < F.at(1, 3) ? F.hour(d) : F.hour(d, temp: 10, dewPoint: 9.5, cloud: d < F.at(1, 5) ? 0.1 : 1, wind: d < F.at(1, 5) ? 1 : 0)
+        }
+        let words = morning(decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(dewFrom3, at: F.at(1, 7, 30)))
+        #expect(words.headline == "Packing wet")
+        #expect(plain(words.lastNightDetail) == "It expected a clear, dry night. Apple Weather now shows dew from 3 AM.")
+    }
+
+    @Test func dewThatDriesOvernightReadsTheSameOvernightAndInTheMorning() {
+        let early = F.night { d in d < F.at(0, 23) ? F.hour(d, temp: 12, dewPoint: 10, wind: 1) : F.hour(d, cloud: 0.9) }
+        let night = fetched(early, at: F.at(0, 21))
+        let overnight = OvernightText(
+            text: VerdictText(night: night, verdict: FlyEngine.evaluate(night, settings: Settings()), settings: Settings(), units: metric, locale: english),
+            decided: night, decidedSettings: Settings(), now: F.at(1, 3)
+        )
+        #expect(overnight.headline == "Rainfly off")
+        let words = morning(decided: night, latest: night)
+        #expect(words.headline == "Dry to pack")
+        #expect(plain(words.reason) == "The dew from 8 PM dried around 2 AM")
     }
 
     @Test func rainAfterSunriseWetsTheTentOnceItHasFallen() {
@@ -135,7 +158,7 @@ struct MorningTextTests {
         let dries = F.dewyNight { F.hour($0, temp: 15, dewPoint: 5) }
         let dryToPack = morning(decided: dries, latest: dries)
         #expect(dryToPack.headline == "Dry to pack")
-        #expect(plain(dryToPack.reason) == "It should be dry around 6:45 AM, before you pack up at 8 AM")
+        #expect(plain(dryToPack.reason) == "It should be dry around 6:30 AM, before you pack up at 8 AM")
         #expect(dryToPack.advice == nil)
 
         let staysWet = F.dewyNight { F.hour($0, temp: 10, dewPoint: 9.5, cloud: 1, wind: 0) }

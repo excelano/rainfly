@@ -200,7 +200,7 @@ struct FlyEngineTests {
     @Test func dewDriesAnHourAfterASunnyDrySunrise() {
         let verdict = evaluate(F.dewyNight { F.hour($0, temp: 15, dewPoint: 5) })
         #expect(verdict.firing(.dew) != nil)
-        #expect(verdict.dryBy == F.at(1, 6, 45))
+        #expect(verdict.dryBy == F.at(1, 6, 30))
     }
 
     @Test func dewWaitsForTheFirstDryingHour() {
@@ -212,13 +212,13 @@ struct FlyEngineTests {
 
     @Test func cloudAndALightBreezeDrySlower() {
         let verdict = evaluate(F.dewyNight { F.hour($0, temp: 15, dewPoint: 5, cloud: 0.9, wind: 2) })
-        #expect(verdict.dryBy == F.at(1, 9))
+        #expect(verdict.dryBy == F.at(1, 8, 15))
     }
 
     @Test func frostTakesLongerThanDew() {
         let verdict = evaluate(F.dewyNight(temp: -1) { F.hour($0, temp: 8, dewPoint: -2) })
         #expect(verdict.firing(.frost) != nil)
-        #expect(verdict.dryBy == F.at(1, 8, 15))
+        #expect(verdict.dryBy == F.at(1, 7, 45))
     }
 
     @Test func aColdMorningDriesSlowerThanAWarmOneAtTheSameGap() {
@@ -250,6 +250,13 @@ struct FlyEngineTests {
         let verdict = evaluate(F.night { F.hour($0, chance: 0.5) })
         #expect(verdict.flyOn)
         #expect(verdict.dryBy == nil)
+    }
+
+    @Test func rainThatFallsDriesLikeDew() {
+        let verdict = evaluate(F.night { F.hour($0, amount: $0 == F.at(1, 2) ? 1 : 0) })
+        #expect(verdict.wet?.cause == .rain)
+        #expect(verdict.wet?.since == F.at(1, 2))
+        #expect(verdict.dryBy != nil)
     }
 
     @Test func thresholdSettingsChangeTheOutcome() {

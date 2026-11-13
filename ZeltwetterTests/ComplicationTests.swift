@@ -53,7 +53,7 @@ struct ComplicationTimelineTests {
 
         let morning = timeline.first { $0.date == F.sunrise }!.face
         let text = VerdictText(night: F.night(), verdict: FlyEngine.evaluate(F.night(), settings: Settings()), settings: Settings(), units: .locale)
-        let dryBy = text.compactClock(F.at(1, 6, 45))
+        let dryBy = text.compactClock(F.at(1, 6, 30))
         #expect(morning.headline == "Dry to pack")
         #expect(morning.dryTime == dryBy)
         #expect(morning.inline == "Dry to pack · dry \(dryBy)")

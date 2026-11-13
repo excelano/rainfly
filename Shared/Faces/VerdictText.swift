@@ -97,8 +97,8 @@ struct VerdictText {
     }
 
     func dryNote(at now: Date) -> String? {
-        if let dryBy = verdict.dryBy { return "Dry around \(clock(dryBy)) \(day(of: dryBy, from: now))" }
-        guard verdict.firing(.dew) != nil || verdict.firing(.frost) != nil else { return nil }
+        guard let wet = verdict.wet else { return nil }
+        if let dryBy = wet.dryBy { return "Dry around \(clock(dryBy)) \(day(of: dryBy, from: now))" }
         return "Won't dry before noon \(day(of: night.sunrise, from: now))"
     }
 
