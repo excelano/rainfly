@@ -138,6 +138,10 @@ final class ForecastModel {
         return date.flatMap { cache.beforeMorning(at: campName, on: $0) }
     }
 
+    var fetches: NightFetches? {
+        night.map { NightFetches(latest: $0, decided: decided, decidedSettings: decidedSettings, beforeMorning: beforeMorning) }
+    }
+
     /// Whether the overnight alert went out for the shown night.
     var wasAlerted: Bool {
         date.map { store.alertedNight == OvernightAlert.key(campName, $0) } ?? false

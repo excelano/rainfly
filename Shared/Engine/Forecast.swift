@@ -52,6 +52,10 @@ struct HourSample: Codable, Equatable, Sendable {
     let isThunderstorm: Bool
 
     var spreadC: Double { tempC - dewPointC }
+
+    func rains(chance: Double) -> Bool {
+        precipChance >= chance || precipAmountMM > 0
+    }
 }
 
 /// The share of the sky covered at each height, each 0...1. Low cloud holds the night's
@@ -71,4 +75,6 @@ struct NightForecast: Codable, Equatable, Sendable {
     let hours: [HourSample]
     /// Set where the sun stays up or stays down, when sunset and sunrise are 9 PM and 6 AM.
     var polar: PolarSky? = nil
+
+    var fetchedBeforeSunrise: Bool { fetchedAt < sunrise }
 }

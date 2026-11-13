@@ -36,10 +36,7 @@ struct OvernightText {
     var headline: String { flyOn ? "Rainfly on" : "Rainfly off" }
 
     private var decidedText: VerdictText {
-        VerdictText(
-            night: decided, verdict: FlyEngine.evaluate(decided, settings: decidedSettings),
-            settings: decidedSettings, units: text.units, locale: text.locale
-        )
+        VerdictText(night: decided, settings: decidedSettings, units: text.units, locale: text.locale)
     }
 
     private var decidedVerdict: Verdict { decidedText.verdict }
@@ -54,7 +51,7 @@ struct OvernightText {
     var hasChanged: Bool { added != nil || dropped != nil }
 
     var change: String? {
-        if let added { return "New since \(decidedAt): \(Self.lowered(ahead.describe(added)))" }
+        if let added { return "New since \(decidedAt): \(VerdictText.lowered(ahead.describe(added)))" }
         if let dropped, wet == nil {
             return "No longer expected since \(decidedAt): \(VerdictText.name(dropped.trigger).lowercased())"
         }
@@ -84,7 +81,7 @@ struct OvernightText {
         guard decided.fetchedAt != text.night.fetchedAt else { return nil }
         guard hasChanged else { return "Same as the \(decidedAt) forecast" }
         let said = "At \(decidedAt), Rainfly said \(decidedVerdict.flyOn ? "on" : "off")"
-        return decidedVerdict.headline.map { "\(said): \(Self.lowered(decidedText.describe($0)))" } ?? said
+        return decidedVerdict.headline.map { "\(said): \(VerdictText.lowered(decidedText.describe($0)))" } ?? said
     }
 
     func notes(at now: Date) -> [String] {
@@ -92,7 +89,7 @@ struct OvernightText {
     }
 
     var inline: String {
-        if let added { return "New: \(Self.lowered(ahead.brief(added)))" }
+        if let added { return "New: \(VerdictText.lowered(ahead.brief(added)))" }
         if let next = ahead.verdict.headline { return "Rainfly on · \(ahead.brief(next))" }
         return wet == nil ? headline : "Rainfly on · wet"
     }
@@ -107,9 +104,7 @@ struct OvernightText {
 
     /// The hour's label in the row of hours: "03".
     func hourLabel(_ hour: HourSample) -> String {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = text.night.location.timeZone
-        let value = calendar.component(.hour, from: hour.date)
+        let value = NightWindow.localCalendar(for: text.night.location).component(.hour, from: hour.date)
         switch text.locale.hourCycle {
         case .oneToTwelve, .zeroToEleven: return "\(value % 12 == 0 ? 12 : value % 12)\(value < 12 ? "a" : "p")"
         default: return String(format: "%02d", value)
@@ -124,11 +119,11 @@ struct OvernightText {
         guard current.spreadC <= settings.dewSpreadC else {
             return ("Dry right now", "The air is \(gap) from its dew point.")
         }
-        let cloudy = current.cloudCover >= settings.clearSky, windy = current.windMS >= settings.calmWindMS
-        if !cloudy && !windy {
+        if FlyEngine.condenses(spreadC: current.spreadC, cloudCover: current.cloudCover, windMS: current.windMS, settings: settings) {
             let wet = FlyEngine.isFrostAir(current.tempC) ? "Frost" : "Dew"
             return ("\(wet) is forming", "The air is only \(gap) from its dew point, the sky is clear and there's almost no wind.")
         }
+        let cloudy = current.cloudCover >= settings.clearSky, windy = current.windMS >= settings.calmWindMS
         let blocker = cloudy && windy ? "clouds and wind keep" : cloudy ? "clouds keep" : "wind keeps"
         return ("Damp, but no dew yet", "The air is \(gap) from its dew point, but the \(blocker) the tent from cooling down.")
     }
@@ -142,9 +137,5 @@ struct OvernightText {
         case .rising: "Rising"
         }
         return "\(moving) over the last \(trend.hours == 1 ? "hour" : "\(trend.hours) hours")"
-    }
-
-    private static func lowered(_ string: String) -> String {
-        string.prefix(1).lowercased() + string.dropFirst()
     }
 }

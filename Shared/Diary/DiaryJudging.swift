@@ -11,7 +11,7 @@ enum DiaryJudging {
     /// the night after it was over.
     static func judge(_ pitched: NightForecast, history: NightForecast?, found kind: DewObservation.Kind?, settings: Settings) -> DiaryJudgement {
         let verdict = FlyEngine.evaluate(pitched, settings: settings)
-        let firing = verdict.firing(.frost) ?? verdict.firing(.dew)
+        let firing = verdict.condensation
         let predicted = firing != nil
         var judgement = DiaryJudgement(
             predicted: predicted, firing: firing, rain: verdict.firings.first { $0.trigger.isRain },
@@ -31,8 +31,7 @@ enum DiaryJudging {
     }
 
     static func predictsMoisture(_ night: NightForecast, settings: Settings) -> Bool {
-        let verdict = FlyEngine.evaluate(night, settings: settings)
-        return verdict.firing(.dew) != nil || verdict.firing(.frost) != nil
+        FlyEngine.evaluate(night, settings: settings).condensation != nil
     }
 }
 

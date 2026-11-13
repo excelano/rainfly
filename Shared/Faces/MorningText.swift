@@ -20,16 +20,13 @@ struct MorningText {
     var locale = Locale.current
 
     private var text: VerdictText {
-        VerdictText(night: latest, verdict: FlyEngine.evaluate(latest, settings: settings), settings: settings, units: units, locale: locale)
+        VerdictText(night: latest, settings: settings, units: units, locale: locale)
     }
 
     private var window: NightWindow { NightWindow(latest, packByMinutes: settings.packByMinutes) }
 
     private var decidedText: VerdictText {
-        VerdictText(
-            night: decided, verdict: FlyEngine.evaluate(decided, settings: decidedSettings),
-            settings: decidedSettings, units: units, locale: locale
-        )
+        VerdictText(night: decided, settings: decidedSettings, units: units, locale: locale)
     }
 
     private var decidedVerdict: Verdict { decidedText.verdict }
@@ -90,7 +87,7 @@ struct MorningText {
     }
 
     private func rains(_ hour: HourSample) -> Bool {
-        hour.precipChance >= settings.morningRainChance || hour.precipAmountMM > 0
+        hour.rains(chance: settings.morningRainChance)
     }
 
     private var spells: [WetFly] {
@@ -107,7 +104,7 @@ struct MorningText {
     }
 
     var madeACall: Bool {
-        decided.fetchedAt < decided.sunrise
+        decided.fetchedBeforeSunrise
     }
 
     /// "At 22:00, Rainfly said on".

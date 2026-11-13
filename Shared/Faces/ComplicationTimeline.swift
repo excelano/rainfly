@@ -37,6 +37,17 @@ struct NightFetches: Equatable, Sendable {
     var decided: NightForecast?
     var decidedSettings: Settings?
     var beforeMorning: NightForecast?
+
+    func overnight(_ text: VerdictText, now: Date, current: CurrentConditions? = nil) -> OvernightText {
+        OvernightText(text: text, decided: decided ?? latest, decidedSettings: decidedSettings ?? text.settings, now: now, current: current)
+    }
+
+    func morning(_ text: VerdictText, alerted: Bool = false) -> MorningText {
+        MorningText(
+            decided: decided ?? latest, beforeMorning: beforeMorning, latest: latest, settings: text.settings,
+            decidedSettings: decidedSettings ?? text.settings, units: text.units, alerted: alerted, locale: text.locale
+        )
+    }
 }
 
 extension ComplicationFace {
@@ -44,22 +55,18 @@ extension ComplicationFace {
     /// evening, what has changed since 22:00 overnight, and packing up in the morning.
     init(_ text: VerdictText, at date: Date, fetches: NightFetches? = nil) {
         let night = text.night
-        switch NightWindow(night, packByMinutes: text.settings.packByMinutes).phase(at: date) {
+        let fetches = fetches ?? NightFetches(latest: night)
+        switch text.window.phase(at: date) {
         case .evening:
             self.init(evening: text, at: date)
         case .overnight:
-            let overnight = OvernightText(
-                text: text, decided: fetches?.decided ?? night, decidedSettings: fetches?.decidedSettings ?? text.settings, now: date
-            )
+            let overnight = fetches.overnight(text, now: date)
             self.init(
                 flyOn: overnight.flyOn, headline: overnight.headline, detail: overnight.reason, inline: overnight.inline,
                 dryTime: nil, fetchedAt: night.fetchedAt, camp: night.location.title, notes: overnight.notes(at: date)
             )
         case .morning:
-            let morning = MorningText(
-                decided: fetches?.decided ?? night, beforeMorning: fetches?.beforeMorning, latest: night,
-                settings: text.settings, decidedSettings: fetches?.decidedSettings ?? text.settings, units: text.units, locale: text.locale
-            )
+            let morning = fetches.morning(text)
             let dryTime = morning.dryBy.map(text.compactClock)
             self.init(
                 flyOn: morning.packing != .dryNight, headline: morning.headline, detail: morning.reason,
@@ -99,8 +106,8 @@ enum ComplicationTimeline {
         guard let fetches = nightAt(now) else { return [(now, .noForecast)] }
         let night = fetches.latest
         let window = NightWindow(night, packByMinutes: settings.packByMinutes)
-        let verdict = FlyEngine.evaluate(night, settings: settings)
-        let text = VerdictText(night: night, verdict: verdict, settings: settings, units: units)
+        let text = VerdictText(night: night, settings: settings, units: units)
+        let verdict = text.verdict
 
         var marks = [now, night.sunset, window.anchor, night.sunrise, NightReview.recordReady(night)] + verdict.firings.map(\.at)
         var hour = Calendar.current.dateInterval(of: .hour, for: now)?.end ?? window.handover
@@ -115,11 +122,7 @@ enum ComplicationTimeline {
             }
 
         let nextFace = nightAt(window.handover).map { next in
-            let nextVerdict = FlyEngine.evaluate(next.latest, settings: settings)
-            return ComplicationFace(
-                VerdictText(night: next.latest, verdict: nextVerdict, settings: settings, units: units),
-                at: window.handover, fetches: next
-            )
+            ComplicationFace(VerdictText(night: next.latest, settings: settings, units: units), at: window.handover, fetches: next)
         }
         entries.append((window.handover, nextFace ?? .noForecast))
         return entries

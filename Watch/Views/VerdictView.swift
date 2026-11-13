@@ -60,27 +60,22 @@ struct VerdictLines {
 
 extension VerdictView {
     private func lines(_ text: VerdictText, at now: Date) -> VerdictLines {
-        let night = text.night
-        switch NightWindow(night, packByMinutes: text.settings.packByMinutes).phase(at: now) {
+        let fetches = model.fetches ?? NightFetches(latest: text.night)
+        switch text.window.phase(at: now) {
         case .evening:
             return VerdictLines(
                 flyOn: text.verdict.flyOn, caption: text.periodLabel(at: now), headline: text.headline, reason: text.reason,
                 warning: text.beforeTonightText(at: now), notes: text.notes(at: now)
             )
         case .overnight:
-            let overnight = OvernightText(
-                text: text, decided: model.decided ?? night, decidedSettings: model.decidedSettings, now: now, current: model.current
-            )
+            let overnight = fetches.overnight(text, now: now, current: model.current)
             let current = model.current.map { overnight.now($0).title }
             return VerdictLines(
                 flyOn: overnight.flyOn, caption: overnight.caption, headline: overnight.headline, reason: overnight.reason,
                 notes: [overnight.note, current.map { "Right now: \($0.lowercased())" }].compactMap { $0 }
             )
         case .morning:
-            let morning = MorningText(
-                decided: model.decided ?? night, beforeMorning: model.beforeMorning, latest: night,
-                settings: text.settings, decidedSettings: model.decidedSettings, units: text.units, alerted: model.wasAlerted
-            )
+            let morning = fetches.morning(text, alerted: model.wasAlerted)
             return VerdictLines(
                 flyOn: morning.packing != .dryNight, caption: morning.caption, headline: morning.headline, reason: morning.reason,
                 warning: morning.rainAhead(at: now), notes: [morning.advice, morning.madeACall ? morning.lastNightTitle : nil].compactMap { $0 },

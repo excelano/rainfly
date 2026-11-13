@@ -121,7 +121,7 @@ private struct UpcomingNightView: View {
         Group {
             if let night {
                 NightView(
-                    text: VerdictText(night: night, verdict: FlyEngine.evaluate(night, settings: model.settings), settings: model.settings, units: model.preferences.units),
+                    text: VerdictText(night: night, settings: model.settings, units: model.preferences.units),
                     now: AppClock.now, attribution: model.attribution, period: "Tonight"
                 )
             } else if isLoading {

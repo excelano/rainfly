@@ -163,7 +163,7 @@ struct DiaryNight: Codable, Equatable {
     /// The forecast that decided the fly: the last one fetched by 22:00, or else the first;
     /// nil when the first came after sunrise, too late to decide anything.
     var pitched: NightForecast? {
-        NightWindow.decided(forecasts).flatMap { $0.fetchedAt < $0.sunrise ? $0 : nil }
+        NightWindow.decided(forecasts).flatMap { $0.fetchedBeforeSunrise ? $0 : nil }
     }
 
     var decidedAt: Date? {
@@ -230,11 +230,9 @@ extension DewDiary {
     }
 
     private static func wetness(_ night: NightForecast, settings: Settings) -> (kind: String, at: String, spread: String) {
-        let verdict = FlyEngine.evaluate(night, settings: settings)
-        let firing = verdict.firing(.frost) ?? verdict.firing(.dew)
+        let firing = FlyEngine.evaluate(night, settings: settings).condensation
         let spread = NightWindow(night, packByMinutes: settings.packByMinutes).closestSpread
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = night.location.timeZone
+        let calendar = NightWindow.localCalendar(for: night.location)
         let time = { (date: Date) in
             let parts = calendar.dateComponents([.hour, .minute], from: date)
             return String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)

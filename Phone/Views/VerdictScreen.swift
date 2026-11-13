@@ -13,8 +13,8 @@ struct VerdictScreen: View {
     var body: some View {
         TimelineView(.everyMinute) { context in
             let now = Self.now(context.date)
-            if let night = model.night, let verdict = model.verdict, let window = model.window {
-                let text = VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units)
+            if let fetches = model.fetches, let verdict = model.verdict, let window = model.window {
+                let text = VerdictText(night: fetches.latest, verdict: verdict, settings: model.settings, units: model.preferences.units)
                 switch window.phase(at: now) {
                 case .evening:
                     NightView(text: text, now: now, attribution: model.attribution, problem: model.problem) {
@@ -25,10 +25,7 @@ struct VerdictScreen: View {
                     }
                 case .overnight:
                     OvernightView(
-                        overnight: OvernightText(
-                            text: text, decided: model.decided ?? night, decidedSettings: model.decidedSettings,
-                            now: now, current: model.current
-                        ),
+                        overnight: fetches.overnight(text, now: now, current: model.current),
                         current: model.current, pressure: pressure(at: now), now: now,
                         attribution: model.attribution, problem: model.problem
                     ) {
@@ -40,11 +37,7 @@ struct VerdictScreen: View {
                     }
                 case .morning:
                     MorningView(
-                        morning: MorningText(
-                            decided: model.decided ?? night, beforeMorning: model.beforeMorning, latest: night,
-                            settings: model.settings, decidedSettings: model.decidedSettings, units: model.preferences.units,
-                            alerted: model.wasAlerted
-                        ),
+                        morning: fetches.morning(text, alerted: model.wasAlerted),
                         now: now, attribution: model.attribution, problem: model.problem
                     ) {
                         if model.preferences.dewDiary, let recorder, let date = model.date,

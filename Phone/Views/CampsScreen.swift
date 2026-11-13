@@ -193,8 +193,6 @@ private struct TripNightScreen: View {
             let text = Self.text(fetches.latest, model: model)
             let tonight = model.nightDate(at: now)
             if night.date == tonight {
-                let decided = fetches.decided ?? fetches.latest
-                let decidedSettings = fetches.decidedSettings ?? model.settings
                 let shown = night.campName == model.campName
                 switch text.window.phase(at: now) {
                 case .evening:
@@ -202,18 +200,12 @@ private struct TripNightScreen: View {
                 case .overnight:
                     let current = shown ? model.current : nil
                     OvernightView(
-                        overnight: OvernightText(
-                            text: text, decided: decided, decidedSettings: decidedSettings, now: now, current: current
-                        ),
+                        overnight: fetches.overnight(text, now: now, current: current),
                         current: current, pressure: nil, now: now, attribution: model.attribution
                     ) { EmptyView() }
                 case .morning:
                     MorningView(
-                        morning: MorningText(
-                            decided: decided, beforeMorning: fetches.beforeMorning, latest: fetches.latest,
-                            settings: model.settings, decidedSettings: decidedSettings, units: model.preferences.units,
-                            alerted: shown && model.wasAlerted
-                        ),
+                        morning: fetches.morning(text, alerted: shown && model.wasAlerted),
                         now: now, attribution: model.attribution
                     ) { EmptyView() }
                 }
@@ -226,10 +218,7 @@ private struct TripNightScreen: View {
     }
 
     static func text(_ forecast: NightForecast, model: ForecastModel) -> VerdictText {
-        VerdictText(
-            night: forecast, verdict: FlyEngine.evaluate(forecast, settings: model.settings),
-            settings: model.settings, units: model.preferences.units
-        )
+        VerdictText(night: forecast, settings: model.settings, units: model.preferences.units)
     }
 
     static func title(_ night: TripNight, tonight: NightDate) -> String {

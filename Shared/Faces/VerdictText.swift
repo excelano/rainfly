@@ -15,6 +15,8 @@ struct VerdictText {
 
     var window: NightWindow { NightWindow(night, packByMinutes: settings.packByMinutes, from: from) }
 
+    private var calendar: Calendar { NightWindow.localCalendar(for: night.location) }
+
     func ahead(of now: Date) -> VerdictText {
         VerdictText(
             night: night, verdict: FlyEngine.evaluate(night, settings: settings, from: now),
@@ -47,7 +49,7 @@ struct VerdictText {
             .sorted { $0.date < $1.date }
             .first { hour in
                 hour.date.addingTimeInterval(3600) > now && hour.date < night.sunset
-                    && (hour.isThunderstorm || hour.precipChance >= settings.rainChance || hour.precipAmountMM > 0)
+                    && (hour.isThunderstorm || hour.rains(chance: settings.rainChance))
             }
     }
 
@@ -105,8 +107,6 @@ struct VerdictText {
     /// The morning `date` falls on, seen from `now` at the camp: "this morning", "tomorrow" or
     /// "on Wednesday".
     func day(of date: Date, from now: Date) -> String {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = night.location.timeZone
         let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: calendar.startOfDay(for: date)).day ?? 0
         switch days {
         case ...0: return "this morning"
@@ -321,8 +321,6 @@ struct VerdictText {
     /// locale keeps a 24-hour clock. The format style's own omitted-AM/PM hour pads to
     /// two digits even on a 12-hour clock.
     func compactClock(_ date: Date) -> String {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = night.location.timeZone
         let parts = calendar.dateComponents([.hour, .minute], from: date)
         let hour = parts.hour ?? 0, minute = String(format: "%02d", parts.minute ?? 0)
         switch locale.hourCycle {
@@ -393,5 +391,15 @@ struct VerdictText {
     static func staleness(since fetchedAt: Date, at now: Date) -> Staleness {
         let hours = now.timeIntervalSince(fetchedAt) / 3600
         return hours > 24 ? .stale : hours > 12 ? .aging : .fresh
+    }
+}
+
+extension VerdictText {
+    init(night: NightForecast, settings: Settings, units: DisplayUnits, locale: Locale = .current) {
+        self.init(night: night, verdict: FlyEngine.evaluate(night, settings: settings), settings: settings, units: units, locale: locale)
+    }
+
+    static func lowered(_ string: String) -> String {
+        string.prefix(1).lowercased() + string.dropFirst()
     }
 }

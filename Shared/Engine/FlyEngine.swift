@@ -31,16 +31,13 @@ enum FlyEngine {
         }
 
         let s = settings
-        func rains(_ hour: HourSample, chance: Double) -> Bool {
-            hour.precipChance >= chance || hour.precipAmountMM > 0
-        }
         func condenses(_ hour: HourSample) -> Bool {
             Self.condenses(spreadC: hour.spreadC, cloudCover: hour.cloudCover, windMS: hour.windMS, settings: s)
         }
 
         record(.storm, in: nightHours + morningHours) { $0.isThunderstorm }
-        record(.rain, in: nightHours) { rains($0, chance: s.rainChance) }
-        record(.morningRain, in: morningHours) { rains($0, chance: s.morningRainChance) }
+        record(.rain, in: nightHours) { $0.rains(chance: s.rainChance) }
+        record(.morningRain, in: morningHours) { $0.rains(chance: s.morningRainChance) }
         record(.windRain, in: nightHours) { max($0.windMS, $0.gustMS ?? 0) > s.windRainMS && $0.precipChance >= s.windRainChance }
         record(.dew, in: nightHours) { condenses($0) && !isFrostAir($0.tempC) }
         record(.frost, in: nightHours) { condenses($0) && isFrostAir($0.tempC) }
