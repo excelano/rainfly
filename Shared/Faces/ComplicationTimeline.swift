@@ -37,12 +37,14 @@ struct NightFetches: Equatable, Sendable {
     var decided: NightForecast?
     var decidedSettings: Settings?
     var beforeMorning: NightForecast?
+    /// What the dew diary found the morning after.
+    var found: DewObservation?
 
     func overnight(_ text: VerdictText, now: Date, current: CurrentConditions? = nil) -> OvernightText {
         OvernightText(text: text, decided: decided ?? latest, decidedSettings: decidedSettings ?? text.settings, now: now, current: current)
     }
 
-    func morning(_ text: VerdictText, alerted: Bool = false, found: DewObservation? = nil) -> MorningText {
+    func morning(_ text: VerdictText, alerted: Bool = false) -> MorningText {
         MorningText(
             decided: decided ?? latest, beforeMorning: beforeMorning, latest: latest, settings: text.settings,
             decidedSettings: decidedSettings ?? text.settings, units: text.units, alerted: alerted, found: found,

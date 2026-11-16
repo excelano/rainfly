@@ -221,12 +221,28 @@ func temporaryCamps() -> Store<Camps> {
 }
 
 func temporaryCache() -> ForecastCache {
-    let url = FileManager.default.temporaryDirectory.appending(path: "zeltwetter-\(UUID().uuidString).json")
-    return ForecastCache(store: Store(url: url))
+    let name = "zeltwetter-\(UUID().uuidString)"
+    let directory = FileManager.default.temporaryDirectory
+    return ForecastCache(store: Store(url: directory.appending(path: "\(name).json")), foundStore: Store(url: directory.appending(path: "\(name)-found.json")))
 }
 
 struct ForecastCacheTests {
     private let july1 = NightDate(year: 2026, month: 7, day: 1)
+
+    @Test func aDiaryAnswerReachesTheNightsFetches() {
+        let cache = temporaryCache()
+        cache.save(F.night(), now: F.at(0, 18))
+        let dry = DewObservation(kind: .dry, openSky: true, at: F.at(1, 6))
+        cache.save(found: [FoundNight(campName: F.camp.name, date: july1, observation: dry)], now: F.at(1, 6))
+        #expect(cache.fetches(at: F.camp.name, on: july1)?.found == dry)
+
+        let wet = DewObservation(kind: .wet, openSky: true, at: F.at(1, 7))
+        cache.save(found: [FoundNight(campName: F.camp.name, date: july1, observation: wet)], now: F.at(1, 7))
+        #expect(cache.allFound.map(\.observation) == [wet])
+
+        cache.save(found: [], now: F.at(3, 8))
+        #expect(cache.allFound.isEmpty)
+    }
 
     @Test func savesAndFindsTheNightByCampAndEvening() {
         let cache = temporaryCache()

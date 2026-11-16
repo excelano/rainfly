@@ -29,11 +29,16 @@ final class DiaryRecorder {
         self.store = store
         diary = store.load() ?? DewDiary()
         model.anyNightFetched = { [weak self] night in self?.record(night) }
+        model.keep(found: diary.nights.compactMap { night in
+            night.observation.map { FoundNight(campName: night.campName, date: night.date, observation: $0) }
+        })
     }
 
     func observe(_ kind: DewObservation.Kind, openSky: Bool, night: DiaryNight) {
-        diary.observe(DewObservation(kind: kind, openSky: openSky, at: .now), campName: night.campName, on: night.date)
+        let observation = DewObservation(kind: kind, openSky: openSky, at: .now)
+        diary.observe(observation, campName: night.campName, on: night.date)
         save()
+        model.keep(found: [FoundNight(campName: night.campName, date: night.date, observation: observation)])
         DiaryReminder.cancel()
         Task { await share() }
     }

@@ -139,7 +139,28 @@ final class ForecastModel {
     }
 
     var fetches: NightFetches? {
-        night.map { NightFetches(latest: $0, decided: decided, decidedSettings: decidedSettings, beforeMorning: beforeMorning) }
+        night.map {
+            NightFetches(
+                latest: $0, decided: decided, decidedSettings: decidedSettings, beforeMorning: beforeMorning,
+                found: date.flatMap { cache.found(at: campName, on: $0) }
+            )
+        }
+    }
+
+    /// The dew diary's answers on this device, which the phone sends to the watch.
+    var found: [FoundNight] {
+        _ = cacheRevision
+        return cache.allFound
+    }
+
+    /// Keeps diary answers, recorded here or sent by the phone, for every screen's morning.
+    func keep(found: [FoundNight]) {
+        let kept = cache.allFound
+        guard found.contains(where: { ForecastCache.isRecent($0) && !kept.contains($0) }) else { return }
+        cache.save(found: found)
+        cacheRevision += 1
+        WidgetCenter.shared.reloadAllTimelines()
+        sharedStateChanged?()
     }
 
     /// Whether the overnight alert went out for the shown night.

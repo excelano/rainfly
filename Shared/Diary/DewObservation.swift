@@ -5,9 +5,9 @@
 import Foundation
 
 /// What was found in the morning on something left under the sky.
-struct DewObservation: Codable, Equatable {
+struct DewObservation: Codable, Equatable, Sendable {
     /// Light dew is spots or edges; wet is damp all over or beaded, enough to pack a wet fly.
-    enum Kind: String, Codable, CaseIterable {
+    enum Kind: String, Codable, CaseIterable, Sendable {
         case dry, lightDew, wet, frost, rain, notChecked
 
         /// Whether the night counts as wet, dry, or neither when it is judged.
@@ -26,3 +26,9 @@ struct DewObservation: Codable, Equatable {
     let at: Date
 }
 
+/// A diary answer as the other screens read it: which camp and night it was given for.
+struct FoundNight: Codable, Equatable, Sendable {
+    let campName: String
+    let date: NightDate
+    let observation: DewObservation
+}

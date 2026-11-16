@@ -6,12 +6,16 @@ import Foundation
 
 /// Fetched nights kept on the device, so a verdict holds in the backcountry. For each camp and
 /// evening it keeps the latest fetch, the one the night is judged against and the last before
-/// sunrise; a night is dropped a day after its sunrise.
+/// sunrise; a night is dropped a day after its sunrise. Beside them it keeps the dew diary's
+/// answers, which the phone records and sends to the watch, so every screen's morning goes by
+/// what was found.
 struct ForecastCache {
     let store: Store<[NightForecast]>
+    let foundStore: Store<[FoundNight]>
 
-    init(store: Store<[NightForecast]> = Store(name: "forecasts")) {
+    init(store: Store<[NightForecast]> = Store(name: "forecasts"), foundStore: Store<[FoundNight]> = Store(name: "found")) {
         self.store = store
+        self.foundStore = foundStore
     }
 
     /// The night at `campName` that begins on the evening of `date`.
@@ -32,8 +36,32 @@ struct ForecastCache {
     func fetches(at campName: String, on date: NightDate) -> NightFetches? {
         let all = all(at: campName, on: date)
         return all.max { $0.fetchedAt < $1.fetchedAt }.map {
-            NightFetches(latest: $0, decided: NightWindow.decided(all), beforeMorning: NightWindow.beforeMorning(all))
+            NightFetches(
+                latest: $0, decided: NightWindow.decided(all), beforeMorning: NightWindow.beforeMorning(all),
+                found: found(at: campName, on: date)
+            )
         }
+    }
+
+    /// What the dew diary found the morning after the night at `campName` on `date`.
+    func found(at campName: String, on date: NightDate) -> DewObservation? {
+        allFound.first { $0.campName == campName && $0.date == date }?.observation
+    }
+
+    var allFound: [FoundNight] {
+        foundStore.load() ?? []
+    }
+
+    /// Keeps the answers given, replacing one for the same night, and drops those more than
+    /// two days old.
+    func save(found: [FoundNight], now: Date = .now) {
+        let replaced = { (old: FoundNight) in found.contains { $0.campName == old.campName && $0.date == old.date } }
+        foundStore.save((allFound.filter { !replaced($0) } + found).filter { Self.isRecent($0, now: now) })
+    }
+
+    /// Whether an answer still belongs to a morning that can be on screen.
+    static func isRecent(_ found: FoundNight, now: Date = .now) -> Bool {
+        now.timeIntervalSince(found.observation.at) < 2 * 86_400
     }
 
     private func all(at campName: String, on date: NightDate) -> [NightForecast] {

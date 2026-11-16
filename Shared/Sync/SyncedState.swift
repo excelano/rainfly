@@ -21,6 +21,8 @@ struct SyncMessage: Codable, Equatable, Sendable {
     /// The sender's own overnight alert toggle, for the same reason; nil from a version
     /// without the alert.
     var overnightAlert: Bool? = nil
+    /// The phone's dew diary answers; nil from the watch and from a version without them.
+    var found: [FoundNight]? = nil
 }
 
 /// The choices sync makes, kept apart from WatchConnectivity so they can be tested.
