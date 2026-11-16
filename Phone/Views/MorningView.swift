@@ -85,7 +85,7 @@ struct MorningView<Diary: View>: View {
             if let review = morning.review {
                 ForEach(review.checks, id: \.trigger) { check in
                     HStack(alignment: .top, spacing: 10) {
-                        CheckIcon(trigger: check.trigger, expected: check.happened != nil)
+                        CheckIcon(trigger: check.trigger, expected: check.occurred)
                         VStack(alignment: .leading, spacing: 2) {
                             HStack(spacing: 6) {
                                 Text(VerdictText.name(check.trigger))

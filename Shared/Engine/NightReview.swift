@@ -39,7 +39,11 @@ struct NightReview: Sendable {
         let trigger: Trigger
         let expected: Firing?
         let happened: Firing?
-        var isRight: Bool { (expected != nil) == (happened != nil) }
+        /// Whether the diary found moisture, which judges the dew or frost check in place of
+        /// the record.
+        var found: Bool?
+        var occurred: Bool { found ?? (happened != nil) }
+        var isRight: Bool { (expected != nil) == occurred }
     }
 
     let decided: NightForecast
@@ -47,15 +51,33 @@ struct NightReview: Sendable {
     let checks: [Check]
 
     /// The checks either side fired, and rain always, since it is the one most people ask about.
-    init(decided: NightForecast, record: NightForecast, settings: Settings) {
+    /// A diary answer of dry, wet or frost makes dew and frost one check, as the diary judges
+    /// them: under what Rainfly expected, else what was found, else what the record shows.
+    init(decided: NightForecast, record: NightForecast, found: DewObservation.Kind? = nil, settings: Settings) {
         self.decided = decided
         self.record = record
         let expected = FlyEngine.evaluate(decided, settings: settings)
+        let moisture = found.flatMap { kind in
+            kind.foundMoisture.map { found in
+                let seen: Trigger? = switch kind {
+                case .frost: .frost
+                case .wet: .dew
+                default: nil
+                }
+                let shows = FlyEngine.evaluate(record, settings: settings).condensation?.trigger
+                return (found: found, trigger: expected.condensation?.trigger ?? seen ?? shows)
+            }
+        }
         checks = Trigger.allCases.compactMap { trigger in
-            let check = Check(
+            var check = Check(
                 trigger: trigger, expected: expected.firing(trigger),
                 happened: Self.happened(trigger, in: record, settings: settings)
             )
+            if let moisture, trigger == .dew || trigger == .frost {
+                guard trigger == moisture.trigger else { return nil }
+                check.found = moisture.found
+                return check
+            }
             return check.expected != nil || check.happened != nil || trigger == .rain ? check : nil
         }
     }

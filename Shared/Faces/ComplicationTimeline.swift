@@ -42,10 +42,11 @@ struct NightFetches: Equatable, Sendable {
         OvernightText(text: text, decided: decided ?? latest, decidedSettings: decidedSettings ?? text.settings, now: now, current: current)
     }
 
-    func morning(_ text: VerdictText, alerted: Bool = false) -> MorningText {
+    func morning(_ text: VerdictText, alerted: Bool = false, found: DewObservation? = nil) -> MorningText {
         MorningText(
             decided: decided ?? latest, beforeMorning: beforeMorning, latest: latest, settings: text.settings,
-            decidedSettings: decidedSettings ?? text.settings, units: text.units, alerted: alerted, locale: text.locale
+            decidedSettings: decidedSettings ?? text.settings, units: text.units, alerted: alerted, found: found,
+            locale: text.locale
         )
     }
 }

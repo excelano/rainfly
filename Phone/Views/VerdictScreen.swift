@@ -36,12 +36,14 @@ struct VerdictScreen: View {
                         }
                     }
                 case .morning:
+                    let diaryNight = model.preferences.dewDiary
+                        ? model.date.flatMap { recorder?.diary.night(campName: model.campName, on: $0) }
+                        : nil
                     MorningView(
-                        morning: fetches.morning(text, alerted: model.wasAlerted),
+                        morning: fetches.morning(text, alerted: model.wasAlerted, found: diaryNight?.observation),
                         now: now, attribution: model.attribution, problem: model.problem
                     ) {
-                        if model.preferences.dewDiary, let recorder, let date = model.date,
-                           let diaryNight = recorder.diary.night(campName: model.campName, on: date) {
+                        if let recorder, let diaryNight {
                             MorningDiarySection(recorder: recorder, night: diaryNight)
                         }
                     }

@@ -5,7 +5,8 @@
 import Foundation
 
 /// The words for the morning after a night: whether the tent packs dry, what Rainfly said at
-/// 22:00, and how that forecast did against Apple Weather's record of the night.
+/// 22:00, and how that forecast did against Apple Weather's record of the night, or against
+/// what the dew diary found once it has an answer.
 struct MorningText {
     /// The forecast the night is judged against, fixed at 22:00.
     let decided: NightForecast
@@ -17,6 +18,7 @@ struct MorningText {
     let decidedSettings: Settings
     let units: DisplayUnits
     var alerted = false
+    var found: DewObservation?
     var locale = Locale.current
 
     private var text: VerdictText {
@@ -91,6 +93,10 @@ struct MorningText {
     }
 
     private var spells: [WetFly] {
+        WetFly.morning(latest, known: latest.fetchedAt, found: found, settings: decidedSettings)
+    }
+
+    private var recordSpells: [WetFly] {
         WetFly.morning(latest, known: latest.fetchedAt, settings: decidedSettings)
     }
 
@@ -137,15 +143,45 @@ struct MorningText {
         return "\(by) on\(because)\(alerted ? ", and Rainfly sent you an alert" : "")."
     }
 
+    /// What the record or the diary shows that the call didn't expect.
     private var nowShows: String? {
         let expectedWet = decidedVerdict.condensation != nil || decidedVerdict.firing(.rain) != nil
         let from = NightWindow.decidedAt(decided)
-        let spell = spells.first { $0.since.addingTimeInterval(3600) > from && $0.since < window.packBy }
-        if !expectedWet, let spell {
-            return "Apple Weather now shows \(Self.cause(spell.cause)) from \(text.clock(spell.since))."
+        let spell = recordSpells.first { $0.since.addingTimeInterval(3600) > from && $0.since < window.packBy }
+        let shows: (words: String, wet: Bool)? = if !expectedWet, let spell {
+            ("Apple Weather now shows \(Self.cause(spell.cause)) from \(text.clock(spell.since))", true)
+        } else if decidedVerdict.condensation != nil, !recordSpells.contains(where: { $0.since < window.packBy }) {
+            ("Apple Weather now shows no dew or frost", false)
+        } else {
+            nil
         }
-        if decidedVerdict.condensation != nil, wet == nil { return "Apple Weather now shows no dew or frost." }
-        return nil
+        let foundWet = found.flatMap(Self.foundWet)
+        guard let shows else {
+            return foundWet.flatMap { $0 == expectedWet ? nil : "You found \(foundWords)." }
+        }
+        guard let foundWet, foundWet != shows.wet else { return "\(shows.words)." }
+        return "\(shows.words), but you found \(foundWords)."
+    }
+
+    /// Whether the fly was wet when the diary was answered; nil when it wasn't checked.
+    private static func foundWet(_ observation: DewObservation) -> Bool? {
+        switch observation.kind {
+        case .dry: false
+        case .lightDew, .wet, .frost, .rain: true
+        case .notChecked: nil
+        }
+    }
+
+    /// "it dry", "light dew".
+    private var foundWords: String {
+        switch found?.kind {
+        case .dry?: "it dry"
+        case .lightDew?: "light dew"
+        case .wet?: "it wet"
+        case .frost?: "frost"
+        case .rain?: "rain on it"
+        case .notChecked?, nil: "nothing"
+        }
     }
 
     /// "Was the 22:00 forecast right?"
@@ -153,7 +189,7 @@ struct MorningText {
 
     /// Nil until WeatherKit's record of the night is in.
     var review: NightReview? {
-        NightReview.isRecord(latest) ? NightReview(decided: decided, record: latest, settings: decidedSettings) : nil
+        NightReview.isRecord(latest) ? NightReview(decided: decided, record: latest, found: found?.kind, settings: decidedSettings) : nil
     }
 
     /// Shown in place of the checks while the record is not in yet.
@@ -173,11 +209,12 @@ struct MorningText {
             } else {
                 happened = "\(record) \(missed(check.trigger, in: latest))"
             }
-            guard !check.isRight else { return "\(happened)." }
+            let seen = check.found == nil ? "\(happened)." : "You found \(foundWords). \(happened)."
+            guard !check.isRight else { return seen }
             if let expected = check.expected {
-                return "Rainfly expected \(wet) from \(text.clock(expected.at)). \(happened)."
+                return "Rainfly expected \(wet) from \(text.clock(expected.at)). \(seen)"
             }
-            return "At \(decidedAt) Rainfly expected \(expectedMiss(check.trigger)), so no \(wet). \(happened)."
+            return "At \(decidedAt) Rainfly expected \(expectedMiss(check.trigger)), so no \(wet). \(seen)"
         case .rain, .morningRain:
             let hours = check.trigger == .rain ? \NightWindow.nightHours : \NightWindow.morningHours
             let chance = { (night: NightForecast) in

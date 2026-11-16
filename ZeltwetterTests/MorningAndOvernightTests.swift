@@ -64,12 +64,47 @@ struct NightReviewTests {
 struct MorningTextTests {
     private func morning(
         decided: NightForecast, beforeMorning: NightForecast? = nil, latest: NightForecast, alerted: Bool = false,
-        settings: Settings = Settings(), decidedSettings: Settings = Settings()
+        found: DewObservation? = nil, settings: Settings = Settings(), decidedSettings: Settings = Settings()
     ) -> MorningText {
         MorningText(
             decided: decided, beforeMorning: beforeMorning, latest: latest, settings: settings, decidedSettings: decidedSettings,
-            units: metric, alerted: alerted, locale: english
+            units: metric, alerted: alerted, found: found, locale: english
         )
+    }
+
+    @Test func aDryAnswerOverridesDewInTheRecord() {
+        let dewFrom1 = F.night { d in d < F.at(1, 1) ? F.hour(d) : F.hour(d, temp: 12, dewPoint: 10, wind: 1) }
+        let words = morning(
+            decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(dewFrom1, at: F.at(1, 8)),
+            found: DewObservation(kind: .dry, openSky: true, at: F.at(1, 6, 30))
+        )
+        #expect(words.headline == "Dry night")
+        #expect(plain(words.lastNightDetail) == "It expected a clear, dry night. Apple Weather now shows dew from 1 AM, but you found it dry.")
+        let checks = words.review!.checks.filter { $0.trigger == .dew || $0.trigger == .frost }
+        #expect(checks.count == 1)
+        #expect(checks[0].isRight)
+        #expect(plain(words.explain(checks[0])) == "You found it dry. Apple Weather's record shows the air got within 2.0° of its dew point at 1 AM, with a clear sky and little wind.")
+    }
+
+    @Test func aWetAnswerWetsADryRecord() {
+        let words = morning(
+            decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(F.night(), at: F.at(1, 8)),
+            found: DewObservation(kind: .wet, openSky: true, at: F.at(1, 6, 30))
+        )
+        #expect(words.packing != .dryNight)
+        #expect(plain(words.lastNightDetail) == "It expected a clear, dry night. You found it wet.")
+        let dew = words.review!.checks.first { $0.trigger == .dew }!
+        #expect(!dew.isRight)
+        #expect(plain(words.explain(dew)) == "At 10 PM Rainfly expected the air to stay too dry, so no dew. You found it wet. Apple Weather's record shows the air stayed at least 10.0° from its dew point.")
+    }
+
+    @Test func aDryAnswerLeavesLaterRainWet() {
+        let morningRain = F.night { d in F.hour(d, amount: d == F.at(1, 7) ? 0.5 : 0) }
+        let words = morning(
+            decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(morningRain, at: F.at(1, 7, 30)),
+            found: DewObservation(kind: .dry, openSky: true, at: F.at(1, 6, 30))
+        )
+        #expect(words.headline == "Packing wet")
     }
 
     @Test func lastNightIsTheCallMadeWithThatNightsSettings() {
