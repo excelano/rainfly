@@ -2,11 +2,9 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "1.3.9"
+version = "1.3.10"
 
 [locales."en-us"]
 whats-new = """
-Once you answer the dew diary, the morning goes by what you found. Before, a dry answer could sit under "Packing wet" and a dew check marked wrong, because those followed Apple Weather's record of the night. Now the packing call, Last night and the dew and frost check all follow your answer, and the record stays as context: "Apple Weather now shows dew from 1 AM, but you found it dry."
-
-Your answer also reaches the Apple Watch, its complication, the iPhone widgets and the trip's nights, so every screen tells the same morning.
+The red night screen now covers the top bar too. The camp and settings buttons and the camp's name had stayed white above the red, bright enough to undo what the red is for.
 """
