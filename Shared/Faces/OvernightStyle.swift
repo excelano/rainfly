@@ -12,6 +12,13 @@ extension View {
         let isRed = isOvernight && red
         return preferredColorScheme(isOvernight ? .dark : nil)
             .tint(isRed ? .white : nil)
-            .colorMultiply(isRed ? Color(red: 1, green: 0.3, blue: 0.25) : .white)
+            .overlay {
+                if isRed {
+                    Color(red: 1, green: 0.3, blue: 0.25)
+                        .blendMode(.multiply)
+                        .ignoresSafeArea()
+                        .allowsHitTesting(false)
+                }
+            }
     }
 }
