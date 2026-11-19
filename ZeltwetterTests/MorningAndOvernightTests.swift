@@ -28,7 +28,9 @@ struct NightRecordTests {
         #expect(!NightRecord.isSettled(fetched(dewy, at: F.at(1, 7))))
         #expect(NightRecord.isSettled(fetched(dewy, at: F.at(1, 8))))
     }
+}
 
+struct SpreadMissTests {
     @Test func spreadMissNamesWhatWasMissing() {
         let hours = { (night: NightForecast) in NightWindow(night, packByMinutes: 8 * 60).nightHours }
         #expect(SpreadMiss.of(.dew, hours: hours(cloudy), settings: Settings()) == .cloudy)
@@ -101,7 +103,7 @@ struct MorningTextTests {
         #expect(overnight.headline == "Rainfly off")
         let words = morning(decided: night, latest: night)
         #expect(words.headline == "Dry to pack")
-        #expect(words.reason == "The dew dried overnight")
+        #expect(words.reason == "The dew dried before sunrise")
     }
 
     @Test func rainAfterSunriseWetsTheTentOnceItHasFallen() {
@@ -132,6 +134,13 @@ struct MorningTextTests {
         #expect(MorningText.expected(Firing(trigger: .windRain, at: F.at(1, 1))) == "Rainfly expected rain")
         #expect(MorningText.expected(nil) == "Rainfly expected a dry night")
         #expect(MorningText.expected(nil, afterRain: true) == "Rainfly expected no dew or frost")
+    }
+
+    @Test func coldAloneIsACallForAColdNight() {
+        var cold = Settings()
+        cold.coldC = 20
+        let words = morning(decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(F.night(), at: F.at(1, 8)), decidedSettings: cold)
+        #expect(words.lastNight == "Rainfly expected a cold night")
     }
 
     @Test func packingComparesDryingWithPackingUp() {

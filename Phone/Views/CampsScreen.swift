@@ -204,10 +204,10 @@ private struct TripNightScreen: View {
                         current: current, pressure: nil, now: now, attribution: model.attribution
                     ) { EmptyView() }
                 case .morning:
-                    MorningView(
-                        morning: fetches.morning(text),
-                        now: now, attribution: model.attribution
-                    ) { EmptyView() }
+                    let morning = fetches.morning(text)
+                    MorningView(morning: morning, now: now, attribution: model.attribution) {
+                        LastNightSection(morning: morning)
+                    }
                 }
             } else {
                 NightView(text: text, now: now, attribution: model.attribution, period: Self.title(night, tonight: tonight))

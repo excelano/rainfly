@@ -181,8 +181,8 @@ private struct NightRow: View {
     private var forecast: String {
         guard let judgement else { return "No forecast kept" }
         let spread = judgement.closestSpread.map { ", closest gap \(Quantity.dewSpread(units).format(units.temperatureSpan($0)))" } ?? ""
-        let dew = judgement.firing.map { VerdictText.name($0.trigger).lowercased() }
-        let rain = judgement.rain.map { VerdictText.name($0.trigger).lowercased() }
+        let dew = judgement.firing.map { MorningText.expectation($0.trigger) }
+        let rain = judgement.rain.map { MorningText.expectation($0.trigger) }
         let call = switch (rain, dew) {
         case let (rain?, dew?): "\(rain), \(dew)"
         case let (rain?, nil): "\(rain), no dew"

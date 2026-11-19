@@ -36,13 +36,13 @@ struct VerdictScreen: View {
                         }
                     }
                 case .morning:
-                    MorningView(
-                        morning: fetches.morning(text),
-                        now: now, attribution: model.attribution, problem: model.problem
-                    ) {
+                    let morning = fetches.morning(text)
+                    MorningView(morning: morning, now: now, attribution: model.attribution, problem: model.problem) {
                         if model.preferences.dewDiary, let recorder, let date = model.date,
                            let diaryNight = recorder.diary.night(campName: model.campName, on: date) {
                             MorningDiarySection(recorder: recorder, night: diaryNight)
+                        } else {
+                            LastNightSection(morning: morning)
                         }
                     }
                 }

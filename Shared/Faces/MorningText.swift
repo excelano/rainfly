@@ -56,7 +56,7 @@ struct MorningText {
             return "It rained \(wet.since < latest.sunrise ? "last night" : "this morning"), so the rainfly is wet"
         }
         guard let dryBy = wet.dryBy else { return "It won't be dry before noon" }
-        if dryBy <= latest.sunrise { return "The \(VerdictText.name(wet.cause).lowercased()) dried overnight" }
+        if dryBy <= latest.sunrise { return "The \(VerdictText.name(wet.cause).lowercased()) dried before sunrise" }
         let at = "It should be dry around \(text.clock(dryBy))"
         if dryBy <= window.packBy { return "\(at), before you pack up at \(text.clock(window.packBy))" }
         return "\(at), \(Self.duration(dryBy.timeIntervalSince(window.packBy))) after you pack up"
@@ -96,16 +96,27 @@ struct MorningText {
         decided.fetchedBeforeSunrise
     }
 
-    /// "Rainfly expected dew".
+    /// "Rainfly expected dew", or a cold night when cold alone put the rainfly on.
     var lastNight: String {
-        Self.expected(decidedVerdict.rain ?? decidedVerdict.condensation)
+        Self.expected(decidedVerdict.rain ?? decidedVerdict.condensation ?? decidedVerdict.firing(.cold))
     }
 
     /// What Rainfly expected of a night, for the morning question. Nil is a dry night, or no dew
     /// or frost when rain was asked about first.
     static func expected(_ firing: Firing?, afterRain: Bool = false) -> String {
         guard let trigger = firing?.trigger else { return afterRain ? "Rainfly expected no dew or frost" : "Rainfly expected a dry night" }
-        return "Rainfly expected \(trigger == .storm ? "a storm" : trigger.isRain ? "rain" : VerdictText.name(trigger).lowercased())"
+        return "Rainfly expected \(expectation(trigger))"
+    }
+
+    /// What a trigger means for the tent: "a storm", "rain", "dew", "a cold night".
+    static func expectation(_ trigger: Trigger) -> String {
+        switch trigger {
+        case .storm: "a storm"
+        case .rain, .windRain, .morningRain: "rain"
+        case .frost: "frost"
+        case .dew: "dew"
+        case .cold: "a cold night"
+        }
     }
 
     /// "an hour and a half", rounded to the half hour.

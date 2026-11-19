@@ -72,6 +72,19 @@ struct MorningView<Diary: View>: View {
     }
 }
 
+/// What Rainfly expected last night, where the dew diary doesn't ask whether it was right.
+struct LastNightSection: View {
+    let morning: MorningText
+
+    var body: some View {
+        if morning.madeACall {
+            Section("Last night") {
+                Text(morning.lastNight)
+            }
+        }
+    }
+}
+
 /// Tonight's forecast before noon, fetched if it isn't on the device yet.
 private struct UpcomingNightView: View {
     @Environment(ForecastModel.self) private var model
