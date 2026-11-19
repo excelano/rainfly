@@ -101,12 +101,15 @@ enum Demo {
             let date = tonight.adding(days: -night.daysAgo)
             let forecast = Provider(scene: night.scene).makeNight(at: camp, evening: date.start(in: calendar), scene: night.scene)
             diary.record(forecast)
+            diary.setCall(NightCall(forecast, settings: Settings()))
             diary.observe(DewObservation(kind: night.found, openSky: night.openSky, at: forecast.sunrise), campName: camp.name, on: date)
         }
         if opens == "review" {
             let here = CampLocation(name: CampLocation.hereName, latitude: camp.latitude, longitude: camp.longitude, timeZoneID: camp.timeZoneID)
             let lastNight = NightDate(.now.addingTimeInterval(-86_400), calendar: calendar)
-            diary.record(Provider(scene: "dew").makeNight(at: here, evening: lastNight.start(in: calendar), scene: "dew"))
+            let forecast = Provider(scene: "dew").makeNight(at: here, evening: lastNight.start(in: calendar), scene: "dew")
+            diary.record(forecast)
+            diary.setCall(NightCall(forecast, settings: Settings()))
         }
         return diary
     }

@@ -13,9 +13,20 @@ struct NightCall: Codable, Equatable, Sendable {
 
     var anchor: Date { NightWindow.anchor(of: forecast) }
 
+    /// The call `forecast` makes with `settings`, whenever it was fetched.
+    init(_ forecast: NightForecast, settings: Settings) {
+        self.forecast = forecast
+        self.settings = settings
+        verdict = FlyEngine.overnight(forecast, settings: settings)
+    }
+
     /// Nil when the forecast was fetched at or after the anchor, too late to be advice before it.
     static func seal(_ forecast: NightForecast, settings: Settings) -> NightCall? {
-        guard forecast.fetchedAt < NightWindow.anchor(of: forecast) else { return nil }
-        return NightCall(forecast: forecast, settings: settings, verdict: FlyEngine.overnight(forecast, settings: settings))
+        forecast.fetchedAt < NightWindow.anchor(of: forecast) ? NightCall(forecast, settings: settings) : nil
+    }
+
+    /// The overnight period's closest dew-point gap in the call's forecast.
+    var closestSpread: Double? {
+        NightWindow(forecast, packByMinutes: settings.packByMinutes, from: anchor).closestSpread
     }
 }

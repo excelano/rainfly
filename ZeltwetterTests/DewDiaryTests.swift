@@ -16,10 +16,12 @@ private func night(_ camp: String, spread: Double, fetchedAt: Date = F.at(0, 18)
     return NightForecast(location: location, fetchedAt: fetchedAt, sunset: base.sunset, sunrise: base.sunrise, hours: base.hours)
 }
 
+/// Each night's call is sealed from its forecast, fetched before the anchor.
 private func diary(_ nights: [(NightForecast, DewObservation.Kind, openSky: Bool)]) -> DewDiary {
     var diary = DewDiary()
     for (forecast, kind, openSky) in nights {
         diary.record(forecast)
+        diary.setCall(NightCall.seal(forecast, settings: Settings())!)
         diary.observe(DewObservation(kind: kind, openSky: openSky, at: forecast.sunrise), campName: forecast.location.name, on: ForecastCache.date(of: forecast))
     }
     return diary
@@ -99,13 +101,35 @@ struct DewDiaryRecordingTests {
 }
 
 struct DewDiaryJudgingTests {
-    @Test func theForecastByTenIsTheOneJudged() {
+    @Test func theCallIsTheOneJudgedWhateverElseWasFetched() {
         var diary = DewDiary()
         diary.record(night("A", spread: 8, fetchedAt: F.at(0, 17)))
         diary.record(night("A", spread: 2, fetchedAt: F.at(0, 21, 30)))
         diary.record(night("A", spread: 8, fetchedAt: F.at(0, 23)))
-        #expect(diary.nights[0].pitched?.fetchedAt == F.at(0, 21, 30))
-        #expect(diary.nights[0].judge(settingsAt: { _ in Settings() })?.predicted == true)
+        #expect(diary.nights[0].judgement == nil)
+        diary.setCall(NightCall.seal(night("A", spread: 2, fetchedAt: F.at(0, 21, 30)), settings: Settings())!)
+        #expect(diary.nights[0].judgement?.predicted == true)
+        #expect(diary.nights[0].forecasts.count == 3)
+    }
+
+    @Test func aCallFromALaterForecastReplacesAnEarlierOne() {
+        var diary = DewDiary()
+        diary.record(night("A", spread: 8, fetchedAt: F.at(0, 17)))
+        let early = NightCall.seal(night("A", spread: 8, fetchedAt: F.at(0, 17)), settings: Settings())!
+        let late = NightCall.seal(night("A", spread: 2, fetchedAt: F.at(0, 21, 30)), settings: Settings())!
+        diary.setCall(late)
+        diary.setCall(early)
+        #expect(diary.nights[0].call == late)
+    }
+
+    @Test func aNightWithNoCallIsNotScored() {
+        var diary = DewDiary()
+        let late = night("A", spread: 2, fetchedAt: F.at(1, 0, 58))
+        diary.record(late)
+        diary.observe(DewObservation(kind: .wet, openSky: true, at: late.sunrise), campName: "A", on: diary.nights[0].date)
+        #expect(diary.nights[0].judgement == nil)
+        #expect(diary.tally == DiaryTally())
+        #expect(diary.openSkyCounts.wet == 0)
     }
 
     @Test func outcomesFollowWhatWasFound() {
@@ -119,7 +143,7 @@ struct DewDiaryJudgingTests {
             (night("light dry", spread: 8), .lightDew, true),
             (night("rain", spread: 2), .rain, true),
         ])
-        let outcome = { (camp: String) in diary.nights.first { $0.campName == camp }?.judge(settingsAt: { _ in Settings() })?.outcome }
+        let outcome = { (camp: String) in diary.nights.first { $0.campName == camp }?.judgement?.outcome }
         #expect(outcome("caught") == .caught)
         #expect(outcome("frost") == .caught)
         #expect(outcome("clear") == .clear)
@@ -127,26 +151,32 @@ struct DewDiaryJudgingTests {
         #expect(outcome("alarm") == .falseAlarm)
         #expect(outcome("light") == nil)
         #expect(outcome("rain") == nil)
-        #expect(diary.tally(settingsAt: { _ in Settings() }) == DiaryTally(caught: 2, clear: 1, missed: 1, falseAlarms: 1, lightDew: 2, lightDewFlagged: 1))
+        #expect(diary.tally == DiaryTally(caught: 2, clear: 1, missed: 1, falseAlarms: 1, lightDew: 2, lightDewFlagged: 1))
     }
 
     @Test func aRainForecastIsKeptBesideTheDewCall() {
-        var rainy = DewDiary()
-        rainy.record(F.night { F.hour($0, chance: 0.9) })
-        let judgement = rainy.nights[0].judge(settingsAt: { _ in Settings() })
+        let judgement = diary([(F.night { F.hour($0, chance: 0.9) }, .notChecked, true)]).nights[0].judgement
         #expect(judgement?.rain?.trigger == .rain)
         #expect(judgement?.predicted == false)
-        #expect(diary([(night("dew", spread: 2), .wet, true)]).nights[0].judge(settingsAt: { _ in Settings() })?.rain == nil)
+        #expect(diary([(night("dew", spread: 2), .wet, true)]).nights[0].judgement?.rain == nil)
     }
 
-    @Test func theHistoryTellsWhichSideMissed() {
-        let forecast = night("A", spread: 8)
-        var missed = diary([(forecast, .wet, true)])
-        #expect(missed.nights[0].judge(settingsAt: { _ in Settings() })?.cause == nil)
+    @Test func theHistoryPlaysNoPartInTheJudgement() {
+        var missed = diary([(night("A", spread: 8), .wet, true)])
+        let judged = missed.nights[0].judgement
         missed.setHistory(night("A", spread: 2), campName: "A", on: missed.nights[0].date)
-        #expect(missed.nights[0].judge(settingsAt: { _ in Settings() })?.cause == .forecast)
-        missed.setHistory(night("A", spread: 8), campName: "A", on: missed.nights[0].date)
-        #expect(missed.nights[0].judge(settingsAt: { _ in Settings() })?.cause == .settings)
+        #expect(missed.nights[0].judgement == judged)
+        #expect(judged?.outcome == .missed)
+    }
+
+    @Test func aCallIsJudgedByTheSettingsItWasSealedWith() {
+        var wide = Settings()
+        wide.dewSpreadC = 5
+        var diary = DewDiary()
+        let forecast = night("A", spread: 4)
+        diary.record(forecast)
+        diary.setCall(NightCall.seal(forecast, settings: wide)!)
+        #expect(diary.nights[0].judgement?.predicted == true)
     }
 }
 
@@ -201,7 +231,7 @@ struct DewDiaryReportTests {
     @Test func theReportComparesTheForecastWithTheHistory() {
         var diary = diary([(night("A", spread: 8), .wet, true)])
         diary.setHistory(night("A", spread: 2), campName: "A", on: diary.nights[0].date)
-        let rows = diary.report(settingsAt: { _ in Settings() }).split(separator: "\n").map { $0.split(separator: ",", omittingEmptySubsequences: false).map(String.init) }
+        let rows = diary.report.split(separator: "\n").map { $0.split(separator: ",", omittingEmptySubsequences: false).map(String.init) }
         #expect(rows.count == 2)
         let row = Dictionary(uniqueKeysWithValues: zip(rows[0], rows[1]))
         #expect(row["found"] == "wet")
@@ -221,26 +251,27 @@ struct SharedNightTests {
         let forecast = NightForecast(location: precise, fetchedAt: base.fetchedAt, sunset: base.sunset, sunrise: base.sunrise, hours: base.hours)
         var diary = DewDiary()
         diary.record(forecast)
+        diary.setCall(NightCall.seal(forecast, settings: Settings())!)
         diary.observe(DewObservation(kind: kind, openSky: true, at: at), campName: precise.name, on: diary.nights[0].date)
         return diary.nights[0]
     }
 
     @Test func aSharedNightIsRoundedAndCarriesNoName() throws {
-        let shared = try #require(SharedNight(answered(.wet), diaryID: id, settings: Settings(), appVersion: "1.0.1"))
+        let shared = try #require(SharedNight(answered(.wet), diaryID: id, appVersion: "1.0.1"))
         #expect(shared.latitude == 39.9)
         #expect(shared.longitude == -105.6)
         let payload = String(decoding: try SharedNight.encoder.encode(shared.forecast), as: UTF8.self)
         #expect(!payload.contains("Mom"))
         #expect(!payload.contains("39.93"))
         #expect(shared.recordName == "6f1a2b3c-0000-4000-8000-000000000001_2026-07-01_39.9_-105.6")
-        #expect(SharedNight(answered(.wet), diaryID: id, settings: Settings(), appVersion: "1.0.2")?.recordName == shared.recordName)
+        #expect(SharedNight(answered(.wet), diaryID: id, appVersion: "1.0.2")?.recordName == shared.recordName)
     }
 
     @Test func nightsWithoutAnAnswerAreNotShared() {
-        #expect(SharedNight(answered(.notChecked), diaryID: id, settings: Settings(), appVersion: "1") == nil)
+        #expect(SharedNight(answered(.notChecked), diaryID: id, appVersion: "1") == nil)
         var unanswered = answered(.wet)
         unanswered.observation = nil
-        #expect(SharedNight(unanswered, diaryID: id, settings: Settings(), appVersion: "1") == nil)
+        #expect(SharedNight(unanswered, diaryID: id, appVersion: "1") == nil)
     }
 
     @Test func aNightIsResentOnlyWhenItChanges() {

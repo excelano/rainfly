@@ -19,13 +19,13 @@ struct ForecastCache {
     /// Seals the night's call from the latest forecast once `now` has reached the anchor, unless
     /// it is sealed already or that forecast came too late.
     func sealCall(at campName: String, on date: NightDate, now: Date, settings: Settings) {
-        guard sealed(at: campName, on: date) == nil,
+        guard sealedCall(at: campName, on: date) == nil,
               let latest = night(at: campName, on: date), now >= NightWindow.anchor(of: latest),
               let call = NightCall.seal(latest, settings: settings) else { return }
         callStore.save((callStore.load() ?? []) + [call])
     }
 
-    private func sealed(at campName: String, on date: NightDate) -> NightCall? {
+    func sealedCall(at campName: String, on date: NightDate) -> NightCall? {
         (callStore.load() ?? []).first { $0.forecast.location.name == campName && Self.date(of: $0.forecast) == date }
     }
 
@@ -38,7 +38,7 @@ struct ForecastCache {
     /// latest forecast would seal with `settings`.
     func fetches(at campName: String, on date: NightDate, settings: Settings) -> NightFetches? {
         night(at: campName, on: date).map {
-            NightFetches(latest: $0, call: sealed(at: campName, on: date) ?? NightCall.seal($0, settings: settings))
+            NightFetches(latest: $0, call: sealedCall(at: campName, on: date) ?? NightCall.seal($0, settings: settings))
         }
     }
 

@@ -14,7 +14,7 @@ struct DiaryScreen: View {
     var body: some View {
         let settings = model.settings
         let units = model.preferences.units
-        let tally = recorder.diary.tally(settingsAt: model.settings(at:))
+        let tally = recorder.diary.tally
         List {
             if tally.judged + tally.lightDew > 0 {
                 Section {
@@ -51,7 +51,7 @@ struct DiaryScreen: View {
                     Button {
                         answering = night
                     } label: {
-                        NightRow(night: night, judgement: night.judge(settingsAt: model.settings(at:)), units: units)
+                        NightRow(night: night, judgement: night.judgement, units: units)
                     }
                     .tint(.primary)
                 }
@@ -179,7 +179,7 @@ private struct NightRow: View {
     }
 
     private var forecast: String {
-        guard let judgement else { return "No forecast kept" }
+        guard let judgement else { return "No call: no forecast before \(VerdictText.anchorClock)" }
         let spread = judgement.closestSpread.map { ", closest gap \(Quantity.dewSpread(units).format(units.temperatureSpan($0)))" } ?? ""
         let dew = judgement.firing.map { MorningText.expectation($0.trigger) }
         let rain = judgement.rain.map { MorningText.expectation($0.trigger) }
@@ -196,17 +196,9 @@ private struct NightRow: View {
         switch judgement?.outcome {
         case .caught?: "Right · dew forecast, dew found"
         case .clear?: "Right · no dew forecast, none found"
-        case .missed?: "Dew found, not forecast · \(cause)"
-        case .falseAlarm?: "Dew forecast, none found · \(cause)"
+        case .missed?: "Wrong · dew found, not forecast"
+        case .falseAlarm?: "Wrong · dew forecast, none found"
         case nil: nil
-        }
-    }
-
-    private var cause: String {
-        switch judgement?.cause {
-        case .forecast?: "the forecast was wrong about the night"
-        case .settings?: "the forecast was right, but the dew-point gap setting wasn't"
-        case nil: "waiting for WeatherKit's record of the night"
         }
     }
 

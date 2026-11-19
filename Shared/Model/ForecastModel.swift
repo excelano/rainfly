@@ -118,8 +118,9 @@ final class ForecastModel {
         night.map { NightWindow($0, packByMinutes: settings.packByMinutes) }
     }
 
-    func settings(at date: Date) -> Settings {
-        store.settings(at: date)
+    /// The sealed call of the night at `campName` on `date`, for the dew diary.
+    func sealedCall(at campName: String, on date: NightDate) -> NightCall? {
+        cache.sealedCall(at: campName, on: date)
     }
 
     /// The shown night's latest forecast with its call.

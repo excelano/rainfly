@@ -19,9 +19,10 @@ struct SharedNight: Equatable {
     let settings: Settings
     let appVersion: String
 
-    /// Nil for a night with no forecast, or with no answer to share.
-    init?(_ night: DiaryNight, diaryID: UUID, settings: Settings, appVersion: String) {
-        guard let pitched = night.pitched, let observation = night.observation, observation.kind != .notChecked else { return nil }
+    /// Nil for a night with no call, or with no answer to share.
+    init?(_ night: DiaryNight, diaryID: UUID, appVersion: String) {
+        guard let call = night.call, let observation = night.observation, observation.kind != .notChecked else { return nil }
+        let pitched = call.forecast
         self.diaryID = diaryID
         self.night = String(format: "%04d-%02d-%02d", night.date.year, night.date.month, night.date.day)
         latitude = Self.rounded(pitched.location.latitude)
@@ -31,7 +32,7 @@ struct SharedNight: Equatable {
         openSky = observation.openSky
         forecast = SharedHours(pitched)
         history = night.history.map(SharedHours.init)
-        self.settings = settings
+        settings = call.settings
         self.appVersion = appVersion
     }
 

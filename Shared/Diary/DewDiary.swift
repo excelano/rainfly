@@ -4,9 +4,9 @@
 
 import Foundation
 
-/// The camper's check of the dew forecast: every forecast fetched for a night, the same night
-/// fetched again from WeatherKit's history the morning after, and what was found on something
-/// left under the sky.
+/// The camper's check of the dew forecast: each night's call and what was found on something
+/// left under the sky. Beside them it tracks the night as it went: every forecast fetched for
+/// it, and the same night fetched again from WeatherKit's history the morning after.
 struct DewDiary: Codable, Equatable {
     var nights: [DiaryNight] = []
 
@@ -37,6 +37,13 @@ struct DewDiary: Codable, Equatable {
             .filter { $0.date < date && $0.observation != nil }
             .max { $0.date < $1.date }?
             .observation?.openSky ?? true
+    }
+
+    /// Keeps the night's call, unless it already has one made from a later forecast.
+    mutating func setCall(_ call: NightCall) {
+        guard let index = index(of: call.forecast.location.name, on: ForecastCache.date(of: call.forecast)),
+              nights[index].call.map({ $0.forecast.fetchedAt < call.forecast.fetchedAt }) ?? true else { return }
+        nights[index].call = call
     }
 
     mutating func setHistory(_ history: NightForecast, campName: String, on date: NightDate) {
@@ -71,10 +78,10 @@ struct DewDiary: Codable, Equatable {
         }
     }
 
-    func tally(settingsAt: (Date) -> Settings) -> DiaryTally {
+    var tally: DiaryTally {
         var tally = DiaryTally()
         for night in nights {
-            guard let kind = night.observation?.kind, let judgement = night.judge(settingsAt: settingsAt) else { continue }
+            guard let kind = night.observation?.kind, let judgement = night.judgement else { continue }
             switch (judgement.outcome, kind) {
             case (.caught?, _): tally.caught += 1
             case (.clear?, _): tally.clear += 1
@@ -133,9 +140,9 @@ struct DewDiary: Codable, Equatable {
     private var openSkyNights: [(forecast: NightForecast, wet: Bool)] {
         nights.compactMap { night in
             guard let observation = night.observation, observation.openSky,
-                  let wet = observation.kind.foundMoisture, let forecast = night.pitched
+                  let wet = observation.kind.foundMoisture, let call = night.call
             else { return nil }
-            return (forecast, wet)
+            return (call.forecast, wet)
         }
     }
 
@@ -155,21 +162,14 @@ struct DewDiary: Codable, Equatable {
 struct DiaryNight: Codable, Equatable {
     let campName: String
     let date: NightDate
+    /// The night's call; nil until it is sealed, and for a night with no forecast before the anchor.
+    var call: NightCall?
+    /// Every fetch of the night, kept as a record of how the forecast moved.
     var forecasts: [NightForecast]
     var history: NightForecast?
     var observation: DewObservation?
     /// Set once the night has been shared with Excelano.
     var shared: SharedMark?
-
-    /// The forecast that decided the fly: the last one fetched by 22:00, or else the first;
-    /// nil when the first came after sunrise, too late to decide anything.
-    var pitched: NightForecast? {
-        NightWindow.decided(forecasts).flatMap { $0.fetchedBeforeSunrise ? $0 : nil }
-    }
-
-    var decidedAt: Date? {
-        pitched.map(NightWindow.decidedAt)
-    }
 
     /// When the morning question opens: `DewDiary.earlyAnswer` before sunrise, for a camper
     /// up before the sun.
@@ -177,9 +177,9 @@ struct DiaryNight: Codable, Equatable {
         forecasts.last.map { $0.sunrise.addingTimeInterval(-DewDiary.earlyAnswer) }
     }
 
-    func judge(settingsAt: (Date) -> Settings) -> DiaryJudgement? {
-        guard let pitched, let decidedAt else { return nil }
-        return DiaryJudging.judge(pitched, history: history, found: observation?.kind, settings: settingsAt(decidedAt))
+    /// Nil for a night with no call, which leaves nothing to judge.
+    var judgement: DiaryJudgement? {
+        call.map { DiaryJudging.judge($0, found: observation?.kind) }
     }
 }
 
@@ -208,15 +208,14 @@ struct SpreadSuggestion: Equatable {
 
 #if DEBUG
 extension DewDiary {
-    /// One row a night for checking the diary from a Mac: what was found, what the forecast
-    /// said when the fly went on or not, and what the same checks make of the history.
-    func report(settingsAt: (Date) -> Settings) -> String {
+    /// One row a night for checking the diary from a Mac: what was found, what the night's call
+    /// said, and what the same checks make of the history.
+    var report: String {
         var rows = ["night,camp,found,open_sky,forecast_wet,forecast_at,forecast_spread,history_wet,history_at,history_spread,forecasts"]
         for night in nights.sorted(by: { ($0.date, $0.campName) < ($1.date, $1.campName) }) {
-            guard let pitched = night.pitched, let decidedAt = night.decidedAt else { continue }
-            let settings = settingsAt(decidedAt)
-            let forecast = Self.wetness(pitched, settings: settings)
-            let history = night.history.map { Self.wetness($0, settings: settings) }
+            guard let call = night.call else { continue }
+            let forecast = Self.wetness(call)
+            let history = night.history.map { Self.wetness(NightCall($0, settings: call.settings)) }
             let date = String(format: "%04d-%02d-%02d", night.date.year, night.date.month, night.date.day)
             let fields: [String] = [
                 date, night.campName, night.observation?.kind.rawValue ?? "",
@@ -230,10 +229,10 @@ extension DewDiary {
         return rows.joined(separator: "\n") + "\n"
     }
 
-    private static func wetness(_ night: NightForecast, settings: Settings) -> (kind: String, at: String, spread: String) {
-        let firing = FlyEngine.evaluate(night, settings: settings).condensation
-        let spread = NightWindow(night, packByMinutes: settings.packByMinutes).closestSpread
-        let calendar = NightWindow.localCalendar(for: night.location)
+    private static func wetness(_ call: NightCall) -> (kind: String, at: String, spread: String) {
+        let firing = call.verdict.condensation
+        let spread = call.closestSpread
+        let calendar = NightWindow.localCalendar(for: call.forecast.location)
         let time = { (date: Date) in
             let parts = calendar.dateComponents([.hour, .minute], from: date)
             return String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)

@@ -7,18 +7,17 @@ import SwiftUI
 /// The morning review: what Rainfly expected, and whether it was right. A night forecast to
 /// rain asks about the rain first; only a wrong dew forecast asks what was found and where.
 struct DiaryAnswerRows: View {
-    @Environment(ForecastModel.self) private var model
     let recorder: DiaryRecorder
     let night: DiaryNight
+    /// Whether the screen's headline already says what Rainfly expected, as the morning's does.
+    var underHeadline = false
     var answered: () -> Void = {}
     @State private var correcting = false
     @State private var rainAnswered = false
     @State private var found: DewObservation.Kind?
 
-    /// Nil when no forecast was kept for the night, which leaves nothing to review.
-    private var judgement: DiaryJudgement? {
-        night.judge(settingsAt: model.settings(at:))
-    }
+    /// Nil for a night with no call, which leaves nothing to review.
+    private var judgement: DiaryJudgement? { night.judgement }
 
     var body: some View {
         if let found {
@@ -36,7 +35,7 @@ struct DiaryAnswerRows: View {
             }
             Button("Back") { self.found = nil }
         } else if let judgement, let rain = judgement.rain, !rainAnswered, !correcting {
-            Text("\(MorningText.expected(rain)). Did it rain?")
+            Text(underHeadline ? "Did it rain?" : "\(MorningText.expected(rain)). Did it rain?")
                 .font(.headline)
             answer("Yes, it rained", chosen: night.observation?.kind == .rain) { record(.rain, openSky: openSky) }
             answer("No, it didn't rain", chosen: night.observation.map { ![.rain, .notChecked].contains($0.kind) } ?? false) {
@@ -44,7 +43,11 @@ struct DiaryAnswerRows: View {
             }
             answer(DewObservation.Kind.notChecked) { record(.notChecked, openSky: openSky) }
         } else if let judgement, !correcting {
-            Text("\(MorningText.expected(judgement.firing, afterRain: judgement.rain != nil)). Was it right?")
+            Text(
+                underHeadline && judgement.rain == nil
+                    ? "Was it right?"
+                    : "\(MorningText.expected(judgement.firing, afterRain: judgement.rain != nil)). Was it right?"
+            )
                 .font(.headline)
             answer("Yes, it was right", chosen: night.observation?.kind == Self.kind(for: judgement.firing)) {
                 record(Self.kind(for: judgement.firing), openSky: recorder.diary.lastOpenSky(before: night.date))
@@ -155,16 +158,19 @@ extension DewObservation.Kind {
     }
 }
 
-/// The morning question on the main screen, under the packing verdict.
+/// The morning question on the main screen.
 struct MorningCheckSection: View {
     let recorder: DiaryRecorder
     let night: DiaryNight
+    var underHeadline = false
 
     var body: some View {
         Section {
-            DiaryAnswerRows(recorder: recorder, night: night)
+            DiaryAnswerRows(recorder: recorder, night: night, underHeadline: underHeadline)
         } header: {
-            MorningDiarySection.header(night)
+            if !underHeadline {
+                Text(night.campName == CampLocation.hereName ? "Last night" : "Last night at \(night.campName)")
+            }
         } footer: {
             Text("Check the same thing left under the sky each morning, not the inside of the tent.")
         }
@@ -180,7 +186,7 @@ struct MorningDiarySection: View {
 
     var body: some View {
         if night.observation == nil {
-            MorningCheckSection(recorder: recorder, night: night)
+            MorningCheckSection(recorder: recorder, night: night, underHeadline: true)
         } else {
             Section {
                 NavigationLink {
@@ -191,8 +197,6 @@ struct MorningDiarySection: View {
                         Text(result.detail).font(.footnote).foregroundStyle(.secondary)
                     }
                 }
-            } header: {
-                Self.header(night)
             }
         }
         if let suggestion = recorder.diary.suggestedDewSpread(settings: model.settings, units: model.preferences.units) {
@@ -203,9 +207,9 @@ struct MorningDiarySection: View {
     }
 
     private var result: (title: String, detail: String) {
-        let tally = recorder.diary.tally(settingsAt: model.settings(at:))
+        let tally = recorder.diary.tally
         let record = tally.judged == 0 ? "" : "Rainfly has been right on \(tally.caught + tally.clear) of the \(tally.judged) mornings you found dry, wet or frosty."
-        guard let observation = night.observation, let judgement = night.judge(settingsAt: model.settings(at:)) else {
+        guard let observation = night.observation, let judgement = night.judgement else {
             return ("Your answer is saved", record)
         }
         switch (observation.kind, judgement.outcome) {
@@ -216,7 +220,7 @@ struct MorningDiarySection: View {
         case (_, .caught?), (_, .clear?): return ("Rainfly was right", Self.sentences("\(found(observation)).", record))
         case (_, .missed?), (_, .falseAlarm?):
             let expected = MorningText.expected(judgement.firing, afterRain: judgement.rain != nil)
-            return ("Rainfly was wrong", Self.sentences("\(found(observation)), but \(expected).", cause(judgement), record))
+            return ("Rainfly was wrong", Self.sentences("\(found(observation)), but \(expected).", record))
         case (_, nil): return ("Your answer is saved", record)
         }
     }
@@ -225,19 +229,8 @@ struct MorningDiarySection: View {
         "You found it \(observation.kind == .frost ? "frosty" : observation.kind == .wet ? "wet" : "dry")"
     }
 
-    private func cause(_ judgement: DiaryJudgement) -> String? {
-        switch judgement.cause {
-        case .forecast?: "The forecast got the night wrong, not your dew setting."
-        case .settings?: "The forecast was right, but your dew setting called it wrong."
-        case nil: nil
-        }
+    private static func sentences(_ parts: String...) -> String {
+        parts.filter { !$0.isEmpty }.joined(separator: " ")
     }
 
-    private static func sentences(_ parts: String?...) -> String {
-        parts.compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-    }
-
-    static func header(_ night: DiaryNight) -> Text {
-        Text(night.campName == CampLocation.hereName ? "Last night" : "Last night at \(night.campName)")
-    }
 }

@@ -56,18 +56,6 @@ struct NightWindow: Sendable {
         return max(ten, night.sunset)
     }
 
-    /// Of the forecasts fetched for one night, the one it is judged against: the last fetched
-    /// by its anchor, or the first when none was.
-    static func decided(_ fetches: [NightForecast]) -> NightForecast? {
-        let sorted = fetches.sorted { $0.fetchedAt < $1.fetchedAt }
-        guard let first = sorted.first else { return nil }
-        return sorted.last { $0.fetchedAt <= anchor(of: first) } ?? first
-    }
-
-    static func decidedAt(_ decided: NightForecast) -> Date {
-        max(decided.fetchedAt, anchor(of: decided))
-    }
-
     static let anchorHour = 22
     static let handoverHour = 12
 

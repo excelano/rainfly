@@ -46,18 +46,26 @@ enum Report {
     static func csv(_ nights: [Night]) -> String {
         var rows = ["diary,night,latitude,longitude,found,open_sky,app_version,forecast_wet,forecast_at,forecast_spread,history_wet,history_at,history_spread,outcome,cause"]
         for night in nights.sorted(by: { ($0.night, $0.diary) < ($1.night, $1.diary) }) {
-            let judgement = DiaryJudging.judge(night.forecast, history: night.history, found: night.found, settings: night.settings)
-            let history = night.history.map { DiaryJudging.judge($0, history: nil, found: nil, settings: night.settings) }
+            let judgement = DiaryJudging.judge(NightCall(night.forecast, settings: night.settings), found: night.found)
+            let history = night.history.map { DiaryJudging.judge(NightCall($0, settings: night.settings), found: nil) }
             let fields = [
                 night.diary, night.night, String(night.latitude), String(night.longitude), night.found.rawValue,
                 night.openSky ? "yes" : "no", night.appVersion,
                 wet(judgement), clock(judgement.firing?.at, night.forecast), spread(judgement.closestSpread),
                 history.map(wet) ?? "", clock(history?.firing?.at, night.forecast), spread(history?.closestSpread),
-                judgement.outcome.map { "\($0)" } ?? "", judgement.cause.map { "\($0)" } ?? "",
+                judgement.outcome.map { "\($0)" } ?? "", cause(judgement, history: history),
             ]
             rows.append(fields.joined(separator: ","))
         }
         return rows.joined(separator: "\n") + "\n"
+    }
+
+    /// For a miss or a false alarm with history: whether WeatherKit's night was not the real
+    /// one ("forecast"), or the thresholds called a correctly forecast night wrong ("settings").
+    private static func cause(_ judgement: DiaryJudgement, history: DiaryJudgement?) -> String {
+        guard let history, judgement.outcome == .missed || judgement.outcome == .falseAlarm else { return "" }
+        let found = judgement.outcome == .missed
+        return history.predicted == found ? "forecast" : "settings"
     }
 
     /// The open-sky nights that found moisture or none, which are the ones a check can be scored on.

@@ -9,9 +9,10 @@ import SwiftUI
 
 private let logger = Logger(subsystem: "com.excelano.zeltwetter", category: "diary")
 
-/// Keeps the dew diary while it is switched on: every fetch goes in as it arrives, the
-/// morning question adds what was found, and each time the app comes forward the nights that
-/// are over get their hours from WeatherKit's history. With sharing on, answered nights are
+/// Keeps the dew diary while it is switched on: every fetch goes in as it arrives, each night
+/// takes its call once the forecast cache has sealed it, the morning question adds what was
+/// found, and each time the app comes forward the nights that are over get their hours from
+/// WeatherKit's history. With sharing on, answered nights are
 /// sent to Excelano as they are answered and again as their history arrives.
 @MainActor
 @Observable
@@ -29,6 +30,15 @@ final class DiaryRecorder {
         self.store = store
         diary = store.load() ?? DewDiary()
         model.anyNightFetched = { [weak self] night in self?.record(night) }
+        fillCalls()
+    }
+
+    /// Gives each night still without a call the one the forecast cache has sealed for it.
+    func fillCalls() {
+        let sealed = diary.nights.filter { $0.call == nil }.compactMap { model.sealedCall(at: $0.campName, on: $0.date) }
+        guard !sealed.isEmpty else { return }
+        for call in sealed { diary.setCall(call) }
+        save()
     }
 
     func observe(_ kind: DewObservation.Kind, openSky: Bool, night: DiaryNight) {
@@ -66,7 +76,7 @@ final class DiaryRecorder {
         let diaryID = preferences.diaryID ?? UUID()
         if preferences.diaryID == nil { model.preferences.diaryID = diaryID }
         let due = diary.needingShare().compactMap { night in
-            SharedNight(night, diaryID: diaryID, settings: night.decidedAt.map(model.settings(at:)) ?? model.settings, appVersion: Self.appVersion).map { (night, $0) }
+            SharedNight(night, diaryID: diaryID, appVersion: Self.appVersion).map { (night, $0) }
         }
         guard !due.isEmpty else { return }
         isSharing = true
@@ -106,6 +116,7 @@ final class DiaryRecorder {
 
     func fillHistory(now: Date = .now) async {
         guard model.preferences.dewDiary else { return }
+        fillCalls()
         for night in diary.needingHistory(now: now) {
             guard let camp = night.forecasts.last?.location else { continue }
             do {
@@ -123,6 +134,7 @@ final class DiaryRecorder {
         guard model.preferences.dewDiary else { return }
         diary.record(night)
         save()
+        fillCalls()
         let date = ForecastCache.date(of: night)
         if model.preferences.diaryReminder, date == model.nightDate(), night.location.name == model.camps.campName(on: date),
            diary.night(campName: night.location.name, on: date)?.observation == nil {
@@ -135,7 +147,7 @@ final class DiaryRecorder {
         #if DEBUG
         let report = store.url.deletingLastPathComponent().appending(path: "dewdiary-report.csv")
         do {
-            try diary.report(settingsAt: model.settings(at:)).write(to: report, atomically: true, encoding: .utf8)
+            try diary.report.write(to: report, atomically: true, encoding: .utf8)
         } catch {
             logger.error("Writing the report failed: \(error, privacy: .public)")
         }
