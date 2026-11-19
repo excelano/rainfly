@@ -14,9 +14,10 @@ private func plain(_ string: String) -> String {
 }
 
 struct ComplicationTimelineTests {
-    private func entries(_ night: NightForecast, now: Date, next: NightForecast? = nil, decided: NightForecast? = nil) -> [(date: Date, face: ComplicationFace)] {
+    /// The night's call is sealed from `called`, or from the night itself, as fetched at 18:00.
+    private func entries(_ night: NightForecast, now: Date, next: NightForecast? = nil, called: NightForecast? = nil) -> [(date: Date, face: ComplicationFace)] {
         ComplicationTimeline.entries(now: now, settings: Settings(), units: .locale) { date in
-            (date < F.at(1, 12) ? night : next).map { NightFetches(latest: $0, decided: decided) }
+            (date < F.at(1, 12) ? night : next).map { NightFetches(latest: $0, call: NightCall.seal(called ?? $0, settings: Settings())) }
         }
     }
 
@@ -33,7 +34,7 @@ struct ComplicationTimelineTests {
         #expect(Set(dates).count == dates.count)
         #expect(dates.first == F.at(0, 18, 20))
         #expect(dates.last == F.at(1, 12))
-        for mark in [F.sunset, F.at(0, 22), F.at(1, 2), F.sunrise, F.at(1, 7, 45), F.at(0, 19), F.at(1, 7)] {
+        for mark in [F.sunset, F.at(0, 22), F.at(1, 2), F.sunrise, F.at(0, 19), F.at(1, 7)] {
             #expect(dates.contains(mark))
         }
     }
@@ -44,33 +45,31 @@ struct ComplicationTimelineTests {
         #expect(!timeline.map(\.date).contains(F.sunset))
     }
 
-    @Test func verdictUntilSunriseThenPacking() {
+    @Test func verdictUntilSunriseThenTheCall() {
         let timeline = entries(F.dewyNight { F.hour($0, temp: 15, dewPoint: 5) }, now: F.at(0, 21))
         let night = timeline.first { $0.date == F.at(1, 5) }!.face
         #expect(night.flyOn == true)
         #expect(plain(night.inline) == "rainfly on · wet")
-        #expect(night.dryTime == nil)
 
         let morning = timeline.first { $0.date == F.sunrise }!.face
-        let text = VerdictText(night: F.night(), verdict: FlyEngine.evaluate(F.night(), settings: Settings()), settings: Settings(), units: .locale)
-        let dryBy = text.compactClock(F.at(1, 6, 30))
-        #expect(morning.headline == "Dry to pack")
-        #expect(morning.dryTime == dryBy)
-        #expect(morning.inline == "Dry to pack · dry \(dryBy)")
+        #expect(morning.flyOn == true)
+        #expect(morning.headline == "Expected dew")
+        #expect(morning.detail == "Last night")
+        #expect(morning.inline == "Rainfly expected dew")
     }
 
-    @Test func wetMorningWithoutDryByPacksWet() {
-        let timeline = entries(F.dewyNight { F.hour($0, temp: 10, dewPoint: 9.5, cloud: 1, wind: 0) }, now: F.at(0, 21))
-        let morning = timeline.first { $0.date == F.sunrise }!.face
-        #expect(morning.dryTime == nil)
-        #expect(morning.headline == "Packing wet")
-        #expect(morning.detail == "It won't be dry before noon")
+    @Test func aMorningWithNoCallSaysSo() {
+        let late = F.night()
+        let unsealed = NightForecast(location: late.location, fetchedAt: F.at(1, 1), sunset: late.sunset, sunrise: late.sunrise, hours: late.hours)
+        let morning = entries(unsealed, now: F.at(1, 7))[0].face
+        #expect(morning.flyOn == nil)
+        #expect(morning.headline == "No call last night")
     }
 
     @Test func overnightFacesNameAChangeSince22() {
         let dewy = F.night { F.hour($0, temp: 12, dewPoint: 10, wind: 1) }
         let rainLater = F.night { d in F.hour(d, temp: 12, dewPoint: 10, wind: 1, chance: d == F.at(1, 5) ? 0.4 : 0) }
-        let face = entries(rainLater, now: F.at(1, 2), decided: dewy)[0].face
+        let face = entries(rainLater, now: F.at(1, 2), called: dewy)[0].face
         #expect(face.headline == "Rainfly on")
         #expect(plain(face.inline).hasPrefix("new: rain "))
     }

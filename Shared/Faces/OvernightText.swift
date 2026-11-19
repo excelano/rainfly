@@ -4,30 +4,29 @@
 
 import Foundation
 
-/// The words for the night after 22:00: the latest verdict, what has changed since the forecast
-/// the night is judged against, and the weather right now.
+/// The words for the night after 22:00: the latest verdict, what has changed since the night's
+/// call, and the weather right now.
 struct OvernightText {
     /// The latest forecast.
     let text: VerdictText
-    /// The forecast the night is judged against, fixed at 22:00.
-    let decided: NightForecast
-    let decidedSettings: Settings
+    /// Nil for a night with no forecast before the anchor, which leaves nothing to compare.
+    let call: NightCall?
     let now: Date
     let ahead: VerdictText
     private let added: Firing?
     private let dropped: Firing?
     private let wet: WetFly?
 
-    init(text: VerdictText, decided: NightForecast, decidedSettings: Settings, now: Date, current: CurrentConditions? = nil) {
+    init(text: VerdictText, call: NightCall?, now: Date, current: CurrentConditions? = nil) {
         self.text = text
-        self.decided = decided
-        self.decidedSettings = decidedSettings
+        self.call = call
         self.now = now
         let ahead = text.ahead(of: now)
-        let decidedAhead = FlyEngine.evaluate(decided, settings: decidedSettings, from: now)
+        // The call's forecast over the hours still ahead, so a check whose hour has passed is not a change.
+        let callAhead = call.map { FlyEngine.evaluate($0.forecast, settings: $0.settings, from: now) }
         self.ahead = ahead
-        added = ahead.verdict.firings.first { decidedAhead.firing($0.trigger) == nil }
-        dropped = decidedAhead.firings.first { ahead.verdict.firing($0.trigger) == nil }
+        added = callAhead.flatMap { called in ahead.verdict.firings.first { called.firing($0.trigger) == nil } }
+        dropped = callAhead.flatMap { called in called.firings.first { ahead.verdict.firing($0.trigger) == nil } }
         wet = WetFly.at(now, night: text.night, current: current, settings: text.settings)
     }
 
@@ -35,15 +34,7 @@ struct OvernightText {
 
     var headline: String { flyOn ? "Rainfly on" : "Rainfly off" }
 
-    private var decidedText: VerdictText {
-        VerdictText(night: decided, settings: decidedSettings, units: text.units, locale: text.locale)
-    }
-
-    private var decidedVerdict: Verdict { decidedText.verdict }
-
-    private var decidedAt: String {
-        text.clock(NightWindow.decidedAt(decided))
-    }
+    private var anchor: String { text.clock(text.window.anchor) }
 
     /// "Overnight · updated 02:10".
     var caption: String { "Overnight · updated \(text.clock(text.night.fetchedAt))" }
@@ -51,9 +42,9 @@ struct OvernightText {
     var hasChanged: Bool { added != nil || dropped != nil }
 
     var change: String? {
-        if let added { return "New since \(decidedAt): \(VerdictText.lowered(ahead.describe(added)))" }
+        if let added { return "New since \(anchor): \(VerdictText.lowered(ahead.describe(added)))" }
         if let dropped, wet == nil {
-            return "No longer expected since \(decidedAt): \(VerdictText.name(dropped.trigger).lowercased())"
+            return "No longer expected since \(anchor): \(VerdictText.name(dropped.trigger).lowercased())"
         }
         return nil
     }
@@ -75,13 +66,14 @@ struct OvernightText {
         }
     }
 
-    /// What Rainfly said at 22:00 when the forecast has moved, or that it hasn't; nil while the
-    /// latest forecast is the only one, with nothing earlier to compare.
+    /// What the call said when the forecast has moved, or that it hasn't; nil while the latest
+    /// forecast is the call's own, and on a night with no call.
     var note: String? {
-        guard decided.fetchedAt != text.night.fetchedAt else { return nil }
-        guard hasChanged else { return "Same as the \(decidedAt) forecast" }
-        let said = "At \(decidedAt), Rainfly said \(decidedVerdict.flyOn ? "on" : "off")"
-        return decidedVerdict.headline.map { "\(said): \(VerdictText.lowered(decidedText.describe($0)))" } ?? said
+        guard let call, call.forecast.fetchedAt != text.night.fetchedAt else { return nil }
+        guard hasChanged else { return "Same as the \(anchor) forecast" }
+        let said = "At \(anchor), Rainfly said \(call.verdict.flyOn ? "on" : "off")"
+        let called = VerdictText(call: call, units: text.units, locale: text.locale)
+        return call.verdict.headline.map { "\(said): \(VerdictText.lowered(called.describe($0)))" } ?? said
     }
 
     func notes(at now: Date) -> [String] {

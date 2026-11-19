@@ -4,8 +4,8 @@
 
 import SwiftUI
 
-/// The morning after a night, until noon: packing up, whether last night's call was right,
-/// and a way to look at tonight early.
+/// The morning after a night, until noon: what Rainfly expected last night, whether that was
+/// right, and a way to look at tonight early.
 struct MorningView<Diary: View>: View {
     let morning: MorningText
     let now: Date
@@ -17,24 +17,14 @@ struct MorningView<Diary: View>: View {
         List {
             Section {
                 VStack(spacing: 8) {
-                    TentGlyph(flyOn: morning.packing != .dryNight)
+                    TentGlyph(flyOn: morning.flyOn)
                         .frame(height: 96)
-                        .foregroundStyle(morning.packing == .packingWet ? Color.accentColor : .secondary)
+                        .foregroundStyle(morning.flyOn ? Color.accentColor : .secondary)
                     Text(morning.caption.uppercased())
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(.secondary)
                     Text(morning.headline)
                         .font(.largeTitle.bold())
-                    Text(morning.reason)
-                        .font(.title3)
-                    if let rain = morning.rainAhead(at: now) {
-                        Label(rain, systemImage: "cloud.rain")
-                            .foregroundStyle(.orange)
-                    }
-                    if let advice = morning.advice {
-                        Text(advice)
-                            .foregroundStyle(.secondary)
-                    }
                 }
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
@@ -65,21 +55,8 @@ struct MorningView<Diary: View>: View {
             Section {
                 AttributionView(attribution: attribution, markHeight: 18)
             } footer: {
-                Text("\(morning.latest.location.title) · \(VerdictText.age(since: morning.latest.fetchedAt, at: now))")
-                    .foregroundStyle(VerdictText.staleness(since: morning.latest.fetchedAt, at: now).color)
-            }
-        }
-    }
-}
-
-/// What Rainfly expected last night, where the dew diary doesn't ask whether it was right.
-struct LastNightSection: View {
-    let morning: MorningText
-
-    var body: some View {
-        if morning.madeACall {
-            Section("Last night") {
-                Text(morning.lastNight)
+                Text("\(morning.text.night.location.title) · \(VerdictText.age(since: morning.text.night.fetchedAt, at: now))")
+                    .foregroundStyle(VerdictText.staleness(since: morning.text.night.fetchedAt, at: now).color)
             }
         }
     }

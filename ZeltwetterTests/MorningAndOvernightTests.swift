@@ -23,13 +23,6 @@ private let dewy = F.night { F.hour($0, temp: 12, dewPoint: 10, wind: 1) }
 private let cloudyThenClear = F.night { d in F.hour(d, temp: 12, dewPoint: 10, cloud: d < F.at(1, 2) ? 0.8 : 0.1, wind: 1) }
 private let cloudy = F.night { F.hour($0, temp: 12, dewPoint: 10, cloud: 0.8, wind: 1) }
 
-struct NightRecordTests {
-    @Test func theRecordIsReadyTwoHoursAfterSunrise() {
-        #expect(!NightRecord.isSettled(fetched(dewy, at: F.at(1, 7))))
-        #expect(NightRecord.isSettled(fetched(dewy, at: F.at(1, 8))))
-    }
-}
-
 struct SpreadMissTests {
     @Test func spreadMissNamesWhatWasMissing() {
         let hours = { (night: NightForecast) in NightWindow(night, packByMinutes: 8 * 60).nightHours }
@@ -41,94 +34,51 @@ struct SpreadMissTests {
 }
 
 struct MorningTextTests {
-    private func morning(
-        decided: NightForecast, latest: NightForecast, found: DewObservation? = nil, settings: Settings = Settings(), decidedSettings: Settings = Settings()
-    ) -> MorningText {
+    /// The morning after a night whose call is sealed from `forecast`, when it came before the anchor.
+    private func morning(call forecast: NightForecast, settings: Settings = Settings()) -> MorningText {
         MorningText(
-            decided: decided, latest: latest, settings: settings, decidedSettings: decidedSettings,
-            units: metric, found: found, locale: english
+            text: VerdictText(night: fetched(F.night(), at: F.at(1, 7)), settings: Settings(), units: metric, locale: english),
+            call: NightCall.seal(forecast, settings: settings)
         )
     }
 
-    @Test func aDryAnswerOverridesDewInTheRecord() {
-        let dewFrom1 = F.night { d in d < F.at(1, 1) ? F.hour(d) : F.hour(d, temp: 12, dewPoint: 10, wind: 1) }
-        let words = morning(
-            decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(dewFrom1, at: F.at(1, 8)),
-            found: DewObservation(kind: .dry, openSky: true, at: F.at(1, 6, 30))
-        )
-        #expect(words.headline == "Dry night")
-    }
-
-    @Test func aWetAnswerWetsADryRecord() {
-        let words = morning(
-            decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(F.night(), at: F.at(1, 8)),
-            found: DewObservation(kind: .wet, openSky: true, at: F.at(1, 6, 30))
-        )
-        #expect(words.packing != .dryNight)
-    }
-
-    @Test func aDryAnswerLeavesLaterRainWet() {
-        let morningRain = F.night { d in F.hour(d, amount: d == F.at(1, 7) ? 0.5 : 0) }
-        let words = morning(
-            decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(morningRain, at: F.at(1, 7, 30)),
-            found: DewObservation(kind: .dry, openSky: true, at: F.at(1, 6, 30))
-        )
-        #expect(words.headline == "Packing wet")
-    }
-
-    @Test func lastNightIsTheCallMadeWithThatNightsSettings() {
-        var wider = Settings()
-        wider.dewSpreadC = 5
-        let nearly = F.night { F.hour($0, temp: 12, dewPoint: 8, wind: 1) }
-        let words = morning(decided: fetched(nearly, at: F.at(0, 21)), latest: fetched(nearly, at: F.at(1, 8)), settings: wider)
-        #expect(words.lastNight == "Rainfly expected a dry night")
-        #expect(words.headline == "Dry night")
-    }
-
-    @Test func dewTheCallMissedWetsTheTent() {
-        let dewFrom3 = F.night { d in
-            d < F.at(1, 3) ? F.hour(d) : F.hour(d, temp: 10, dewPoint: 9.5, cloud: d < F.at(1, 5) ? 0.1 : 1, wind: d < F.at(1, 5) ? 1 : 0)
-        }
-        let words = morning(decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(dewFrom3, at: F.at(1, 7, 30)))
-        #expect(words.headline == "Packing wet")
-    }
-
-    @Test func dewThatDriesOvernightReadsTheSameOvernightAndInTheMorning() {
-        let early = F.night { d in d < F.at(0, 23) ? F.hour(d, temp: 12, dewPoint: 10, wind: 1) : F.hour(d, cloud: 0.9) }
-        let night = fetched(early, at: F.at(0, 21))
-        let overnight = OvernightText(
-            text: VerdictText(night: night, verdict: FlyEngine.evaluate(night, settings: Settings()), settings: Settings(), units: metric, locale: english),
-            decided: night, decidedSettings: Settings(), now: F.at(1, 3)
-        )
-        #expect(overnight.headline == "Rainfly off")
-        let words = morning(decided: night, latest: night)
-        #expect(words.headline == "Dry to pack")
-        #expect(words.reason == "The dew dried before sunrise")
-    }
-
-    @Test func rainAfterSunriseWetsTheTentOnceItHasFallen() {
-        let morningRain = F.night { d in F.hour(d, amount: d == F.at(1, 6) ? 0.5 : 0) }
-        let fallen = morning(decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(morningRain, at: F.at(1, 7, 30)))
-        #expect(fallen.headline == "Packing wet")
-        #expect(fallen.reason == "It rained this morning, so the rainfly is wet")
-        let coming = morning(decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(morningRain, at: F.at(1, 5, 50)))
-        #expect(coming.headline == "Dry night")
-    }
-
-    @Test func aFirstForecastAfterSunriseMadeNoCall() {
-        #expect(!morning(decided: fetched(dewy, at: F.at(1, 7)), latest: fetched(dewy, at: F.at(1, 7))).madeACall)
-        #expect(morning(decided: fetched(dewy, at: F.at(1, 2)), latest: fetched(dewy, at: F.at(1, 7))).madeACall)
-    }
-
-    @Test func lastNightNamesWhatRainflyExpectedWithoutATime() {
-        #expect(morning(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 8))).lastNight == "Rainfly expected dew")
+    @Test func theHeadlineIsWhatTheCallExpected() {
+        let dew = morning(call: fetched(dewy, at: F.at(0, 21)))
+        #expect(dew.headline == "Rainfly expected dew")
+        #expect(dew.brief == "Expected dew")
+        #expect(dew.flyOn)
         let likely = F.night { F.hour($0, temp: 12, dewPoint: 10, wind: 1, chance: 0.6) }
-        #expect(morning(decided: fetched(likely, at: F.at(0, 21)), latest: fetched(likely, at: F.at(1, 8))).lastNight == "Rainfly expected rain")
+        #expect(morning(call: fetched(likely, at: F.at(0, 21))).headline == "Rainfly expected rain")
+        let dry = morning(call: fetched(F.night(), at: F.at(0, 21)))
+        #expect(dry.headline == "Rainfly expected a dry night")
+        #expect(!dry.flyOn)
+    }
+
+    @Test func theCallGoesByTheSettingsItWasSealedWith() {
+        var wide = Settings()
+        wide.dewSpreadC = 5
+        let nearly = fetched(F.night { F.hour($0, temp: 12, dewPoint: 8, wind: 1) }, at: F.at(0, 21))
+        #expect(morning(call: nearly, settings: wide).headline == "Rainfly expected dew")
+        #expect(morning(call: nearly).headline == "Rainfly expected a dry night")
+    }
+
+    @Test func coldAloneIsACallForAColdNight() {
+        var cold = Settings()
+        cold.coldC = 20
+        let words = morning(call: fetched(F.night(), at: F.at(0, 21)), settings: cold)
+        #expect(words.headline == "Rainfly expected a cold night")
+        #expect(words.flyOn)
+    }
+
+    @Test func aNightWithNoForecastBeforeTheAnchorHasNoCall() {
+        let words = morning(call: fetched(dewy, at: F.at(1, 0, 58)))
+        #expect(words.headline == "Rainfly made no call last night")
+        #expect(words.brief == "No call last night")
+        #expect(!words.flyOn)
     }
 
     @Test func theMorningQuestionReadsAsTheCall() {
-        let dew = Firing(trigger: .dew, at: F.at(0, 19))
-        #expect(MorningText.expected(dew) == "Rainfly expected dew")
+        #expect(MorningText.expected(Firing(trigger: .dew, at: F.at(0, 22))) == "Rainfly expected dew")
         #expect(MorningText.expected(Firing(trigger: .frost, at: F.at(1, 4))) == "Rainfly expected frost")
         #expect(MorningText.expected(Firing(trigger: .storm, at: F.at(1, 1))) == "Rainfly expected a storm")
         #expect(MorningText.expected(Firing(trigger: .windRain, at: F.at(1, 1))) == "Rainfly expected rain")
@@ -136,58 +86,31 @@ struct MorningTextTests {
         #expect(MorningText.expected(nil, afterRain: true) == "Rainfly expected no dew or frost")
     }
 
-    @Test func coldAloneIsACallForAColdNight() {
-        var cold = Settings()
-        cold.coldC = 20
-        let words = morning(decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(F.night(), at: F.at(1, 8)), decidedSettings: cold)
-        #expect(words.lastNight == "Rainfly expected a cold night")
-    }
-
-    @Test func packingComparesDryingWithPackingUp() {
-        let dries = F.dewyNight { F.hour($0, temp: 15, dewPoint: 5) }
-        let dryToPack = morning(decided: dries, latest: dries)
-        #expect(dryToPack.headline == "Dry to pack")
-        #expect(plain(dryToPack.reason) == "It should be dry around 6:30 AM, before you pack up at 8 AM")
-        #expect(dryToPack.advice == nil)
-
-        let staysWet = F.dewyNight { F.hour($0, temp: 10, dewPoint: 9.5, cloud: 1, wind: 0) }
-        let wet = morning(decided: staysWet, latest: staysWet)
-        #expect(wet.headline == "Packing wet")
-        #expect(wet.reason == "It won't be dry before noon")
-        #expect(wet.advice != nil)
-
-        let dry = morning(decided: F.night(), latest: F.night())
-        #expect(dry.headline == "Dry night")
-    }
-
-    @Test func durationsReadAsWords() {
-        #expect(MorningText.duration(1800) == "half an hour")
-        #expect(MorningText.duration(3600) == "an hour")
-        #expect(MorningText.duration(5400) == "an hour and a half")
-        #expect(MorningText.duration(7200) == "two hours")
-        #expect(MorningText.duration(9000) == "two and a half hours")
+    @Test func tonightTakesOverAtNoon() {
+        #expect(plain(morning(call: fetched(dewy, at: F.at(0, 21))).handoverTime) == "12 PM")
     }
 }
 
 struct OvernightTextTests {
+    /// The night's call is sealed from `forecast`, when it came before the anchor.
     private func overnight(
-        decided: NightForecast, latest: NightForecast, at now: Date? = nil, current: CurrentConditions? = nil
+        call forecast: NightForecast, latest: NightForecast, at now: Date? = nil, current: CurrentConditions? = nil
     ) -> OvernightText {
         OvernightText(
-            text: VerdictText(night: latest, verdict: FlyEngine.evaluate(latest, settings: Settings()), settings: Settings(), units: metric, locale: english),
-            decided: decided, decidedSettings: Settings(), now: now ?? latest.fetchedAt, current: current
+            text: VerdictText(night: latest, settings: Settings(), units: metric, locale: english),
+            call: NightCall.seal(forecast, settings: Settings()), now: now ?? latest.fetchedAt, current: current
         )
     }
 
     @Test func the22CallKeepsItsOwnChanceOfRain() {
         let rainAt1 = { (chance: Double) in F.night { d in F.hour(d, chance: d == F.at(1, 1) ? chance : 0) } }
-        let words = overnight(decided: fetched(rainAt1(0.4), at: F.at(0, 21)), latest: fetched(F.night(), at: F.at(1, 0, 30)))
+        let words = overnight(call: fetched(rainAt1(0.4), at: F.at(0, 21)), latest: fetched(F.night(), at: F.at(1, 0, 30)))
         #expect(plain(words.note) == "At 10 PM, Rainfly said on: rain 40% at 1 AM")
     }
 
     @Test func aChangeSince22IsNamed() {
         let rainLater = F.night { d in F.hour(d, temp: 12, dewPoint: 10, wind: 1, chance: d == F.at(1, 5) ? 0.4 : 0) }
-        let words = overnight(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(rainLater, at: F.at(1, 2)))
+        let words = overnight(call: fetched(dewy, at: F.at(0, 21)), latest: fetched(rainLater, at: F.at(1, 2)))
         #expect(words.hasChanged)
         #expect(plain(words.reason) == "New since 10 PM: rain 40% at 5 AM")
         #expect(plain(words.note) == "At 10 PM, Rainfly said on: dew likely by 10 PM")
@@ -196,11 +119,11 @@ struct OvernightTextTests {
 
     @Test func aSingleForecastHasNothingToCompare() {
         let only = fetched(dewy, at: F.at(1, 1, 50))
-        #expect(overnight(decided: only, latest: only).note == nil)
+        #expect(overnight(call: only, latest: only).note == nil)
     }
 
     @Test func noChangeSaysSo() {
-        let words = overnight(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 2)), at: F.at(1, 2, 10))
+        let words = overnight(call: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 2)), at: F.at(1, 2, 10))
         #expect(!words.hasChanged)
         #expect(plain(words.note) == "Same as the 10 PM forecast")
         #expect(words.hoursAhead.map(\.date) == [F.at(1, 2), F.at(1, 3), F.at(1, 4), F.at(1, 5)])
@@ -208,7 +131,7 @@ struct OvernightTextTests {
 
     @Test func rainInAnHourAlreadyPastIsNotNew() {
         let rainedAt20 = F.night { d in F.hour(d, temp: 12, dewPoint: 10, wind: 1, amount: d == F.at(0, 20) ? 0.5 : 0) }
-        let words = overnight(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(rainedAt20, at: F.at(1, 2)))
+        let words = overnight(call: fetched(dewy, at: F.at(0, 21)), latest: fetched(rainedAt20, at: F.at(1, 2)))
         #expect(!words.hasChanged)
         #expect(words.headline == "Rainfly on")
         #expect(plain(words.reason) == "The rainfly is wet from rain at 8 PM")
@@ -219,27 +142,27 @@ struct OvernightTextTests {
     @Test func aWetRainflyStaysOnUntilItHasDried() {
         let rainAt23 = { (wind: Double) in F.night { d in F.hour(d, wind: wind, amount: d == F.at(0, 23) ? 1 : 0) } }
         let breezy = fetched(rainAt23(8), at: F.at(0, 21))
-        let wet = overnight(decided: breezy, latest: breezy, at: F.at(1, 2, 30))
+        let wet = overnight(call: breezy, latest: breezy, at: F.at(1, 2, 30))
         #expect(wet.headline == "Rainfly on")
         #expect(plain(wet.reason) == "The rainfly is wet from rain at 11 PM")
-        let dried = overnight(decided: breezy, latest: breezy, at: F.at(1, 4, 30))
+        let dried = overnight(call: breezy, latest: breezy, at: F.at(1, 4, 30))
         #expect(dried.headline == "Rainfly off")
         #expect(dried.reason == "Nothing more expected tonight")
         let still = fetched(rainAt23(1), at: F.at(0, 21))
-        #expect(overnight(decided: still, latest: still, at: F.at(1, 5)).headline == "Rainfly on")
+        #expect(overnight(call: still, latest: still, at: F.at(1, 5)).headline == "Rainfly on")
     }
 
     @Test func rainRightNowWetsTheRainfly() {
         let dry = fetched(F.night(), at: F.at(0, 21))
         let raining = CurrentConditions(date: F.at(1, 3, 15), tempC: 15, dewPointC: 5, cloudCover: 0.9, windMS: 4, isRaining: true)
-        let words = overnight(decided: dry, latest: dry, at: F.at(1, 3, 20), current: raining)
+        let words = overnight(call: dry, latest: dry, at: F.at(1, 3, 20), current: raining)
         #expect(words.headline == "Rainfly on")
         #expect(plain(words.reason) == "The rainfly is wet from rain at 3:15 AM")
-        #expect(overnight(decided: dry, latest: dry, at: F.at(1, 3, 20)).headline == "Rainfly off")
+        #expect(overnight(call: dry, latest: dry, at: F.at(1, 3, 20)).headline == "Rainfly off")
     }
 
     @Test func rightNowNamesWhatIsHappening() {
-        let words = overnight(decided: dewy, latest: dewy)
+        let words = overnight(call: dewy, latest: dewy)
         let forming = CurrentConditions(date: F.at(1, 2), tempC: 7, dewPointC: 5, cloudCover: 0.1, windMS: 1, isRaining: false)
         #expect(words.now(forming).title == "Dew is forming")
         let cloudyNow = CurrentConditions(date: F.at(1, 2), tempC: 7, dewPointC: 5, cloudCover: 0.9, windMS: 1, isRaining: false)
@@ -262,23 +185,23 @@ struct OvernightTextTests {
 
 @MainActor
 struct OvernightAlertTests {
-    private func message(decided: NightForecast, latest: NightForecast, at now: Date) -> (title: String, body: String)? {
-        OvernightAlert.message(
-            night: latest, decided: decided, decidedSettings: Settings(), settings: Settings(), units: metric, at: now
-        )
+    private func message(call forecast: NightForecast, latest: NightForecast, at now: Date) -> (title: String, body: String)? {
+        NightCall.seal(forecast, settings: Settings()).flatMap {
+            OvernightAlert.message(night: latest, call: $0, settings: Settings(), units: metric, at: now)
+        }
     }
 
     @Test func goesOutWhenTheForecastTurnsTheRainflyOnOvernight() {
-        let alert = message(decided: fetched(cloudy, at: F.at(0, 21)), latest: fetched(cloudyThenClear, at: F.at(1, 1)), at: F.at(1, 1))
+        let alert = message(call: fetched(cloudy, at: F.at(0, 21)), latest: fetched(cloudyThenClear, at: F.at(1, 1)), at: F.at(1, 1))
         #expect(alert?.title == "Put the rainfly on")
         #expect(alert?.body.hasSuffix("Rainfly said it could stay off.") == true)
     }
 
     @Test func staysQuietOtherwise() {
-        #expect(message(decided: fetched(cloudy, at: F.at(0, 21)), latest: fetched(cloudyThenClear, at: F.at(0, 21)), at: F.at(0, 21)) == nil)
-        #expect(message(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 1)), at: F.at(1, 1)) == nil)
-        #expect(message(decided: fetched(cloudy, at: F.at(0, 21)), latest: fetched(cloudy, at: F.at(1, 1)), at: F.at(1, 1)) == nil)
+        #expect(message(call: fetched(cloudy, at: F.at(0, 21)), latest: fetched(cloudyThenClear, at: F.at(0, 21)), at: F.at(0, 21)) == nil)
+        #expect(message(call: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 1)), at: F.at(1, 1)) == nil)
+        #expect(message(call: fetched(cloudy, at: F.at(0, 21)), latest: fetched(cloudy, at: F.at(1, 1)), at: F.at(1, 1)) == nil)
         let rainedAt20 = F.night { d in F.hour(d, temp: 12, dewPoint: 10, cloud: 0.8, wind: 1, amount: d == F.at(0, 20) ? 0.5 : 0) }
-        #expect(message(decided: fetched(cloudy, at: F.at(0, 21)), latest: fetched(rainedAt20, at: F.at(1, 1)), at: F.at(1, 1)) == nil)
+        #expect(message(call: fetched(cloudy, at: F.at(0, 21)), latest: fetched(rainedAt20, at: F.at(1, 1)), at: F.at(1, 1)) == nil)
     }
 }

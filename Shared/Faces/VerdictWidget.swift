@@ -32,9 +32,7 @@ struct VerdictProvider: TimelineProvider {
         let camps = Store.camps.load() ?? Camps()
         return ComplicationTimeline.entries(now: now, settings: settings, units: store.preferences.units) { date in
             let night = camps.night(at: date)
-            guard var fetches = cache.fetches(at: camps.campName(on: night), on: night) else { return nil }
-            fetches.decidedSettings = fetches.decided.map { store.settings(at: NightWindow.decidedAt($0)) }
-            return fetches
+            return cache.fetches(at: camps.campName(on: night), on: night, settings: settings)
         }
         .map { VerdictEntry(date: $0.date, face: $0.face) }
     }
@@ -47,7 +45,7 @@ struct VerdictWidget: Widget {
                 .containerBackground(.fill.tertiary, for: .widget)
         }
         .configurationDisplayName("Rainfly")
-        .description("Tonight's rainfly verdict, and when the tent will be dry.")
+        .description("Tonight's rainfly verdict.")
         .supportedFamilies(Self.families)
     }
 
@@ -70,7 +68,7 @@ struct VerdictWidgetView: View {
         case .accessoryCorner:
             glyph
                 .frame(width: 26, height: 26)
-                .widgetLabel(face.dryTime.map { "Dry \($0)" } ?? face.headline)
+                .widgetLabel(face.headline)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("\(face.headline). \(face.detail)")
         #else
@@ -129,14 +127,7 @@ struct VerdictWidgetView: View {
         default:
             ZStack {
                 AccessoryWidgetBackground()
-                if let dryTime = face.dryTime {
-                    VStack(spacing: 0) {
-                        Text("DRY").font(.system(size: 9, weight: .semibold))
-                        Text(dryTime).font(.system(.body, design: .rounded).weight(.semibold))
-                    }
-                } else {
-                    glyph.frame(width: 30, height: 30)
-                }
+                glyph.frame(width: 30, height: 30)
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(face.headline). \(face.detail)")
@@ -155,7 +146,7 @@ struct VerdictWidgetView: View {
     @ViewBuilder
     private var glyph: some View {
         switch face.flyOn {
-        case true?: TentGlyph(flyOn: true).foregroundStyle(face.muted ? AnyShapeStyle(.secondary) : AnyShapeStyle(Self.green))
+        case true?: TentGlyph(flyOn: true).foregroundStyle(Self.green)
         case false?: TentGlyph(flyOn: false)
         case nil: TentGlyph(flyOn: false).foregroundStyle(.secondary)
         }

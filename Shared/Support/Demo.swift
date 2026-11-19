@@ -18,8 +18,8 @@ import Foundation
 ///                                         nights at the first camp, and its diary screen
 ///     --at HH:MM                          runs the app at that time: from noon on the
 ///                                         evening of tonight, before noon the morning after
-///     --was clear|rain|storm|dew|frost    the forecast at 22:00 in that scene, so the
-///                                         overnight and morning screens show a change
+///     --was clear|rain|storm|dew|frost    the night's call in that scene, so the overnight
+///                                         screen shows a change
 ///     --open review                       the same week, and last night at My Location
 ///                                         with dew forecast and no answer, so from 6:10 AM
 ///                                         to 8:10 PM the main screen asks if it was right
@@ -74,10 +74,11 @@ enum Demo {
         let cache = ForecastCache(directory: directory)
         let calendar = NightWindow.localCalendar(for: nextCamp)
         cache.save(provider.makeNight(at: nextCamp, evening: tonight.adding(days: 1).start(in: calendar), scene: "clear"), settings: Settings())
-        if let was = argument(after: "--was") {
-            let evening = tonight.start(in: NightWindow.localCalendar(for: camp))
-            let decided = provider.makeNight(at: camp, evening: evening, scene: was, fetchedAt: evening.addingTimeInterval(21 * 3600))
-            cache.save(decided, now: decided.fetchedAt, settings: Settings())
+        let evening = tonight.start(in: NightWindow.localCalendar(for: camp))
+        let beforeBed = evening.addingTimeInterval(21 * 3600)
+        if beforeBed < AppClock.now {
+            let called = provider.makeNight(at: camp, evening: evening, scene: argument(after: "--was") ?? scene, fetchedAt: beforeBed)
+            cache.save(called, now: beforeBed, settings: Settings())
         }
         return ForecastModel(
             provider: provider, cache: cache,

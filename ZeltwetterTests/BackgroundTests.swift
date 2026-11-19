@@ -112,10 +112,11 @@ struct RefreshScheduleTests {
         #expect(RefreshTiming.nextDate(after: F.at(0, 23), window: window, watchesNight: false) == F.at(1, 0))
     }
 
-    @Test func soonAfterSunsetAndTheRecord() {
+    @Test func soonAfterSunsetAndJustBeforeTheAnchor() {
         #expect(RefreshTiming.nextDate(after: F.at(0, 20), window: window, watchesNight: true) == F.sunset)
         #expect(RefreshTiming.nextDate(after: F.at(0, 20, 25), window: window, watchesNight: true) == F.at(0, 20, 40))
-        #expect(RefreshTiming.nextDate(after: F.at(1, 7, 30), window: window, watchesNight: true) == F.at(1, 7, 46))
+        #expect(RefreshTiming.nextDate(after: F.at(0, 21), window: window, watchesNight: false) == F.at(0, 21, 45))
+        #expect(RefreshTiming.nextDate(after: F.at(0, 21, 45), window: window, watchesNight: false) == F.at(0, 22))
     }
 
     @Test func hourlyOtherwise() {

@@ -50,10 +50,7 @@ struct NightWindowTests {
 struct VerdictTextTests {
     private func text(_ night: NightForecast, _ settings: Settings = Settings(), fahrenheit: Bool = false) -> VerdictText {
         let units = DisplayUnits(fahrenheit: fahrenheit, mph: false)
-        return VerdictText(
-            night: night, verdict: FlyEngine.evaluate(night, settings: settings), settings: settings,
-            units: units, locale: Locale(identifier: "en_US")
-        )
+        return VerdictText(night: night, settings: settings, units: units, locale: Locale(identifier: "en_US"))
     }
 
     /// Recent ICU puts a narrow no-break space before AM and PM.
@@ -89,14 +86,14 @@ struct VerdictTextTests {
         #expect(plain(morning.reason) == "Morning rain 40% at 7 AM")
 
         let cold = text(F.night { F.hour($0, temp: 8, dewPoint: 0) })
-        #expect(plain(cold.reason) == "Below 10° by 8 PM: the rainfly holds warmth")
+        #expect(plain(cold.reason) == "Below 10° by 10 PM: the rainfly holds warmth")
         let coldF = text(F.night { F.hour($0, temp: 8, dewPoint: 0) }, fahrenheit: true)
-        #expect(plain(coldF.reason) == "Below 50° by 8 PM: the rainfly holds warmth")
+        #expect(plain(coldF.reason) == "Below 50° by 10 PM: the rainfly holds warmth")
     }
 
     @Test func dewAndFrostSayWhatDecidedThem() {
         let dew = text(F.night { F.hour($0, temp: 12, dewPoint: 10, wind: 1) })
-        #expect(plain(dew.summary(.dew)) == "At 8 PM the air is 2.0° from its dew point, with a clear sky and little wind, so dew will form.")
+        #expect(plain(dew.summary(.dew)) == "At 10 PM the air is 2.0° from its dew point, with a clear sky and little wind, so dew will form.")
         #expect(dew.summary(.frost) == "Frost would form, but the air stays warmer than 2°, so it will be dew instead.")
 
         let frost = text(F.night { F.hour($0, temp: -2, dewPoint: -4, wind: 1) })
@@ -148,7 +145,7 @@ struct VerdictTextTests {
         var settings = Settings()
         settings.bagRatingC = 15
         let words = text(F.dewyNight { F.hour($0, temp: 15, dewPoint: 5) }, settings)
-        #expect(plain(words.reason) == "Dew likely by 8 PM")
+        #expect(plain(words.reason) == "Dew likely by 10 PM")
         #expect(words.notes(at: F.at(0, 21)).map(plain) == ["Open the vents: it's a damp, still night", "Wear layers: it gets colder than your sleeping bag is rated for", "Dry around 6:30 AM tomorrow"])
         #expect(words.notes(at: F.at(1, 2)).last.map(plain) == "Dry around 6:30 AM this morning")
         #expect(words.notes(at: F.at(-1, 21)).last.map(plain) == "Dry around 6:30 AM on Thursday")
@@ -159,17 +156,12 @@ struct VerdictTextTests {
         #expect(words.notes(at: F.at(0, 21)) == ["Open the vents: it's a damp, still night", "Won't dry before noon tomorrow"])
     }
 
-    @Test func briefAndCompactTimes() {
+    @Test func briefTimesFollowTheLocalesClock() {
         let words = text(F.night { F.hour($0, temp: 12, dewPoint: 10, wind: 1) })
-        #expect(plain(words.brief(words.verdict.headline!)) == "Dew 8 PM")
-        #expect(words.compactClock(F.at(1, 6, 45)) == "6:45")
-        #expect(words.compactClock(F.at(0, 20, 5)) == "8:05")
-        #expect(words.compactClock(F.at(1, 0, 30)) == "12:30")
+        #expect(plain(words.brief(words.verdict.headline!)) == "Dew 10 PM")
 
         var german = words
         german.locale = Locale(identifier: "de_DE")
-        #expect(german.compactClock(F.at(1, 6, 45)) == "06:45")
-        #expect(german.compactClock(F.at(0, 20, 5)) == "20:05")
         #expect(german.clock(F.at(0, 20)) == "20:00")
     }
 
@@ -227,21 +219,6 @@ func temporaryCache() -> ForecastCache {
 struct ForecastCacheTests {
     private let july1 = NightDate(year: 2026, month: 7, day: 1)
 
-    @Test func aDiaryAnswerReachesTheNightsFetches() {
-        let cache = temporaryCache()
-        cache.save(F.night(), now: F.at(0, 18), settings: Settings())
-        let dry = DewObservation(kind: .dry, openSky: true, at: F.at(1, 6))
-        cache.save(found: [FoundNight(campName: F.camp.name, date: july1, observation: dry)], now: F.at(1, 6))
-        #expect(cache.fetches(at: F.camp.name, on: july1)?.found == dry)
-
-        let wet = DewObservation(kind: .wet, openSky: true, at: F.at(1, 7))
-        cache.save(found: [FoundNight(campName: F.camp.name, date: july1, observation: wet)], now: F.at(1, 7))
-        #expect(cache.allFound.map(\.observation) == [wet])
-
-        cache.save(found: [], now: F.at(3, 8))
-        #expect(cache.allFound.isEmpty)
-    }
-
     @Test func savesAndFindsTheNightByCampAndEvening() {
         let cache = temporaryCache()
         let night = F.night()
@@ -251,26 +228,8 @@ struct ForecastCacheTests {
         #expect(cache.night(at: F.camp.name, on: july1.adding(days: 1)) == nil)
     }
 
-    @Test func aNightKeepsItsLatestAndItsDecided() {
-        let cache = temporaryCache()
-        let fetched = { (date: Date) in
-            let night = F.night()
-            return NightForecast(location: night.location, fetchedAt: date, sunset: night.sunset, sunrise: night.sunrise, hours: night.hours)
-        }
-        for date in [F.at(0, 18), F.at(0, 21, 30), F.at(0, 23), F.at(1, 5), F.at(1, 8)] {
-            cache.save(fetched(date), now: date, settings: Settings())
-        }
-        #expect(cache.night(at: F.camp.name, on: july1)?.fetchedAt == F.at(1, 8))
-        #expect(cache.decided(at: F.camp.name, on: july1)?.fetchedAt == F.at(0, 21, 30))
-        #expect(cache.store.load()?.count == 2)
-    }
-
-    @Test func aNightFirstFetchedAfterTenIsJudgedOnThatFetch() {
-        let cache = temporaryCache()
-        let night = F.night()
-        let late = NightForecast(location: night.location, fetchedAt: F.at(1, 1), sunset: night.sunset, sunrise: night.sunrise, hours: night.hours)
-        cache.save(late, now: F.at(1, 1), settings: Settings())
-        #expect(cache.decided(at: F.camp.name, on: july1) == late)
+    private func call(in cache: ForecastCache) -> NightCall? {
+        cache.fetches(at: F.camp.name, on: july1, settings: Settings())?.call
     }
 
     private func fetched(_ date: Date, _ night: NightForecast = F.night()) -> NightForecast {
@@ -282,24 +241,32 @@ struct ForecastCacheTests {
         for date in [F.at(0, 18), F.at(0, 21, 30), F.at(0, 23), F.at(1, 2)] {
             cache.save(fetched(date), now: date, settings: Settings())
         }
-        let call = cache.call(at: F.camp.name, on: july1, now: F.at(1, 7), settings: Settings())
-        #expect(call?.forecast.fetchedAt == F.at(0, 21, 30))
+        #expect(call(in: cache)?.forecast.fetchedAt == F.at(0, 21, 30))
         #expect(cache.callStore.load()?.count == 1)
+        #expect(cache.store.load()?.count == 1)
     }
 
     @Test func readingAtTheAnchorSealsTheCall() {
         let cache = temporaryCache()
         cache.save(fetched(F.at(0, 21, 30)), now: F.at(0, 21, 30), settings: Settings())
-        #expect(cache.call(at: F.camp.name, on: july1, now: F.at(0, 21, 45), settings: Settings()) == nil)
+        cache.sealCall(at: F.camp.name, on: july1, now: F.at(0, 21, 45), settings: Settings())
         #expect(cache.callStore.load() ?? [] == [])
-        #expect(cache.call(at: F.camp.name, on: july1, now: F.at(0, 22), settings: Settings())?.forecast.fetchedAt == F.at(0, 21, 30))
+        cache.sealCall(at: F.camp.name, on: july1, now: F.at(0, 22), settings: Settings())
+        #expect(cache.callStore.load()?.map(\.forecast.fetchedAt) == [F.at(0, 21, 30)])
     }
 
     @Test func aNightFirstFetchedAfterTheAnchorHasNoCall() {
         let cache = temporaryCache()
         cache.save(fetched(F.at(1, 0, 58)), now: F.at(1, 0, 58), settings: Settings())
         cache.save(fetched(F.at(1, 3)), now: F.at(1, 3), settings: Settings())
-        #expect(cache.call(at: F.camp.name, on: july1, now: F.at(1, 7), settings: Settings()) == nil)
+        #expect(call(in: cache) == nil)
+    }
+
+    @Test func beforeItIsSealedTheCallIsWhatTheLatestForecastWouldSeal() {
+        let cache = temporaryCache()
+        cache.save(fetched(F.at(0, 20)), now: F.at(0, 20), settings: Settings())
+        #expect(call(in: cache)?.forecast.fetchedAt == F.at(0, 20))
+        #expect(cache.callStore.load() ?? [] == [])
     }
 
     @Test func aSealedCallKeepsItsForecastAndSettings() {
@@ -310,7 +277,7 @@ struct ForecastCacheTests {
         cache.save(fetched(F.at(0, 21), nearly), now: F.at(0, 21), settings: wide)
         cache.save(fetched(F.at(0, 23)), now: F.at(0, 23), settings: wide)
         cache.save(fetched(F.at(1, 4)), now: F.at(1, 4), settings: Settings())
-        let call = cache.call(at: F.camp.name, on: july1, now: F.at(1, 7), settings: Settings())
+        let call = call(in: cache)
         #expect(call?.forecast.fetchedAt == F.at(0, 21))
         #expect(call?.settings == wide)
         #expect(call?.verdict.condensation != nil)

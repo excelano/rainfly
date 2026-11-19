@@ -25,10 +25,3 @@ struct DewObservation: Codable, Equatable, Sendable {
     let openSky: Bool
     let at: Date
 }
-
-/// A diary answer as the other screens read it: which camp and night it was given for.
-struct FoundNight: Codable, Equatable, Sendable {
-    let campName: String
-    let date: NightDate
-    let observation: DewObservation
-}

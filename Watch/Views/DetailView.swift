@@ -10,9 +10,9 @@ struct DetailView: View {
     var body: some View {
         List {
             let now = AppClock.now
-            if let night = model.night, let verdict = model.verdict, let phase = model.window?.phase(at: now) {
-                let wholeNight = VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units)
-                let text = phase == .overnight ? wholeNight.ahead(of: now) : wholeNight
+            if let night = model.night, let phase = model.window?.phase(at: now) {
+                let overnight = VerdictText(night: night, settings: model.settings, units: model.preferences.units)
+                let text = phase == .overnight ? overnight.ahead(of: now) : overnight
                 let window = text.window
                 Section {
                     ForEach(text.checks, id: \.self) { trigger in
@@ -62,7 +62,7 @@ struct DetailView: View {
 
 extension DetailView {
     private var title: String {
-        guard let night = model.night, let verdict = model.verdict else { return "Tonight" }
-        return VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units).period(at: .now)
+        guard let night = model.night else { return "Tonight" }
+        return VerdictText(night: night, settings: model.settings, units: model.preferences.units).period(at: .now)
     }
 }

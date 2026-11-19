@@ -10,8 +10,8 @@ struct VerdictView: View {
     var body: some View {
         TimelineView(.everyMinute) { context in
             let now = Self.now(context.date)
-            if let night = model.night, let verdict = model.verdict {
-                let text = VerdictText(night: night, verdict: verdict, settings: model.settings, units: model.preferences.units)
+            if let night = model.night {
+                let text = VerdictText(night: night, settings: model.settings, units: model.preferences.units)
                 NavigationLink {
                     DetailView()
                 } label: {
@@ -52,10 +52,9 @@ struct VerdictLines {
     let flyOn: Bool
     let caption: String
     let headline: String
-    let reason: String
+    var reason: String?
     var warning: String?
     var notes: [String] = []
-    var muted = false
 }
 
 extension VerdictView {
@@ -76,11 +75,7 @@ extension VerdictView {
             )
         case .morning:
             let morning = fetches.morning(text)
-            return VerdictLines(
-                flyOn: morning.packing != .dryNight, caption: morning.caption, headline: morning.headline, reason: morning.reason,
-                warning: morning.rainAhead(at: now), notes: [morning.advice, morning.madeACall ? morning.lastNight : nil].compactMap { $0 },
-                muted: morning.packing == .dryToPack
-            )
+            return VerdictLines(flyOn: morning.flyOn, caption: morning.caption, headline: morning.brief)
         }
     }
 
@@ -104,16 +99,18 @@ private struct VerdictContent: View {
             VStack(spacing: 4) {
                 TentGlyph(flyOn: lines.flyOn)
                     .frame(height: 52)
-                    .foregroundStyle(lines.flyOn && !lines.muted ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+                    .foregroundStyle(lines.flyOn ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
                 Text(lines.caption.uppercased())
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                 Text(lines.headline)
                     .font(.title2.bold())
-                Text(lines.reason)
-                    .font(.footnote)
-                    .multilineTextAlignment(.center)
+                if let reason = lines.reason {
+                    Text(reason)
+                        .font(.footnote)
+                        .multilineTextAlignment(.center)
+                }
                 if let warning = lines.warning {
                     Text(warning)
                         .font(.footnote)

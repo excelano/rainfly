@@ -118,43 +118,14 @@ final class ForecastModel {
         night.map { NightWindow($0, packByMinutes: settings.packByMinutes) }
     }
 
-    /// The forecast the shown night is judged against, fixed at 22:00.
-    var decided: NightForecast? {
-        _ = cacheRevision
-        return date.flatMap { cache.decided(at: campName, on: $0) }
-    }
-
-    var decidedSettings: Settings {
-        decided.map { settings(at: NightWindow.decidedAt($0)) } ?? settings
-    }
-
     func settings(at date: Date) -> Settings {
         store.settings(at: date)
     }
 
+    /// The shown night's latest forecast with its call.
     var fetches: NightFetches? {
-        night.map {
-            NightFetches(
-                latest: $0, decided: decided, decidedSettings: decidedSettings,
-                found: date.flatMap { cache.found(at: campName, on: $0) }
-            )
-        }
-    }
-
-    /// The dew diary's answers on this device, which the phone sends to the watch.
-    var found: [FoundNight] {
         _ = cacheRevision
-        return cache.allFound
-    }
-
-    /// Keeps diary answers, recorded here or sent by the phone, for every screen's morning.
-    func keep(found: [FoundNight]) {
-        let kept = cache.allFound
-        guard found.contains(where: { ForecastCache.isRecent($0) && !kept.contains($0) }) else { return }
-        cache.save(found: found)
-        cacheRevision += 1
-        WidgetCenter.shared.reloadAllTimelines()
-        sharedStateChanged?()
+        return date.flatMap { cache.fetches(at: campName, on: $0, settings: settings) }
     }
 
     /// Whether the overnight alert went out for the shown night.
@@ -184,18 +155,14 @@ final class ForecastModel {
         campName = name
         self.date = date
         night = cache.night(at: campName, on: date)
+        cache.sealCall(at: campName, on: date, now: now, settings: settings)
         evaluate()
-        if let night, now.timeIntervalSince(night.fetchedAt) < Self.refreshAge, !awaitsRecord(night, now: now) {
+        if let night, now.timeIntervalSince(night.fetchedAt) < Self.refreshAge {
             if !inBackground { await refreshCurrent(now: now) }
             return
         }
         await refresh(now: now, inBackground: inBackground)
         if !inBackground { await refreshCurrent(now: now) }
-    }
-
-    /// In the morning the night is fetched again once WeatherKit's hours have become its record.
-    private func awaitsRecord(_ night: NightForecast, now: Date) -> Bool {
-        window?.phase(at: now) == .morning && !NightRecord.isSettled(night) && now >= NightRecord.ready(night)
     }
 
     /// Overnight, the weather now at the night's camp, every quarter hour while on screen.
@@ -306,9 +273,7 @@ final class ForecastModel {
 
     func cachedFetches(_ tripNight: TripNight) -> NightFetches? {
         _ = cacheRevision
-        guard var fetches = cache.fetches(at: tripNight.campName, on: tripNight.date) else { return nil }
-        fetches.decidedSettings = fetches.decided.map { settings(at: NightWindow.decidedAt($0)) }
-        return fetches
+        return cache.fetches(at: tripNight.campName, on: tripNight.date, settings: settings)
     }
 
     var sharedState: SyncedState {

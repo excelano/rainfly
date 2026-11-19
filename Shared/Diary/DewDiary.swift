@@ -145,7 +145,8 @@ struct DewDiary: Codable, Equatable {
 
     static let answerWindow: TimeInterval = 14 * 3600
     static let earlyAnswer: TimeInterval = 2 * 3600
-    static let historyDelay = NightRecord.delay
+    /// How long after sunrise WeatherKit's hours for the night are taken as its history.
+    static let historyDelay: TimeInterval = 2 * 3600
     static let settledAfter: TimeInterval = 12 * 3600
     static let historyReach: TimeInterval = 5 * 86_400
     static let suggestionNights = 5

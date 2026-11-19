@@ -21,33 +21,20 @@ struct WetFly: Codable, Equatable, Sendable {
     }
 
     static func packing(
-        _ night: NightForecast, packBy: Date, known: Date = .distantPast, settings: Settings,
-        dryByModel: DryByModel = DryByModel()
+        _ night: NightForecast, packBy: Date, settings: Settings, dryByModel: DryByModel = DryByModel()
     ) -> WetFly? {
-        morning(night, known: known, settings: settings, dryByModel: dryByModel).last { $0.since < packBy }
+        spells(night, wettingBefore: night.sunrise, settings: settings, dryByModel: dryByModel).last { $0.since < packBy }
     }
 
-    static func morning(
-        _ night: NightForecast, known: Date = .distantPast, found: DewObservation? = nil, settings: Settings,
-        dryByModel: DryByModel = DryByModel()
-    ) -> [WetFly] {
-        spells(night, wettingBefore: max(night.sunrise, known), found: found, settings: settings, dryByModel: dryByModel)
-    }
-
-    /// `found` is what the diary recorded on the fly, which overrides the forecast's hours: wet
-    /// from that moment if the hours had it dry, and on a dry answer no dew or frost before it
-    /// and nothing still wet at it.
     static func spells(
-        _ night: NightForecast, wettingBefore: Date, current: CurrentConditions? = nil, found: DewObservation? = nil,
-        settings: Settings, dryByModel: DryByModel = DryByModel()
+        _ night: NightForecast, wettingBefore: Date, current: CurrentConditions? = nil, settings: Settings,
+        dryByModel: DryByModel = DryByModel()
     ) -> [WetFly] {
         let noon = NightWindow(night, packByMinutes: settings.packByMinutes).handover
         let sunlit = night.polar != .polarNight
         var spells: [WetFly] = []
         var wet: (cause: Trigger, since: Date)?
         var left = 0.0
-        let seen = Seen(found)
-        let foundDryAt = seen.flatMap { $0.cause == nil ? $0.at : nil }
 
         func wetted(by cause: Trigger, at date: Date) {
             if wet.map({ cause.priority < $0.cause.priority }) ?? true { wet = (cause, date) }
@@ -75,8 +62,7 @@ struct WetFly: Codable, Equatable, Sendable {
             let end = min(hour.date.addingTimeInterval(3600), noon)
             if hour.date < wettingBefore,
                let cause = cause(rained: hour.precipAmountMM > 0, condenses: hour.date < night.sunrise, spreadC: hour.spreadC,
-                                 cloudCover: hour.cloudCover, windMS: hour.windMS, tempC: hour.tempC, settings: settings),
-               cause == .rain || foundDryAt.map({ hour.date >= $0 }) ?? true {
+                                 cloudCover: hour.cloudCover, windMS: hour.windMS, tempC: hour.tempC, settings: settings) {
                 wetted(by: cause, at: hour.date)
             } else {
                 let sunrise = min(max(night.sunrise, hour.date), end)
@@ -88,35 +74,9 @@ struct WetFly: Codable, Equatable, Sendable {
                                  cloudCover: current.cloudCover, windMS: current.windMS, tempC: current.tempC, settings: settings) {
                 wetted(by: cause, at: current.date)
             }
-            if let seen, seen.at >= hour.date, seen.at < end {
-                if let cause = seen.cause {
-                    if wet == nil { wetted(by: cause, at: seen.at) }
-                } else {
-                    wet = nil
-                }
-            }
         }
         if let wet { spells.append(WetFly(cause: wet.cause, since: wet.since, dryBy: nil)) }
         return spells
-    }
-
-    /// A diary answer as the walk reads it: when it was given, and what had wet the fly.
-    private struct Seen {
-        let at: Date
-        /// Nil when the fly was found dry.
-        let cause: Trigger?
-
-        init?(_ observation: DewObservation?) {
-            guard let observation else { return nil }
-            at = observation.at
-            switch observation.kind {
-            case .dry: cause = nil
-            case .lightDew, .wet: cause = .dew
-            case .frost: cause = .frost
-            case .rain: cause = .rain
-            case .notChecked: return nil
-            }
-        }
     }
 
     private static func cause(

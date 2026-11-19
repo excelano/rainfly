@@ -11,49 +11,40 @@ struct ComplicationFace: Equatable, Sendable {
     let headline: String
     let detail: String
     let inline: String
-    /// The dry-by time, set from sunrise to noon when there is one.
-    let dryTime: String?
     let fetchedAt: Date?
     /// The night's camp and the advice under the reason, for the phone's larger widgets.
     var camp: String?
     var notes: [String] = []
-    var muted = false
 
     static let noForecast = ComplicationFace(
-        flyOn: nil, headline: "No forecast", detail: "Open Rainfly with a signal", inline: "Rainfly: no forecast",
-        dryTime: nil, fetchedAt: nil
+        flyOn: nil, headline: "No forecast", detail: "Open Rainfly with a signal", inline: "Rainfly: no forecast", fetchedAt: nil
     )
 
     /// For the watch face and widget galleries.
     static let sample = ComplicationFace(
         flyOn: true, headline: "Rainfly on tonight", detail: "Dew likely by 4 AM", inline: "Rainfly on · Dew 4 AM",
-        dryTime: nil, fetchedAt: nil, camp: "Lost Lake", notes: ["Open the vents: it's a damp night", "Dry around 8:40 AM tomorrow"]
+        fetchedAt: nil, camp: "Lost Lake", notes: ["Open the vents: it's a damp night", "Dry around 8:40 AM tomorrow"]
     )
 }
 
-/// A night's latest forecast with the ones its overnight and morning words compare against.
+/// A night's latest forecast with its call: the one sealed, or before that the one the latest
+/// forecast would seal. Nil for a night with no forecast before the anchor.
 struct NightFetches: Equatable, Sendable {
     let latest: NightForecast
-    var decided: NightForecast?
-    var decidedSettings: Settings?
-    /// What the dew diary found the morning after.
-    var found: DewObservation?
+    var call: NightCall?
 
     func overnight(_ text: VerdictText, now: Date, current: CurrentConditions? = nil) -> OvernightText {
-        OvernightText(text: text, decided: decided ?? latest, decidedSettings: decidedSettings ?? text.settings, now: now, current: current)
+        OvernightText(text: text, call: call, now: now, current: current)
     }
 
     func morning(_ text: VerdictText) -> MorningText {
-        MorningText(
-            decided: decided ?? latest, latest: latest, settings: text.settings,
-            decidedSettings: decidedSettings ?? text.settings, units: text.units, found: found, locale: text.locale
-        )
+        MorningText(text: text, call: call)
     }
 }
 
 extension ComplicationFace {
     /// The face at `date`, for the part of the night it falls in: the verdict through the
-    /// evening, what has changed since 22:00 overnight, and packing up in the morning.
+    /// evening, what has changed since 22:00 overnight, and the night's call in the morning.
     init(_ text: VerdictText, at date: Date, fetches: NightFetches? = nil) {
         let night = text.night
         let fetches = fetches ?? NightFetches(latest: night)
@@ -64,16 +55,13 @@ extension ComplicationFace {
             let overnight = fetches.overnight(text, now: date)
             self.init(
                 flyOn: overnight.flyOn, headline: overnight.headline, detail: overnight.reason, inline: overnight.inline,
-                dryTime: nil, fetchedAt: night.fetchedAt, camp: night.location.title, notes: overnight.notes(at: date)
+                fetchedAt: night.fetchedAt, camp: night.location.title, notes: overnight.notes(at: date)
             )
         case .morning:
             let morning = fetches.morning(text)
-            let dryTime = morning.dryBy.map(text.compactClock)
             self.init(
-                flyOn: morning.packing != .dryNight, headline: morning.headline, detail: morning.reason,
-                inline: dryTime.map { "\(morning.headline) · dry \($0)" } ?? morning.headline, dryTime: dryTime,
-                fetchedAt: night.fetchedAt, camp: night.location.title,
-                notes: [morning.rainAhead(at: date), morning.advice].compactMap { $0 }, muted: morning.packing == .dryToPack
+                flyOn: morning.call.map(\.verdict.flyOn), headline: morning.brief, detail: morning.caption, inline: morning.headline,
+                fetchedAt: night.fetchedAt, camp: night.location.title
             )
         }
     }
@@ -84,13 +72,13 @@ extension ComplicationFace {
         if let ahead = text.beforeTonightText(at: date), let brief = text.beforeTonightBrief(at: date) {
             self.init(
                 flyOn: verdict.flyOn, headline: headline, detail: ahead,
-                inline: "\(brief), before tonight", dryTime: nil,
+                inline: "\(brief), before tonight",
                 fetchedAt: text.night.fetchedAt, camp: text.night.location.title, notes: [text.reason] + text.notes(at: date)
             )
         } else {
             self.init(
                 flyOn: verdict.flyOn, headline: headline, detail: text.reason,
-                inline: verdict.headline.map { "Rainfly on · \(text.brief($0))" } ?? headline, dryTime: nil,
+                inline: verdict.headline.map { "Rainfly on · \(text.brief($0))" } ?? headline,
                 fetchedAt: text.night.fetchedAt, camp: text.night.location.title, notes: text.notes(at: date)
             )
         }
@@ -98,8 +86,8 @@ extension ComplicationFace {
 }
 
 /// The complication's entries from the cached night: one now, at sunset, at 22:00, at each
-/// trigger, at sunrise, when the record arrives and on every hour so the forecast's age stays
-/// current, then one at noon, when the next night takes over.
+/// trigger, at sunrise and on every hour so the forecast's age stays current, then one at noon,
+/// when the next night takes over.
 enum ComplicationTimeline {
     static func entries(
         now: Date, settings: Settings, units: DisplayUnits, nightAt: (Date) -> NightFetches?
@@ -110,7 +98,7 @@ enum ComplicationTimeline {
         let text = VerdictText(night: night, settings: settings, units: units)
         let verdict = text.verdict
 
-        var marks = [now, night.sunset, window.anchor, night.sunrise, NightRecord.ready(night)] + verdict.firings.map(\.at)
+        var marks = [now, night.sunset, window.anchor, night.sunrise] + verdict.firings.map(\.at)
         var hour = Calendar.current.dateInterval(of: .hour, for: now)?.end ?? window.handover
         while hour < window.handover {
             marks.append(hour)

@@ -5,9 +5,8 @@
 import Foundation
 import UserNotifications
 
-/// After 22:00, a notification when the latest forecast puts the rainfly on and the forecast
-/// the night is judged against had it off. Once a night, and only through the system's
-/// notification settings.
+/// After 22:00, a notification when the latest forecast puts the rainfly on and the night's
+/// call had it off. Once a night, and only through the system's notification settings.
 @MainActor
 enum OvernightAlert {
     /// Posts the alert when it is due, unless `quiet`, which marks the night as alerted while
@@ -15,10 +14,9 @@ enum OvernightAlert {
     @discardableResult
     static func check(_ model: ForecastModel, quiet: Bool = false, now: Date = .now) async -> Bool {
         guard model.preferences.overnightAlert, !model.wasAlerted,
-              let night = model.night, let decided = model.decided,
+              let fetches = model.fetches, let call = fetches.call,
               let message = message(
-                  night: night, decided: decided, decidedSettings: model.decidedSettings,
-                  settings: model.settings, units: model.preferences.units, at: now
+                  night: fetches.latest, call: call, settings: model.settings, units: model.preferences.units, at: now
               )
         else { return false }
         model.markAlerted()
@@ -28,17 +26,11 @@ enum OvernightAlert {
 
     /// The alert's text when the forecast has gone from off to on overnight, nil otherwise.
     static func message(
-        night: NightForecast, decided: NightForecast, decidedSettings: Settings, settings: Settings,
-        units: DisplayUnits, at now: Date
+        night: NightForecast, call: NightCall, settings: Settings, units: DisplayUnits, at now: Date
     ) -> (title: String, body: String)? {
-        let window = NightWindow(night, packByMinutes: settings.packByMinutes)
-        let ahead = FlyEngine.evaluate(night, settings: settings, from: now)
-        guard window.phase(at: now) == .overnight, ahead.flyOn,
-              !FlyEngine.evaluate(decided, settings: decidedSettings).flyOn, let headline = ahead.headline
-        else { return nil }
-        let text = VerdictText(night: night, verdict: ahead, settings: settings, units: units)
-        let decidedAt = text.clock(NightWindow.decidedAt(decided))
-        return ("Put the rainfly on", "\(text.describe(headline)). At \(decidedAt), Rainfly said it could stay off.")
+        let ahead = VerdictText(night: night, settings: settings, units: units).ahead(of: now)
+        guard ahead.window.phase(at: now) == .overnight, !call.verdict.flyOn, let headline = ahead.verdict.headline else { return nil }
+        return ("Put the rainfly on", "\(ahead.describe(headline)). At \(ahead.clock(call.anchor)), Rainfly said it could stay off.")
     }
 
     static func requestPermission() async {

@@ -11,7 +11,18 @@ struct VerdictText {
     let settings: Settings
     let units: DisplayUnits
     var locale = Locale.current
-    var from: Date = .distantPast
+    /// Where the verdict's hours start: the anchor, or now for the hours still ahead.
+    let from: Date
+
+    /// Kept to this file so a verdict is always paired with the window it was made over.
+    fileprivate init(night: NightForecast, verdict: Verdict, settings: Settings, units: DisplayUnits, locale: Locale, from: Date) {
+        self.night = night
+        self.verdict = verdict
+        self.settings = settings
+        self.units = units
+        self.locale = locale
+        self.from = from
+    }
 
     var window: NightWindow { NightWindow(night, packByMinutes: settings.packByMinutes, from: from) }
 
@@ -250,10 +261,11 @@ struct VerdictText {
         let calm = Quantity.calmWind(units).text(settings.calmWindMS)
         let condenses = "If, in the same hour, the air gets within \(spreadLimit) of its dew point, the sky is less than \(percent(settings.clearSky)) cloudy, the wind is under \(calm)"
         let anyRain = "chance of rain, or any rain at all is forecast to fall, the rainfly goes on."
-        let (sunset, sunrise) = night.polar == nil ? ("sunset", "sunrise") : (clock(night.sunset), clock(night.sunrise))
+        let anchor = clock(window.anchor)
+        let sunrise = night.polar == nil ? "sunrise" : clock(night.sunrise)
         return switch trigger {
-        case .storm: "If a thunderstorm is forecast any time from \(sunset) until you pack up, the rainfly goes on, even if the chance of rain is small."
-        case .rain: "If any hour from \(sunset) until \(window.packBy < night.sunrise ? "you pack up at \(packBy)" : sunrise) has a \(percent(settings.rainChance)) or higher \(anyRain)"
+        case .storm: "If a thunderstorm is forecast any time from \(anchor) until you pack up, the rainfly goes on, even if the chance of rain is small."
+        case .rain: "If any hour from \(anchor) until \(window.packBy < night.sunrise ? "you pack up at \(packBy)" : sunrise) has a \(percent(settings.rainChance)) or higher \(anyRain)"
         case .windRain: "If, in the same hour, the wind or its gusts go over \(windRainLimit) and the chance of rain is \(percent(settings.windRainChance)) or more, the rainfly goes on."
         case .frost: "\(condenses), and the air is \(frostLine) or colder, the rainfly goes on."
         case .dew: "\(condenses), and the air is warmer than \(frostLine), the rainfly goes on."
@@ -313,20 +325,6 @@ struct VerdictText {
         style.timeZone = timeZone
         style.locale = locale
         return date.formatted(style)
-    }
-
-    /// "8:40" with no AM or PM for the smallest complications, or "08:40" where the
-    /// locale keeps a 24-hour clock. The format style's own omitted-AM/PM hour pads to
-    /// two digits even on a 12-hour clock.
-    func compactClock(_ date: Date) -> String {
-        let parts = calendar.dateComponents([.hour, .minute], from: date)
-        let hour = parts.hour ?? 0, minute = String(format: "%02d", parts.minute ?? 0)
-        switch locale.hourCycle {
-        case .oneToTwelve, .zeroToEleven:
-            return "\(hour % 12 == 0 ? 12 : hour % 12):\(minute)"
-        default:
-            return String(format: "%02d", hour) + ":" + minute
-        }
     }
 
     /// A temperature, in whole degrees.
@@ -398,6 +396,13 @@ extension VerdictText {
         self.init(
             night: night, verdict: FlyEngine.overnight(night, settings: settings), settings: settings, units: units,
             locale: locale, from: NightWindow.anchor(of: night)
+        )
+    }
+
+    /// A night's call in words, with the settings it was sealed with.
+    init(call: NightCall, units: DisplayUnits, locale: Locale = .current) {
+        self.init(
+            night: call.forecast, verdict: call.verdict, settings: call.settings, units: units, locale: locale, from: call.anchor
         )
     }
 

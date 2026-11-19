@@ -13,9 +13,9 @@ struct VerdictScreen: View {
     var body: some View {
         TimelineView(.everyMinute) { context in
             let now = Self.now(context.date)
-            if let fetches = model.fetches, let verdict = model.verdict, let window = model.window {
-                let text = VerdictText(night: fetches.latest, verdict: verdict, settings: model.settings, units: model.preferences.units)
-                switch window.phase(at: now) {
+            if let fetches = model.fetches {
+                let text = VerdictText(night: fetches.latest, settings: model.settings, units: model.preferences.units)
+                switch text.window.phase(at: now) {
                 case .evening:
                     NightView(text: text, now: now, attribution: model.attribution, problem: model.problem) {
                         if model.preferences.dewDiary, let recorder,
@@ -36,13 +36,10 @@ struct VerdictScreen: View {
                         }
                     }
                 case .morning:
-                    let morning = fetches.morning(text)
-                    MorningView(morning: morning, now: now, attribution: model.attribution, problem: model.problem) {
+                    MorningView(morning: fetches.morning(text), now: now, attribution: model.attribution, problem: model.problem) {
                         if model.preferences.dewDiary, let recorder, let date = model.date,
                            let diaryNight = recorder.diary.night(campName: model.campName, on: date) {
                             MorningDiarySection(recorder: recorder, night: diaryNight)
-                        } else {
-                            LastNightSection(morning: morning)
                         }
                     }
                 }
