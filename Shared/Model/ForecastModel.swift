@@ -104,6 +104,7 @@ final class ForecastModel {
     }
 
     static func live() -> ForecastModel {
+        NightCallMigration.run()
         let fix = LocationFix()
         return ForecastModel(provider: WeatherKitProvider(), cache: ForecastCache(), store: SettingsStore(), campStore: .camps) {
             let location = try await fix.current()

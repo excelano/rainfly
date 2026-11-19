@@ -47,25 +47,3 @@ extension Settings {
         return reset
     }
 }
-
-struct SettingsLog: Codable, Equatable, Sendable {
-    struct Change: Codable, Equatable, Sendable {
-        let at: Date
-        var settings: Settings
-    }
-
-    private(set) var changes: [Change] = []
-
-    mutating func record(_ settings: Settings, replacing old: Settings, at date: Date) {
-        if changes.isEmpty { changes.append(Change(at: .distantPast, settings: old)) }
-        if let last = changes.indices.last, last > 0, date.timeIntervalSince(changes[last].at) < 60 {
-            changes[last].settings = settings
-        } else {
-            changes.append(Change(at: date, settings: settings))
-        }
-    }
-
-    func settings(at date: Date) -> Settings? {
-        changes.last { $0.at <= date }?.settings
-    }
-}

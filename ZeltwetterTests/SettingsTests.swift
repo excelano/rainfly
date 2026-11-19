@@ -18,21 +18,6 @@ struct SettingsTests {
         #expect(settings == expected)
     }
 
-    @Test func theLogGivesTheSettingsInForceAtATime() {
-        var log = SettingsLog()
-        let original = Settings()
-        #expect(log.settings(at: F.at(0, 22)) == nil)
-        var wider = original
-        wider.dewSpreadC = 5
-        log.record(wider, replacing: original, at: F.at(1, 8))
-        var widest = wider
-        widest.dewSpreadC = 6
-        log.record(widest, replacing: wider, at: F.at(1, 8).addingTimeInterval(30))
-        #expect(log.changes.count == 2)
-        #expect(log.settings(at: F.at(0, 22)) == original)
-        #expect(log.settings(at: F.at(1, 9)) == widest)
-    }
-
     @Test func settingsRoundTrip() throws {
         var settings = Settings()
         settings.coldC = 4

@@ -74,22 +74,7 @@ struct SettingsStore {
 
     var settings: Settings {
         get { load("settings") ?? Settings() }
-        nonmutating set {
-            let old = settings
-            guard newValue != old else { return }
-            var log = settingsLog
-            log.record(newValue, replacing: old, at: .now)
-            save(log, "settingsLog")
-            save(newValue, "settings")
-        }
-    }
-
-    var settingsLog: SettingsLog {
-        load("settingsLog") ?? SettingsLog()
-    }
-
-    func settings(at date: Date) -> Settings {
-        settingsLog.settings(at: date) ?? settings
+        nonmutating set { save(newValue, "settings") }
     }
 
     var preferences: Preferences {
