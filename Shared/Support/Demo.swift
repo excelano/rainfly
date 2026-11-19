@@ -106,7 +106,7 @@ enum Demo {
         }
         if opens == "review" {
             let here = CampLocation(name: CampLocation.hereName, latitude: camp.latitude, longitude: camp.longitude, timeZoneID: camp.timeZoneID)
-            let lastNight = NightDate(.now.addingTimeInterval(-86_400), calendar: calendar)
+            let lastNight = NightDate(AppClock.now.addingTimeInterval(-86_400), calendar: calendar)
             let forecast = Provider(scene: "dew").makeNight(at: here, evening: lastNight.start(in: calendar), scene: "dew")
             diary.record(forecast)
             diary.setCall(NightCall(forecast, settings: Settings()))
