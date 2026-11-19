@@ -61,6 +61,8 @@ final class ForecastModel {
     @ObservationIgnored private var refreshAgain = false
     /// Called after every fetch, Here included, for the dew diary.
     @ObservationIgnored var anyNightFetched: ((NightForecast) -> Void)?
+    /// Called with a call this device sealed, or holds over one the other device sent.
+    @ObservationIgnored var callSealed: ((NightCall) -> Void)?
 
     @ObservationIgnored private let provider: ForecastProvider
     @ObservationIgnored private let cache: ForecastCache
@@ -156,7 +158,7 @@ final class ForecastModel {
         campName = name
         self.date = date
         night = cache.night(at: campName, on: date)
-        cache.sealCall(at: campName, on: date, now: now, settings: settings)
+        sealed(cache.sealCall(at: campName, on: date, now: now, settings: settings))
         evaluate()
         if let night, now.timeIntervalSince(night.fetchedAt) < Self.refreshAge {
             if !inBackground { await refreshCurrent(now: now) }
@@ -302,13 +304,29 @@ final class ForecastModel {
     func receive(_ received: NightForecast) {
         let date = ForecastCache.date(of: received)
         guard SyncRules.keeps(received, over: cache.night(at: received.location.name, on: date)) else { return }
-        cache.save(received, settings: settings)
+        sealed(cache.save(received, settings: settings))
         cacheRevision += 1
         WidgetCenter.shared.reloadAllTimelines()
         if received.location.name == campName, date == nightDate() {
             night = received
             evaluate()
         }
+    }
+
+    /// Keeps a call the other device sealed. When the one here stands instead, it goes back, so
+    /// both devices end up with the same call.
+    func receive(_ call: NightCall) {
+        let name = call.forecast.location.name, date = ForecastCache.date(of: call.forecast)
+        guard cache.keep(call) else {
+            sealed(cache.sealedCall(at: name, on: date))
+            return
+        }
+        cacheRevision += 1
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    private func sealed(_ call: NightCall?) {
+        if let call, SyncRules.sends(call.forecast) { callSealed?(call) }
     }
 
     /// Fetches every trip night within reach whose forecast is missing or old, so the
@@ -343,7 +361,7 @@ final class ForecastModel {
     private func fetch(_ camp: CampLocation, on date: NightDate, now: Date) async throws -> NightForecast {
         let evening = date.start(in: NightWindow.localCalendar(for: camp))
         let fetched = try await provider.night(at: camp, evening: evening)
-        cache.save(fetched, now: now, settings: settings)
+        sealed(cache.save(fetched, now: now, settings: settings))
         cacheRevision += 1
         WidgetCenter.shared.reloadAllTimelines()
         if SyncRules.sends(fetched) { nightFetched?(fetched) }

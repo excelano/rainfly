@@ -17,12 +17,23 @@ struct ForecastCache {
     }
 
     /// Seals the night's call from the latest forecast once `now` has reached the anchor, unless
-    /// it is sealed already or that forecast came too late.
-    func sealCall(at campName: String, on date: NightDate, now: Date, settings: Settings) {
+    /// it is sealed already or that forecast came too late. Returns the call when it sealed one.
+    @discardableResult
+    func sealCall(at campName: String, on date: NightDate, now: Date, settings: Settings) -> NightCall? {
         guard sealedCall(at: campName, on: date) == nil,
               let latest = night(at: campName, on: date), now >= NightWindow.anchor(of: latest),
-              let call = NightCall.seal(latest, settings: settings) else { return }
+              let call = NightCall.seal(latest, settings: settings) else { return nil }
         callStore.save((callStore.load() ?? []) + [call])
+        return call
+    }
+
+    /// Keeps a call the other device sealed when it supersedes the one here, and says whether it did.
+    func keep(_ call: NightCall) -> Bool {
+        let name = call.forecast.location.name, date = Self.date(of: call.forecast)
+        guard call.supersedes(sealedCall(at: name, on: date)) else { return false }
+        let others = (callStore.load() ?? []).filter { $0.forecast.location.name != name || Self.date(of: $0.forecast) != date }
+        callStore.save(others + [call])
+        return true
     }
 
     func sealedCall(at campName: String, on date: NightDate) -> NightCall? {
@@ -51,16 +62,19 @@ struct ForecastCache {
         (store.load() ?? []).filter { $0.location.name == campName }.max { $0.fetchedAt < $1.fetchedAt }
     }
 
-    /// A fetch made at or after the anchor seals the night's call from the fetch it replaces.
-    func save(_ night: NightForecast, now: Date = .now, settings: Settings) {
+    /// A fetch made at or after the anchor seals the night's call from the fetch it replaces,
+    /// and that call is returned.
+    @discardableResult
+    func save(_ night: NightForecast, now: Date = .now, settings: Settings) -> NightCall? {
         let date = Self.date(of: night)
-        sealCall(at: night.location.name, on: date, now: night.fetchedAt, settings: settings)
+        let sealed = sealCall(at: night.location.name, on: date, now: night.fetchedAt, settings: settings)
         callStore.save((callStore.load() ?? []).filter { $0.forecast.sunrise.addingTimeInterval(86_400) > now })
         let isSame = { (old: NightForecast) in old.location.name == night.location.name && Self.date(of: old) == date }
         let all = store.load() ?? []
         let others = all.filter { $0.sunrise.addingTimeInterval(86_400) > now && !isSame($0) }
         let latest = (all.filter(isSame) + [night]).max { $0.fetchedAt < $1.fetchedAt }
         store.save(others + [latest].compactMap { $0 })
+        return sealed
     }
 
     /// The evening a night belongs to: twelve hours before its sunset, since far north the

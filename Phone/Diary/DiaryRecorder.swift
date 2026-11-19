@@ -33,12 +33,12 @@ final class DiaryRecorder {
         fillCalls()
     }
 
-    /// Gives each night still without a call the one the forecast cache has sealed for it.
+    /// Gives each night the call the forecast cache holds for it, when the night has none or
+    /// the watch has sent one that supersedes it.
     func fillCalls() {
-        let sealed = diary.nights.filter { $0.call == nil }.compactMap { model.sealedCall(at: $0.campName, on: $0.date) }
-        guard !sealed.isEmpty else { return }
-        for call in sealed { diary.setCall(call) }
-        save()
+        let before = diary
+        for call in diary.nights.compactMap({ model.sealedCall(at: $0.campName, on: $0.date) }) { diary.setCall(call) }
+        if diary != before { save() }
     }
 
     func observe(_ kind: DewObservation.Kind, openSky: Bool, night: DiaryNight) {

@@ -283,6 +283,27 @@ struct ForecastCacheTests {
         #expect(call?.verdict.condensation != nil)
     }
 
+    @Test func aCallFromTheOtherDeviceIsKeptWhenItsForecastIsLater() {
+        let cache = temporaryCache()
+        cache.save(fetched(F.at(0, 20)), now: F.at(0, 20), settings: Settings())
+        cache.save(fetched(F.at(0, 23)), now: F.at(0, 23), settings: Settings())
+        let earlier = NightCall.seal(fetched(F.at(0, 19)), settings: Settings())!
+        let later = NightCall.seal(fetched(F.at(0, 21, 40)), settings: Settings())!
+        #expect(!cache.keep(earlier))
+        #expect(call(in: cache)?.forecast.fetchedAt == F.at(0, 20))
+        #expect(cache.keep(later))
+        #expect(call(in: cache) == later)
+        #expect(cache.callStore.load()?.count == 1)
+        #expect(!cache.keep(later))
+    }
+
+    @Test func aCallFromTheOtherDeviceFillsANightWithNone() {
+        let cache = temporaryCache()
+        cache.save(fetched(F.at(1, 0, 58)), now: F.at(1, 0, 58), settings: Settings())
+        #expect(cache.keep(NightCall.seal(fetched(F.at(0, 21)), settings: Settings())!))
+        #expect(call(in: cache)?.forecast.fetchedAt == F.at(0, 21))
+    }
+
     @Test func callsAreDroppedADayAfterSunrise() {
         let cache = temporaryCache()
         cache.save(fetched(F.at(0, 21)), now: F.at(0, 21), settings: Settings())

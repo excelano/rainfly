@@ -25,6 +25,12 @@ struct NightCall: Codable, Equatable, Sendable {
         forecast.fetchedAt < NightWindow.anchor(of: forecast) ? NightCall(forecast, settings: settings) : nil
     }
 
+    /// Whether this call replaces `other` for the same night: the one made from the later
+    /// forecast stands, so two devices that each sealed one end up with the same call.
+    func supersedes(_ other: NightCall?) -> Bool {
+        other.map { $0.forecast.fetchedAt < forecast.fetchedAt } ?? true
+    }
+
     /// The overnight period's closest dew-point gap in the call's forecast.
     var closestSpread: Double? {
         NightWindow(forecast, packByMinutes: settings.packByMinutes, from: anchor).closestSpread

@@ -23,7 +23,8 @@ final class SyncSession: NSObject, WCSessionDelegate {
         super.init()
         guard WCSession.isSupported() else { return }
         model.sharedStateChanged = { [weak self] in self?.sendState() }
-        model.nightFetched = { [weak self] night in self?.send(night) }
+        model.nightFetched = { [weak self] night in self?.send(night, as: "night") }
+        model.callSealed = { [weak self] call in self?.send(call, as: "call") }
         session.delegate = self
         session.activate()
     }
@@ -62,9 +63,10 @@ final class SyncSession: NSObject, WCSessionDelegate {
         return encoder
     }()
 
-    private func send(_ night: NightForecast) {
-        guard counterpartInstalled, let data = try? JSONEncoder().encode(night) else { return }
-        session.transferUserInfo(["night": data])
+    /// A fetched night or a sealed call, queued until the other device takes it.
+    private func send(_ value: some Encodable, as key: String) {
+        guard counterpartInstalled, let data = try? JSONEncoder().encode(value) else { return }
+        session.transferUserInfo([key: data])
     }
 
     private func received(_ message: SyncMessage?) async {
@@ -102,13 +104,14 @@ final class SyncSession: NSObject, WCSessionDelegate {
     }
 
     nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
-        guard let data = userInfo["night"] as? Data,
-              let night = try? JSONDecoder().decode(NightForecast.self, from: data)
-        else {
-            log.error("A transfer held no night")
-            return
+        let decoder = JSONDecoder()
+        if let data = userInfo["night"] as? Data, let night = try? decoder.decode(NightForecast.self, from: data) {
+            Task { @MainActor in model.receive(night) }
+        } else if let data = userInfo["call"] as? Data, let call = try? decoder.decode(NightCall.self, from: data) {
+            Task { @MainActor in model.receive(call) }
+        } else {
+            log.error("A transfer held no night and no call")
         }
-        Task { @MainActor in model.receive(night) }
     }
 
     #if os(iOS)

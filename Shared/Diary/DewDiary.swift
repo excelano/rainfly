@@ -42,7 +42,7 @@ struct DewDiary: Codable, Equatable {
     /// Keeps the night's call, unless it already has one made from a later forecast.
     mutating func setCall(_ call: NightCall) {
         guard let index = index(of: call.forecast.location.name, on: ForecastCache.date(of: call.forecast)),
-              nights[index].call.map({ $0.forecast.fetchedAt < call.forecast.fetchedAt }) ?? true else { return }
+              call.supersedes(nights[index].call) else { return }
         nights[index].call = call
     }
 
