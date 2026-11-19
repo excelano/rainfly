@@ -12,8 +12,8 @@ struct NightWindow: Sendable {
     let sunset: Date
     let sunrise: Date
     let packBy: Date
-    /// When the night's forecast is fixed for judging it in the morning: 22:00 on the
-    /// evening, or sunset where the sun sets later.
+    /// The start of the overnight period: 22:00 on the evening, or sunset where the sun sets
+    /// later.
     let anchor: Date
     /// Noon after the night, when the morning gives way to the next night's forecast.
     let handover: Date

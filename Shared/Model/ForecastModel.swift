@@ -427,6 +427,6 @@ final class ForecastModel {
     }
 
     private func evaluate() {
-        verdict = night.map { FlyEngine.evaluate($0, settings: settings) }
+        verdict = night.map { FlyEngine.overnight($0, settings: settings) }
     }
 }

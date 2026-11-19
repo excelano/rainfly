@@ -18,6 +18,12 @@ enum FlyEngine {
         spreadC <= settings.dewSpreadC && cloudCover < settings.clearSky && windMS < settings.calmWindMS
     }
 
+    /// The verdict over the overnight period, from the anchor to pack-up: what the evening
+    /// shows and what a night's call keeps.
+    static func overnight(_ night: NightForecast, settings: Settings) -> Verdict {
+        evaluate(night, settings: settings, from: NightWindow.anchor(of: night))
+    }
+
     static func evaluate(
         _ night: NightForecast, settings: Settings, from start: Date = .distantPast, dryByModel: DryByModel = DryByModel()
     ) -> Verdict {

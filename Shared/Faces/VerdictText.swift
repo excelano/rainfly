@@ -31,24 +31,22 @@ struct VerdictText {
         period(at: now) == "Tonight" ? "\(headline) tonight" : headline
     }
 
-    /// "Tonight · sunset 8:30 PM to 8 AM" before sunset, so a daytime look reads as the
-    /// night's forecast; the period alone after it.
+    /// "Tonight · 10 PM to pack up 8 AM", the overnight period the verdict covers.
     func periodLabel(at now: Date) -> String {
         let period = period(at: now)
-        guard period == "Tonight", now < night.sunset else { return period }
-        let packBy = window.packBy
-        let start = night.polar == nil ? "sunset \(clock(night.sunset))" : clock(night.sunset)
-        return "\(period) · \(start), pack up \(clock(packBy))"
+        guard period == "Tonight" else { return period }
+        return "\(period) · \(clock(window.anchor)) to pack up \(clock(window.packBy))"
     }
 
-    /// The first hour from `now` to sunset with a storm or rain the night's checks would
-    /// count, which they don't cover because the night has not started.
+    /// The first hour from `now` to the anchor with a storm or rain the night's checks would
+    /// count, which they don't cover because the overnight period has not started.
     func beforeTonight(at now: Date) -> HourSample? {
-        guard now < night.sunset else { return nil }
+        let anchor = window.anchor
+        guard now < anchor else { return nil }
         return night.hours
             .sorted { $0.date < $1.date }
             .first { hour in
-                hour.date.addingTimeInterval(3600) > now && hour.date < night.sunset
+                hour.date.addingTimeInterval(3600) > now && hour.date < anchor
                     && (hour.isThunderstorm || hour.rains(chance: settings.rainChance))
             }
     }
@@ -395,8 +393,12 @@ struct VerdictText {
 }
 
 extension VerdictText {
+    /// The overnight verdict, as the evening shows it and the call keeps it.
     init(night: NightForecast, settings: Settings, units: DisplayUnits, locale: Locale = .current) {
-        self.init(night: night, verdict: FlyEngine.evaluate(night, settings: settings), settings: settings, units: units, locale: locale)
+        self.init(
+            night: night, verdict: FlyEngine.overnight(night, settings: settings), settings: settings, units: units,
+            locale: locale, from: NightWindow.anchor(of: night)
+        )
     }
 
     static func lowered(_ string: String) -> String {

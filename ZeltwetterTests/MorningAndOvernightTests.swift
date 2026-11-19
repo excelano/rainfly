@@ -190,7 +190,7 @@ struct OvernightTextTests {
         let words = overnight(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(rainLater, at: F.at(1, 2)))
         #expect(words.hasChanged)
         #expect(plain(words.reason) == "New since 10 PM: rain 40% at 5 AM")
-        #expect(plain(words.note) == "At 10 PM, Rainfly said on: dew likely by 8 PM")
+        #expect(plain(words.note) == "At 10 PM, Rainfly said on: dew likely by 10 PM")
         #expect(plain(words.inline) == "New: rain 5 AM")
     }
 
