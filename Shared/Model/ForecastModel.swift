@@ -336,7 +336,7 @@ final class ForecastModel {
     func receive(_ received: NightForecast) {
         let date = ForecastCache.date(of: received)
         guard SyncRules.keeps(received, over: cache.night(at: received.location.name, on: date)) else { return }
-        cache.save(received)
+        cache.save(received, settings: settings)
         cacheRevision += 1
         WidgetCenter.shared.reloadAllTimelines()
         if received.location.name == campName, date == nightDate() {
@@ -377,7 +377,7 @@ final class ForecastModel {
     private func fetch(_ camp: CampLocation, on date: NightDate, now: Date) async throws -> NightForecast {
         let evening = date.start(in: NightWindow.localCalendar(for: camp))
         let fetched = try await provider.night(at: camp, evening: evening)
-        cache.save(fetched, now: now)
+        cache.save(fetched, now: now, settings: settings)
         cacheRevision += 1
         WidgetCenter.shared.reloadAllTimelines()
         if SyncRules.sends(fetched) { nightFetched?(fetched) }

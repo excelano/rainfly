@@ -5,17 +5,32 @@
 import Foundation
 
 /// Fetched nights kept on the device, so a verdict holds in the backcountry. For each camp and
-/// evening it keeps the latest fetch, the one the night is judged against and the last before
-/// sunrise; a night is dropped a day after its sunrise. Beside them it keeps the dew diary's
-/// answers, which the phone records and sends to the watch, so every screen's morning goes by
-/// what was found.
+/// evening it keeps the latest fetch and the night's call, sealed from the last fetch before
+/// the anchor; both are dropped a day after the night's sunrise. Beside them it keeps the dew
+/// diary's answers, which the phone records and sends to the watch.
 struct ForecastCache {
     let store: Store<[NightForecast]>
+    let callStore: Store<[NightCall]>
     let foundStore: Store<[FoundNight]>
 
-    init(store: Store<[NightForecast]> = Store(name: "forecasts"), foundStore: Store<[FoundNight]> = Store(name: "found")) {
-        self.store = store
-        self.foundStore = foundStore
+    init(directory: URL = AppGroup.applicationSupport) {
+        store = Store(url: directory.appending(path: "forecasts.json"))
+        callStore = Store(url: directory.appending(path: "calls.json"))
+        foundStore = Store(url: directory.appending(path: "found.json"))
+    }
+
+    /// The night's call: the one sealed, or sealed now from the latest forecast once `now` has
+    /// reached the anchor. Nil before the anchor, and for a night with no fetch before it.
+    func call(at campName: String, on date: NightDate, now: Date, settings: Settings) -> NightCall? {
+        if let sealed = sealed(at: campName, on: date) { return sealed }
+        guard let latest = night(at: campName, on: date), now >= NightWindow.anchor(of: latest),
+              let call = NightCall.seal(latest, settings: settings) else { return nil }
+        callStore.save((callStore.load() ?? []) + [call])
+        return call
+    }
+
+    private func sealed(at campName: String, on date: NightDate) -> NightCall? {
+        (callStore.load() ?? []).first { $0.forecast.location.name == campName && Self.date(of: $0.forecast) == date }
     }
 
     /// The night at `campName` that begins on the evening of `date`.
@@ -69,8 +84,11 @@ struct ForecastCache {
         (store.load() ?? []).filter { $0.location.name == campName }.max { $0.fetchedAt < $1.fetchedAt }
     }
 
-    func save(_ night: NightForecast, now: Date = .now) {
+    /// A fetch made at or after the anchor seals the night's call from the fetch it replaces.
+    func save(_ night: NightForecast, now: Date = .now, settings: Settings) {
         let date = Self.date(of: night)
+        _ = call(at: night.location.name, on: date, now: night.fetchedAt, settings: settings)
+        callStore.save((callStore.load() ?? []).filter { $0.forecast.sunrise.addingTimeInterval(86_400) > now })
         let isSame = { (old: NightForecast) in old.location.name == night.location.name && Self.date(of: old) == date }
         let all = store.load() ?? []
         let others = all.filter { $0.sunrise.addingTimeInterval(86_400) > now && !isSame($0) }

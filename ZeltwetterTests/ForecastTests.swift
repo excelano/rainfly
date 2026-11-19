@@ -221,9 +221,7 @@ func temporaryCamps() -> Store<Camps> {
 }
 
 func temporaryCache() -> ForecastCache {
-    let name = "zeltwetter-\(UUID().uuidString)"
-    let directory = FileManager.default.temporaryDirectory
-    return ForecastCache(store: Store(url: directory.appending(path: "\(name).json")), foundStore: Store(url: directory.appending(path: "\(name)-found.json")))
+    ForecastCache(directory: FileManager.default.temporaryDirectory.appending(path: "zeltwetter-\(UUID().uuidString)"))
 }
 
 struct ForecastCacheTests {
@@ -231,7 +229,7 @@ struct ForecastCacheTests {
 
     @Test func aDiaryAnswerReachesTheNightsFetches() {
         let cache = temporaryCache()
-        cache.save(F.night(), now: F.at(0, 18))
+        cache.save(F.night(), now: F.at(0, 18), settings: Settings())
         let dry = DewObservation(kind: .dry, openSky: true, at: F.at(1, 6))
         cache.save(found: [FoundNight(campName: F.camp.name, date: july1, observation: dry)], now: F.at(1, 6))
         #expect(cache.fetches(at: F.camp.name, on: july1)?.found == dry)
@@ -247,7 +245,7 @@ struct ForecastCacheTests {
     @Test func savesAndFindsTheNightByCampAndEvening() {
         let cache = temporaryCache()
         let night = F.night()
-        cache.save(night, now: F.at(0, 18))
+        cache.save(night, now: F.at(0, 18), settings: Settings())
         #expect(cache.night(at: F.camp.name, on: july1) == night)
         #expect(cache.night(at: "Elsewhere", on: july1) == nil)
         #expect(cache.night(at: F.camp.name, on: july1.adding(days: 1)) == nil)
@@ -260,7 +258,7 @@ struct ForecastCacheTests {
             return NightForecast(location: night.location, fetchedAt: date, sunset: night.sunset, sunrise: night.sunrise, hours: night.hours)
         }
         for date in [F.at(0, 18), F.at(0, 21, 30), F.at(0, 23), F.at(1, 5), F.at(1, 8)] {
-            cache.save(fetched(date), now: date)
+            cache.save(fetched(date), now: date, settings: Settings())
         }
         #expect(cache.night(at: F.camp.name, on: july1)?.fetchedAt == F.at(1, 8))
         #expect(cache.decided(at: F.camp.name, on: july1)?.fetchedAt == F.at(0, 21, 30))
@@ -271,16 +269,69 @@ struct ForecastCacheTests {
         let cache = temporaryCache()
         let night = F.night()
         let late = NightForecast(location: night.location, fetchedAt: F.at(1, 1), sunset: night.sunset, sunrise: night.sunrise, hours: night.hours)
-        cache.save(late, now: F.at(1, 1))
+        cache.save(late, now: F.at(1, 1), settings: Settings())
         #expect(cache.decided(at: F.camp.name, on: july1) == late)
+    }
+
+    private func fetched(_ date: Date, _ night: NightForecast = F.night()) -> NightForecast {
+        NightForecast(location: night.location, fetchedAt: date, sunset: night.sunset, sunrise: night.sunrise, hours: night.hours)
+    }
+
+    @Test func aFetchAfterTheAnchorSealsTheCallFromTheLastFetchBeforeIt() {
+        let cache = temporaryCache()
+        for date in [F.at(0, 18), F.at(0, 21, 30), F.at(0, 23), F.at(1, 2)] {
+            cache.save(fetched(date), now: date, settings: Settings())
+        }
+        let call = cache.call(at: F.camp.name, on: july1, now: F.at(1, 7), settings: Settings())
+        #expect(call?.forecast.fetchedAt == F.at(0, 21, 30))
+        #expect(cache.callStore.load()?.count == 1)
+    }
+
+    @Test func readingAtTheAnchorSealsTheCall() {
+        let cache = temporaryCache()
+        cache.save(fetched(F.at(0, 21, 30)), now: F.at(0, 21, 30), settings: Settings())
+        #expect(cache.call(at: F.camp.name, on: july1, now: F.at(0, 21, 45), settings: Settings()) == nil)
+        #expect(cache.callStore.load() ?? [] == [])
+        #expect(cache.call(at: F.camp.name, on: july1, now: F.at(0, 22), settings: Settings())?.forecast.fetchedAt == F.at(0, 21, 30))
+    }
+
+    @Test func aNightFirstFetchedAfterTheAnchorHasNoCall() {
+        let cache = temporaryCache()
+        cache.save(fetched(F.at(1, 0, 58)), now: F.at(1, 0, 58), settings: Settings())
+        cache.save(fetched(F.at(1, 3)), now: F.at(1, 3), settings: Settings())
+        #expect(cache.call(at: F.camp.name, on: july1, now: F.at(1, 7), settings: Settings()) == nil)
+    }
+
+    @Test func aSealedCallKeepsItsForecastAndSettings() {
+        let cache = temporaryCache()
+        var wide = Settings()
+        wide.dewSpreadC = 5
+        let nearly = F.night { F.hour($0, temp: 12, dewPoint: 8, wind: 1) }
+        cache.save(fetched(F.at(0, 21), nearly), now: F.at(0, 21), settings: wide)
+        cache.save(fetched(F.at(0, 23)), now: F.at(0, 23), settings: wide)
+        cache.save(fetched(F.at(1, 4)), now: F.at(1, 4), settings: Settings())
+        let call = cache.call(at: F.camp.name, on: july1, now: F.at(1, 7), settings: Settings())
+        #expect(call?.forecast.fetchedAt == F.at(0, 21))
+        #expect(call?.settings == wide)
+        #expect(call?.verdict.condensation != nil)
+    }
+
+    @Test func callsAreDroppedADayAfterSunrise() {
+        let cache = temporaryCache()
+        cache.save(fetched(F.at(0, 21)), now: F.at(0, 21), settings: Settings())
+        cache.save(fetched(F.at(0, 23)), now: F.at(0, 23), settings: Settings())
+        #expect(cache.callStore.load()?.count == 1)
+        let otherCamp = CampLocation(name: "Ridge", latitude: 40, longitude: -106, timeZoneID: F.camp.timeZoneID)
+        cache.save(NightForecast(location: otherCamp, fetchedAt: F.at(2, 6), sunset: F.at(2, 20), sunrise: F.at(3, 5), hours: []), now: F.at(2, 6), settings: Settings())
+        #expect(cache.callStore.load() ?? [] == [])
     }
 
     @Test func oldNightsAreDropped() {
         let cache = temporaryCache()
-        cache.save(F.night(), now: F.at(0, 18))
+        cache.save(F.night(), now: F.at(0, 18), settings: Settings())
         let otherCamp = CampLocation(name: "Ridge", latitude: 40, longitude: -106, timeZoneID: F.camp.timeZoneID)
         let later = NightForecast(location: otherCamp, fetchedAt: F.at(2, 6), sunset: F.at(2, 20), sunrise: F.at(3, 5), hours: [])
-        cache.save(later, now: F.at(2, 6))
+        cache.save(later, now: F.at(2, 6), settings: Settings())
         #expect(cache.store.load() == [later])
     }
 }

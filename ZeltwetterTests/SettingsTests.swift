@@ -123,7 +123,7 @@ struct SettingsTests {
 struct SettingsModelTests {
     @Test func changesAreSavedAndReloaded() {
         let store = temporarySettings()
-        let model = ForecastModel(provider: NoProvider(), cache: ForecastCache(store: Store(url: .temporaryDirectory.appending(path: UUID().uuidString))), store: store, campStore: temporaryCamps()) {
+        let model = ForecastModel(provider: NoProvider(), cache: ForecastCache(directory: .temporaryDirectory.appending(path: UUID().uuidString)), store: store, campStore: temporaryCamps()) {
             throw ForecastError.noLocation
         }
         model.settings.coldC = 5
@@ -134,7 +134,7 @@ struct SettingsModelTests {
 
     @Test func settingsFollowTheUnitsShown() {
         let store = temporarySettings()
-        let model = ForecastModel(provider: NoProvider(), cache: ForecastCache(store: Store(url: .temporaryDirectory.appending(path: UUID().uuidString))), store: store, campStore: temporaryCamps()) {
+        let model = ForecastModel(provider: NoProvider(), cache: ForecastCache(directory: .temporaryDirectory.appending(path: UUID().uuidString)), store: store, campStore: temporaryCamps()) {
             throw ForecastError.noLocation
         }
         #expect(model.settings == Settings())
@@ -144,7 +144,7 @@ struct SettingsModelTests {
         var unsnapped = Settings()
         unsnapped.dewSpreadC = 3
         store.settings = unsnapped
-        let reopened = ForecastModel(provider: NoProvider(), cache: ForecastCache(store: Store(url: .temporaryDirectory.appending(path: UUID().uuidString))), store: store, campStore: temporaryCamps()) {
+        let reopened = ForecastModel(provider: NoProvider(), cache: ForecastCache(directory: .temporaryDirectory.appending(path: UUID().uuidString)), store: store, campStore: temporaryCamps()) {
             throw ForecastError.noLocation
         }
         #expect(abs(reopened.settings.dewSpreadC - 5 * 5.0 / 9) < 1e-9)

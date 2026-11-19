@@ -53,8 +53,8 @@ enum Demo {
 
     @MainActor
     static func model(scene: String) -> ForecastModel {
-        let url = FileManager.default.temporaryDirectory.appending(path: "demo-forecasts.json")
-        try? FileManager.default.removeItem(at: url)
+        let directory = FileManager.default.temporaryDirectory.appending(path: "demo-cache")
+        try? FileManager.default.removeItem(at: directory)
         let defaults = UserDefaults(suiteName: "demo")!
         defaults.removePersistentDomain(forName: "demo")
         if keepsDiary {
@@ -71,13 +71,13 @@ enum Demo {
         let campStore = Store<Camps>(url: FileManager.default.temporaryDirectory.appending(path: "demo-camps.json"))
         campStore.save(camps)
         let provider = Provider(scene: scene)
-        let cache = ForecastCache(store: Store(url: url))
+        let cache = ForecastCache(directory: directory)
         let calendar = NightWindow.localCalendar(for: nextCamp)
-        cache.save(provider.makeNight(at: nextCamp, evening: tonight.adding(days: 1).start(in: calendar), scene: "clear"))
+        cache.save(provider.makeNight(at: nextCamp, evening: tonight.adding(days: 1).start(in: calendar), scene: "clear"), settings: Settings())
         if let was = argument(after: "--was") {
             let evening = tonight.start(in: NightWindow.localCalendar(for: camp))
             let decided = provider.makeNight(at: camp, evening: evening, scene: was, fetchedAt: evening.addingTimeInterval(21 * 3600))
-            cache.save(decided, now: decided.fetchedAt)
+            cache.save(decided, now: decided.fetchedAt, settings: Settings())
         }
         return ForecastModel(
             provider: provider, cache: cache,
