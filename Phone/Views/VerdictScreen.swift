@@ -37,7 +37,7 @@ struct VerdictScreen: View {
                     }
                 case .morning:
                     MorningView(
-                        morning: fetches.morning(text, alerted: model.wasAlerted),
+                        morning: fetches.morning(text),
                         now: now, attribution: model.attribution, problem: model.problem
                     ) {
                         if model.preferences.dewDiary, let recorder, let date = model.date,

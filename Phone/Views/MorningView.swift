@@ -4,8 +4,8 @@
 
 import SwiftUI
 
-/// The morning after a night, until noon: packing up, what Rainfly said at 22:00 and how
-/// that forecast did, the dew diary, and a way to look at tonight early.
+/// The morning after a night, until noon: packing up, whether last night's call was right,
+/// and a way to look at tonight early.
 struct MorningView<Diary: View>: View {
     let morning: MorningText
     let now: Date
@@ -48,15 +48,6 @@ struct MorningView<Diary: View>: View {
                         .foregroundStyle(.orange)
                 }
             }
-            if morning.madeACall {
-                Section("Last night") {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(morning.lastNightTitle).font(.headline)
-                        Text(morning.lastNightDetail).font(.footnote).foregroundStyle(.secondary)
-                    }
-                }
-                review
-            }
             diary
             Section {
                 NavigationLink {
@@ -76,36 +67,6 @@ struct MorningView<Diary: View>: View {
             } footer: {
                 Text("\(morning.latest.location.title) · \(VerdictText.age(since: morning.latest.fetchedAt, at: now))")
                     .foregroundStyle(VerdictText.staleness(since: morning.latest.fetchedAt, at: now).color)
-            }
-        }
-    }
-
-    private var review: some View {
-        Section(morning.reviewTitle) {
-            if let review = morning.review {
-                ForEach(review.checks, id: \.trigger) { check in
-                    HStack(alignment: .top, spacing: 10) {
-                        CheckIcon(trigger: check.trigger, expected: check.occurred)
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack(spacing: 6) {
-                                Text(VerdictText.name(check.trigger))
-                                Text(check.isRight ? "Right" : "Wrong")
-                                    .font(.caption.weight(.semibold))
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 1)
-                                    .background(check.isRight ? Color.green.opacity(0.18) : Color.orange.opacity(0.22), in: .rect(cornerRadius: 5))
-                                    .foregroundStyle(check.isRight ? Color.green : Color.orange)
-                            }
-                            Text(morning.explain(check))
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .accessibilityElement(children: .combine)
-                }
-            } else {
-                Text(morning.reviewPending)
-                    .foregroundStyle(.secondary)
             }
         }
     }

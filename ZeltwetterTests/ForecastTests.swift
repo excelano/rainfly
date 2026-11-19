@@ -253,7 +253,7 @@ struct ForecastCacheTests {
         #expect(cache.night(at: F.camp.name, on: july1.adding(days: 1)) == nil)
     }
 
-    @Test func aNightKeepsItsLatestItsDecidedAndItsLastBeforeMorning() {
+    @Test func aNightKeepsItsLatestAndItsDecided() {
         let cache = temporaryCache()
         let fetched = { (date: Date) in
             let night = F.night()
@@ -264,8 +264,7 @@ struct ForecastCacheTests {
         }
         #expect(cache.night(at: F.camp.name, on: july1)?.fetchedAt == F.at(1, 8))
         #expect(cache.decided(at: F.camp.name, on: july1)?.fetchedAt == F.at(0, 21, 30))
-        #expect(cache.beforeMorning(at: F.camp.name, on: july1)?.fetchedAt == F.at(1, 5))
-        #expect(cache.store.load()?.count == 3)
+        #expect(cache.store.load()?.count == 2)
     }
 
     @Test func aNightFirstFetchedAfterTenIsJudgedOnThatFetch() {

@@ -132,16 +132,10 @@ final class ForecastModel {
         store.settings(at: date)
     }
 
-    /// The shown night's last forecast fetched before sunrise.
-    var beforeMorning: NightForecast? {
-        _ = cacheRevision
-        return date.flatMap { cache.beforeMorning(at: campName, on: $0) }
-    }
-
     var fetches: NightFetches? {
         night.map {
             NightFetches(
-                latest: $0, decided: decided, decidedSettings: decidedSettings, beforeMorning: beforeMorning,
+                latest: $0, decided: decided, decidedSettings: decidedSettings,
                 found: date.flatMap { cache.found(at: campName, on: $0) }
             )
         }
@@ -201,7 +195,7 @@ final class ForecastModel {
 
     /// In the morning the night is fetched again once WeatherKit's hours have become its record.
     private func awaitsRecord(_ night: NightForecast, now: Date) -> Bool {
-        window?.phase(at: now) == .morning && !NightReview.isRecord(night) && now >= NightReview.recordReady(night)
+        window?.phase(at: now) == .morning && !NightRecord.isSettled(night) && now >= NightRecord.ready(night)
     }
 
     /// Overnight, the weather now at the night's camp, every quarter hour while on screen.

@@ -46,4 +46,7 @@ struct Verdict: Codable, Equatable, Sendable {
     }
 
     var condensation: Firing? { firing(.frost) ?? firing(.dew) }
+
+    /// The first rain trigger in priority order, storms first.
+    var rain: Firing? { firings.first { $0.trigger.isRain } }
 }

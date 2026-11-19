@@ -205,7 +205,7 @@ private struct TripNightScreen: View {
                     ) { EmptyView() }
                 case .morning:
                     MorningView(
-                        morning: fetches.morning(text, alerted: shown && model.wasAlerted),
+                        morning: fetches.morning(text),
                         now: now, attribution: model.attribution
                     ) { EmptyView() }
                 }

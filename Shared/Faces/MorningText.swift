@@ -4,20 +4,16 @@
 
 import Foundation
 
-/// The words for the morning after a night: whether the tent packs dry, what Rainfly said at
-/// 22:00, and how that forecast did against Apple Weather's record of the night, or against
-/// what the dew diary found once it has an answer.
+/// The words for the morning after a night: whether the tent packs dry, and what Rainfly
+/// expected last night.
 struct MorningText {
     /// The forecast the night is judged against, fixed at 22:00.
     let decided: NightForecast
-    /// The last forecast fetched before sunrise, to show how it moved overnight.
-    let beforeMorning: NightForecast?
     /// The latest fetch, which becomes the record two hours after sunrise.
     let latest: NightForecast
     let settings: Settings
     let decidedSettings: Settings
     let units: DisplayUnits
-    var alerted = false
     var found: DewObservation?
     var locale = Locale.current
 
@@ -27,11 +23,7 @@ struct MorningText {
 
     private var window: NightWindow { NightWindow(latest, packByMinutes: settings.packByMinutes) }
 
-    private var decidedText: VerdictText {
-        VerdictText(night: decided, settings: decidedSettings, units: units, locale: locale)
-    }
-
-    private var decidedVerdict: Verdict { decidedText.verdict }
+    private var decidedVerdict: Verdict { FlyEngine.evaluate(decided, settings: decidedSettings) }
 
     /// When tonight's forecast takes over: "12:00".
     var handoverTime: String { text.clock(window.handover) }
@@ -64,7 +56,7 @@ struct MorningText {
             return "It rained \(wet.since < latest.sunrise ? "last night" : "this morning"), so the rainfly is wet"
         }
         guard let dryBy = wet.dryBy else { return "It won't be dry before noon" }
-        if dryBy <= latest.sunrise { return "The \(Self.cause(wet.cause)) from \(text.clock(wet.since)) dried around \(text.clock(dryBy))" }
+        if dryBy <= latest.sunrise { return "The \(VerdictText.name(wet.cause).lowercased()) dried overnight" }
         let at = "It should be dry around \(text.clock(dryBy))"
         if dryBy <= window.packBy { return "\(at), before you pack up at \(text.clock(window.packBy))" }
         return "\(at), \(Self.duration(dryBy.timeIntervalSince(window.packBy))) after you pack up"
@@ -96,196 +88,24 @@ struct MorningText {
         WetFly.morning(latest, known: latest.fetchedAt, found: found, settings: decidedSettings)
     }
 
-    private var recordSpells: [WetFly] {
-        WetFly.morning(latest, known: latest.fetchedAt, settings: decidedSettings)
-    }
-
     private var wet: WetFly? {
         spells.last { $0.since < window.packBy }
-    }
-
-    /// When the night was judged from: 22:00, or the first fetch when it came later.
-    var decidedAt: String {
-        text.clock(NightWindow.decidedAt(decided))
     }
 
     var madeACall: Bool {
         decided.fetchedBeforeSunrise
     }
 
-    /// "At 22:00, Rainfly said on".
-    var lastNightTitle: String {
-        "At \(decidedAt), Rainfly said \(decidedVerdict.flyOn ? "on" : "off")"
+    /// "Rainfly expected dew".
+    var lastNight: String {
+        Self.expected(decidedVerdict.rain ?? decidedVerdict.condensation)
     }
 
-    /// Why it said so, or how the forecast changed before sunrise.
-    var lastNightDetail: String {
-        if let overnightChange { return overnightChange }
-        let said: String
-        if decidedVerdict.firings.isEmpty {
-            said = "It expected a clear, dry night."
-        } else {
-            let causes = decidedVerdict.firings.map { "\(Self.cause($0.trigger)) \(Self.from($0.trigger)) \(text.clock($0.at))" }
-            said = "Because of \(Self.list(causes))."
-        }
-        return [said, nowShows].compactMap { $0 }.joined(separator: " ")
-    }
-
-    private var overnightChange: String? {
-        guard let beforeMorning else { return nil }
-        let from = NightWindow.decidedAt(decided)
-        let overnight = FlyEngine.evaluate(beforeMorning, settings: decidedSettings, from: from)
-        let said = FlyEngine.evaluate(decided, settings: decidedSettings, from: from)
-        guard overnight.flyOn != said.flyOn, said.flyOn == decidedVerdict.flyOn else { return nil }
-        let by = "By \(text.clock(beforeMorning.fetchedAt)) the forecast changed to"
-        guard overnight.flyOn else { return "\(by) off." }
-        let because = overnight.headline.map { " because of \(Self.cause($0.trigger))" } ?? ""
-        return "\(by) on\(because)\(alerted ? ", and Rainfly sent you an alert" : "")."
-    }
-
-    /// What the record or the diary shows that the call didn't expect.
-    private var nowShows: String? {
-        let expectedWet = decidedVerdict.condensation != nil || decidedVerdict.firing(.rain) != nil
-        let from = NightWindow.decidedAt(decided)
-        let spell = recordSpells.first { $0.since.addingTimeInterval(3600) > from && $0.since < window.packBy }
-        let shows: (words: String, wet: Bool)? = if !expectedWet, let spell {
-            ("Apple Weather now shows \(Self.cause(spell.cause)) from \(text.clock(spell.since))", true)
-        } else if decidedVerdict.condensation != nil, !recordSpells.contains(where: { $0.since < window.packBy }) {
-            ("Apple Weather now shows no dew or frost", false)
-        } else {
-            nil
-        }
-        let foundWet = found.flatMap(Self.foundWet)
-        guard let shows else {
-            return foundWet.flatMap { $0 == expectedWet ? nil : "You found \(foundWords)." }
-        }
-        guard let foundWet, foundWet != shows.wet else { return "\(shows.words)." }
-        return "\(shows.words), but you found \(foundWords)."
-    }
-
-    /// Whether the fly was wet when the diary was answered; nil when it wasn't checked.
-    private static func foundWet(_ observation: DewObservation) -> Bool? {
-        switch observation.kind {
-        case .dry: false
-        case .lightDew, .wet, .frost, .rain: true
-        case .notChecked: nil
-        }
-    }
-
-    /// "it dry", "light dew".
-    private var foundWords: String {
-        switch found?.kind {
-        case .dry?: "it dry"
-        case .lightDew?: "light dew"
-        case .wet?: "it wet"
-        case .frost?: "frost"
-        case .rain?: "rain on it"
-        case .notChecked?, nil: "nothing"
-        }
-    }
-
-    /// "Was the 22:00 forecast right?"
-    var reviewTitle: String { "Was the \(decidedAt) forecast right?" }
-
-    /// Nil until WeatherKit's record of the night is in.
-    var review: NightReview? {
-        NightReview.isRecord(latest) ? NightReview(decided: decided, record: latest, found: found?.kind, settings: decidedSettings) : nil
-    }
-
-    /// Shown in place of the checks while the record is not in yet.
-    var reviewPending: String {
-        "Apple Weather's record of last night will be ready around \(text.clock(NightReview.recordReady(latest)))."
-    }
-
-    /// What the record shows for one check, and what Rainfly expected when it differs.
-    func explain(_ check: NightReview.Check) -> String {
-        let record = "Apple Weather's record shows"
-        switch check.trigger {
-        case .dew, .frost:
-            let wet = check.trigger == .dew ? "dew" : "frost"
-            let happened: String
-            if let firing = check.happened, let hour = latest.hours.first(where: { $0.date == firing.at }) {
-                happened = "\(record) the air got within \(decidedText.spread(hour.spreadC)) of its dew point at \(text.clock(firing.at)), with a clear sky and little wind"
-            } else {
-                happened = "\(record) \(missed(check.trigger, in: latest))"
-            }
-            let seen = check.found == nil ? "\(happened)." : "You found \(foundWords). \(happened)."
-            guard !check.isRight else { return seen }
-            if let expected = check.expected {
-                return "Rainfly expected \(wet) from \(text.clock(expected.at)). \(seen)"
-            }
-            return "At \(decidedAt) Rainfly expected \(expectedMiss(check.trigger)), so no \(wet). \(seen)"
-        case .rain, .morningRain:
-            let hours = check.trigger == .rain ? \NightWindow.nightHours : \NightWindow.morningHours
-            let chance = { (night: NightForecast) in
-                NightWindow(night, packByMinutes: decidedSettings.packByMinutes)[keyPath: hours].map(\.precipChance).max() ?? 0
-            }
-            var said = "At \(decidedAt) the chance was \(text.percent(chance(decided)))."
-            if let beforeMorning, chance(beforeMorning) >= chance(decided) + 0.1 {
-                said += " It went up to \(text.percent(chance(beforeMorning))) overnight"
-                return said + (check.happened.map { ", and rain fell from \(text.clock($0.at))." } ?? ", but no rain fell.")
-            }
-            return said + (check.happened.map { " Rain fell from \(text.clock($0.at))." } ?? " No rain fell.")
-        case .storm:
-            let said = check.expected.map { "A thunderstorm was forecast at \(text.clock($0.at))." } ?? "No thunderstorms were forecast."
-            return said + (check.happened.map { " \(record) one at \(text.clock($0.at))." } ?? " \(record) none.")
-        case .windRain:
-            let said = check.expected.map { "Rainfly expected wind with rain at \(text.clock($0.at))." } ?? "Rainfly didn't expect wind with rain."
-            return said + (check.happened.map { " \(record) wind with rain at \(text.clock($0.at))." } ?? " \(record) the wind and the rain never came together.")
-        case .cold:
-            let expectedLow = NightWindow(decided, packByMinutes: decidedSettings.packByMinutes).low
-            let actualLow = NightWindow(latest, packByMinutes: decidedSettings.packByMinutes).low
-            guard let expectedLow, let actualLow else { return "No hours to compare." }
-            let below = check.happened == nil ? ", so it never got below the \(decidedText.coldLimit) limit" : ", below the \(decidedText.coldLimit) limit"
-            return "Rainfly expected a low of \(text.low(expectedLow)). It got down to \(text.low(actualLow))\(below)."
-        }
-    }
-
-    private func missed(_ trigger: Trigger, in night: NightForecast) -> String {
-        let hours = NightWindow(night, packByMinutes: decidedSettings.packByMinutes).nightHours
-        return switch SpreadMiss.of(trigger, hours: hours, settings: decidedSettings) {
-        case .tooDry(let closest)?: "the air stayed at least \(decidedText.spread(closest)) from its dew point"
-        case .cloudy?: "it was cloudy whenever the air got close to its dew point"
-        case .windy?: "it was windy whenever the air got close to its dew point"
-        case .cloudyOrWindy?: "it was cloudy or windy whenever the air got close to its dew point"
-        case .otherSideOfFrostLine?:
-            trigger == .dew
-                ? "the air got down to \(decidedText.frostLine), so it was frost instead"
-                : "the air stayed warmer than \(decidedText.frostLine), so it was dew instead"
-        case nil: "no hours for the night"
-        }
-    }
-
-    private func expectedMiss(_ trigger: Trigger) -> String {
-        let hours = NightWindow(decided, packByMinutes: decidedSettings.packByMinutes).nightHours
-        return switch SpreadMiss.of(trigger, hours: hours, settings: decidedSettings) {
-        case .tooDry?, nil: "the air to stay too dry"
-        case .cloudy?: "clouds all night"
-        case .windy?: "wind all night"
-        case .cloudyOrWindy?: "clouds or wind all night"
-        case .otherSideOfFrostLine?: trigger == .dew ? "the air to get down to \(decidedText.frostLine)" : "the air to stay warmer than \(decidedText.frostLine)"
-        }
-    }
-
-    private static func cause(_ trigger: Trigger) -> String {
-        switch trigger {
-        case .storm: "storms"
-        case .rain: "rain"
-        case .windRain: "wind with rain"
-        case .frost: "frost"
-        case .dew: "dew"
-        case .morningRain: "morning rain"
-        case .cold: "cold"
-        }
-    }
-
-    private static func from(_ trigger: Trigger) -> String {
-        trigger == .storm || trigger == .windRain || trigger == .morningRain ? "at" : "from"
-    }
-
-    private static func list(_ items: [String]) -> String {
-        guard let last = items.last else { return "" }
-        return items.count == 1 ? last : items.dropLast().joined(separator: ", ") + " and " + last
+    /// What Rainfly expected of a night, for the morning question. Nil is a dry night, or no dew
+    /// or frost when rain was asked about first.
+    static func expected(_ firing: Firing?, afterRain: Bool = false) -> String {
+        guard let trigger = firing?.trigger else { return afterRain ? "Rainfly expected no dew or frost" : "Rainfly expected a dry night" }
+        return "Rainfly expected \(trigger == .storm ? "a storm" : trigger.isRain ? "rain" : VerdictText.name(trigger).lowercased())"
     }
 
     /// "an hour and a half", rounded to the half hour.

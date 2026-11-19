@@ -18,7 +18,7 @@ enum RefreshTiming {
         let soonest = now.addingTimeInterval(nightInterval)
         guard let window else { return now.addingTimeInterval(dayInterval) }
         if watchesNight, now >= window.sunset, now < window.sunrise { return soonest }
-        let record = window.sunrise.addingTimeInterval(NightReview.recordDelay + 60)
+        let record = window.sunrise.addingTimeInterval(NightRecord.delay + 60)
         let marks = [window.sunset, window.anchor, record, window.handover.addingTimeInterval(60)].filter { $0 > now }
         let next = min(now.addingTimeInterval(dayInterval), marks.min() ?? .distantFuture)
         return max(soonest, next)

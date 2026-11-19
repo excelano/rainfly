@@ -75,10 +75,10 @@ extension VerdictView {
                 notes: [overnight.note, current.map { "Right now: \($0.lowercased())" }].compactMap { $0 }
             )
         case .morning:
-            let morning = fetches.morning(text, alerted: model.wasAlerted)
+            let morning = fetches.morning(text)
             return VerdictLines(
                 flyOn: morning.packing != .dryNight, caption: morning.caption, headline: morning.headline, reason: morning.reason,
-                warning: morning.rainAhead(at: now), notes: [morning.advice, morning.madeACall ? morning.lastNightTitle : nil].compactMap { $0 },
+                warning: morning.rainAhead(at: now), notes: [morning.advice, morning.madeACall ? morning.lastNight : nil].compactMap { $0 },
                 muted: morning.packing == .dryToPack
             )
         }

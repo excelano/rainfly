@@ -36,7 +36,6 @@ struct NightFetches: Equatable, Sendable {
     let latest: NightForecast
     var decided: NightForecast?
     var decidedSettings: Settings?
-    var beforeMorning: NightForecast?
     /// What the dew diary found the morning after.
     var found: DewObservation?
 
@@ -44,11 +43,10 @@ struct NightFetches: Equatable, Sendable {
         OvernightText(text: text, decided: decided ?? latest, decidedSettings: decidedSettings ?? text.settings, now: now, current: current)
     }
 
-    func morning(_ text: VerdictText, alerted: Bool = false) -> MorningText {
+    func morning(_ text: VerdictText) -> MorningText {
         MorningText(
-            decided: decided ?? latest, beforeMorning: beforeMorning, latest: latest, settings: text.settings,
-            decidedSettings: decidedSettings ?? text.settings, units: text.units, alerted: alerted, found: found,
-            locale: text.locale
+            decided: decided ?? latest, latest: latest, settings: text.settings,
+            decidedSettings: decidedSettings ?? text.settings, units: text.units, found: found, locale: text.locale
         )
     }
 }
@@ -112,7 +110,7 @@ enum ComplicationTimeline {
         let text = VerdictText(night: night, settings: settings, units: units)
         let verdict = text.verdict
 
-        var marks = [now, night.sunset, window.anchor, night.sunrise, NightReview.recordReady(night)] + verdict.firings.map(\.at)
+        var marks = [now, night.sunset, window.anchor, night.sunrise, NightRecord.ready(night)] + verdict.firings.map(\.at)
         var hour = Calendar.current.dateInterval(of: .hour, for: now)?.end ?? window.handover
         while hour < window.handover {
             marks.append(hour)

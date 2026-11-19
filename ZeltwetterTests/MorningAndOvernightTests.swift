@@ -23,33 +23,10 @@ private let dewy = F.night { F.hour($0, temp: 12, dewPoint: 10, wind: 1) }
 private let cloudyThenClear = F.night { d in F.hour(d, temp: 12, dewPoint: 10, cloud: d < F.at(1, 2) ? 0.8 : 0.1, wind: 1) }
 private let cloudy = F.night { F.hour($0, temp: 12, dewPoint: 10, cloud: 0.8, wind: 1) }
 
-struct NightReviewTests {
-    @Test func aRightForecastIsRightOnEveryCheck() {
-        let review = NightReview(decided: fetched(dewy, at: F.at(0, 21)), record: fetched(dewy, at: F.at(1, 8)), settings: Settings())
-        #expect(review.checks.map(\.trigger) == [.rain, .dew])
-        #expect(review.checks.filter { !$0.isRight }.isEmpty)
-    }
-
-    @Test func aMissedDewNightIsWrong() {
-        let review = NightReview(decided: fetched(cloudy, at: F.at(0, 21)), record: fetched(cloudyThenClear, at: F.at(1, 8)), settings: Settings())
-        let dew = review.checks.first { $0.trigger == .dew }
-        #expect(dew?.expected == nil)
-        #expect(dew?.happened?.at == F.at(1, 2))
-        #expect(dew?.isRight == false)
-    }
-
-    @Test func rainInTheRecordCountsOnlyWhereItFell() {
-        let likely = F.night { F.hour($0, chance: 0.6) }
-        let review = NightReview(decided: fetched(likely, at: F.at(0, 21)), record: fetched(likely, at: F.at(1, 8)), settings: Settings())
-        let rain = review.checks.first { $0.trigger == .rain }
-        #expect(rain?.expected != nil)
-        #expect(rain?.happened == nil)
-        #expect(rain?.isRight == false)
-    }
-
+struct NightRecordTests {
     @Test func theRecordIsReadyTwoHoursAfterSunrise() {
-        #expect(!NightReview.isRecord(fetched(dewy, at: F.at(1, 7))))
-        #expect(NightReview.isRecord(fetched(dewy, at: F.at(1, 8))))
+        #expect(!NightRecord.isSettled(fetched(dewy, at: F.at(1, 7))))
+        #expect(NightRecord.isSettled(fetched(dewy, at: F.at(1, 8))))
     }
 
     @Test func spreadMissNamesWhatWasMissing() {
@@ -63,12 +40,11 @@ struct NightReviewTests {
 
 struct MorningTextTests {
     private func morning(
-        decided: NightForecast, beforeMorning: NightForecast? = nil, latest: NightForecast, alerted: Bool = false,
-        found: DewObservation? = nil, settings: Settings = Settings(), decidedSettings: Settings = Settings()
+        decided: NightForecast, latest: NightForecast, found: DewObservation? = nil, settings: Settings = Settings(), decidedSettings: Settings = Settings()
     ) -> MorningText {
         MorningText(
-            decided: decided, beforeMorning: beforeMorning, latest: latest, settings: settings, decidedSettings: decidedSettings,
-            units: metric, alerted: alerted, found: found, locale: english
+            decided: decided, latest: latest, settings: settings, decidedSettings: decidedSettings,
+            units: metric, found: found, locale: english
         )
     }
 
@@ -79,11 +55,6 @@ struct MorningTextTests {
             found: DewObservation(kind: .dry, openSky: true, at: F.at(1, 6, 30))
         )
         #expect(words.headline == "Dry night")
-        #expect(plain(words.lastNightDetail) == "It expected a clear, dry night. Apple Weather now shows dew from 1 AM, but you found it dry.")
-        let checks = words.review!.checks.filter { $0.trigger == .dew || $0.trigger == .frost }
-        #expect(checks.count == 1)
-        #expect(checks[0].isRight)
-        #expect(plain(words.explain(checks[0])) == "You found it dry. Apple Weather's record shows the air got within 2.0° of its dew point at 1 AM, with a clear sky and little wind.")
     }
 
     @Test func aWetAnswerWetsADryRecord() {
@@ -92,10 +63,6 @@ struct MorningTextTests {
             found: DewObservation(kind: .wet, openSky: true, at: F.at(1, 6, 30))
         )
         #expect(words.packing != .dryNight)
-        #expect(plain(words.lastNightDetail) == "It expected a clear, dry night. You found it wet.")
-        let dew = words.review!.checks.first { $0.trigger == .dew }!
-        #expect(!dew.isRight)
-        #expect(plain(words.explain(dew)) == "At 10 PM Rainfly expected the air to stay too dry, so no dew. You found it wet. Apple Weather's record shows the air stayed at least 10.0° from its dew point.")
     }
 
     @Test func aDryAnswerLeavesLaterRainWet() {
@@ -112,17 +79,16 @@ struct MorningTextTests {
         wider.dewSpreadC = 5
         let nearly = F.night { F.hour($0, temp: 12, dewPoint: 8, wind: 1) }
         let words = morning(decided: fetched(nearly, at: F.at(0, 21)), latest: fetched(nearly, at: F.at(1, 8)), settings: wider)
-        #expect(plain(words.lastNightTitle) == "At 10 PM, Rainfly said off")
+        #expect(words.lastNight == "Rainfly expected a dry night")
         #expect(words.headline == "Dry night")
     }
 
-    @Test func dewTheCallMissedIsNamedUnderLastNight() {
+    @Test func dewTheCallMissedWetsTheTent() {
         let dewFrom3 = F.night { d in
             d < F.at(1, 3) ? F.hour(d) : F.hour(d, temp: 10, dewPoint: 9.5, cloud: d < F.at(1, 5) ? 0.1 : 1, wind: d < F.at(1, 5) ? 1 : 0)
         }
         let words = morning(decided: fetched(F.night(), at: F.at(0, 21)), latest: fetched(dewFrom3, at: F.at(1, 7, 30)))
         #expect(words.headline == "Packing wet")
-        #expect(plain(words.lastNightDetail) == "It expected a clear, dry night. Apple Weather now shows dew from 3 AM.")
     }
 
     @Test func dewThatDriesOvernightReadsTheSameOvernightAndInTheMorning() {
@@ -135,7 +101,7 @@ struct MorningTextTests {
         #expect(overnight.headline == "Rainfly off")
         let words = morning(decided: night, latest: night)
         #expect(words.headline == "Dry to pack")
-        #expect(plain(words.reason) == "The dew from 8 PM dried around 2 AM")
+        #expect(words.reason == "The dew dried overnight")
     }
 
     @Test func rainAfterSunriseWetsTheTentOnceItHasFallen() {
@@ -152,41 +118,20 @@ struct MorningTextTests {
         #expect(morning(decided: fetched(dewy, at: F.at(1, 2)), latest: fetched(dewy, at: F.at(1, 7))).madeACall)
     }
 
-    @Test func aRightNightReadsRight() {
-        let words = morning(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 8)))
-        #expect(plain(words.lastNightTitle) == "At 10 PM, Rainfly said on")
-        #expect(plain(words.lastNightDetail) == "Because of dew from 8 PM.")
-        #expect(plain(words.reviewTitle) == "Was the 10 PM forecast right?")
-        let dew = words.review!.checks.first { $0.trigger == .dew }!
-        #expect(plain(words.explain(dew)) == "Apple Weather's record shows the air got within 2.0° of its dew point at 8 PM, with a clear sky and little wind.")
-        let rain = words.review!.checks.first { $0.trigger == .rain }!
-        #expect(plain(words.explain(rain)) == "At 10 PM the chance was 0%. No rain fell.")
+    @Test func lastNightNamesWhatRainflyExpectedWithoutATime() {
+        #expect(morning(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 8))).lastNight == "Rainfly expected dew")
+        let likely = F.night { F.hour($0, temp: 12, dewPoint: 10, wind: 1, chance: 0.6) }
+        #expect(morning(decided: fetched(likely, at: F.at(0, 21)), latest: fetched(likely, at: F.at(1, 8))).lastNight == "Rainfly expected rain")
     }
 
-    @Test func aWrongNightSaysWhatHappened() {
-        let words = morning(
-            decided: fetched(cloudy, at: F.at(0, 21)), beforeMorning: fetched(cloudyThenClear, at: F.at(1, 1)),
-            latest: fetched(cloudyThenClear, at: F.at(1, 8)), alerted: true
-        )
-        #expect(plain(words.lastNightTitle) == "At 10 PM, Rainfly said off")
-        #expect(plain(words.lastNightDetail) == "By 1 AM the forecast changed to on because of dew, and Rainfly sent you an alert.")
-        let dew = words.review!.checks.first { $0.trigger == .dew }!
-        #expect(plain(words.explain(dew)) == "At 10 PM Rainfly expected clouds all night, so no dew. Apple Weather's record shows the air got within 2.0° of its dew point at 2 AM, with a clear sky and little wind.")
-    }
-
-    @Test func anHourPastAt22IsNotAChangeOvernight() {
-        let rainedAt20 = F.night { d in F.hour(d, temp: 12, dewPoint: 10, cloud: 0.8, wind: 1, amount: d == F.at(0, 20) ? 0.5 : 0) }
-        let words = morning(
-            decided: fetched(cloudy, at: F.at(0, 21)), beforeMorning: fetched(rainedAt20, at: F.at(1, 5)),
-            latest: fetched(rainedAt20, at: F.at(1, 8))
-        )
-        #expect(plain(words.lastNightDetail) == "It expected a clear, dry night.")
-    }
-
-    @Test func theReviewWaitsForTheRecord() {
-        let words = morning(decided: fetched(dewy, at: F.at(0, 21)), latest: fetched(dewy, at: F.at(1, 6)))
-        #expect(words.review == nil)
-        #expect(plain(words.reviewPending) == "Apple Weather's record of last night will be ready around 7:45 AM.")
+    @Test func theMorningQuestionReadsAsTheCall() {
+        let dew = Firing(trigger: .dew, at: F.at(0, 19))
+        #expect(MorningText.expected(dew) == "Rainfly expected dew")
+        #expect(MorningText.expected(Firing(trigger: .frost, at: F.at(1, 4))) == "Rainfly expected frost")
+        #expect(MorningText.expected(Firing(trigger: .storm, at: F.at(1, 1))) == "Rainfly expected a storm")
+        #expect(MorningText.expected(Firing(trigger: .windRain, at: F.at(1, 1))) == "Rainfly expected rain")
+        #expect(MorningText.expected(nil) == "Rainfly expected a dry night")
+        #expect(MorningText.expected(nil, afterRain: true) == "Rainfly expected no dew or frost")
     }
 
     @Test func packingComparesDryingWithPackingUp() {

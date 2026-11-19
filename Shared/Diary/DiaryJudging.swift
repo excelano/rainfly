@@ -14,7 +14,7 @@ enum DiaryJudging {
         let firing = verdict.condensation
         let predicted = firing != nil
         var judgement = DiaryJudgement(
-            predicted: predicted, firing: firing, rain: verdict.firings.first { $0.trigger.isRain },
+            predicted: predicted, firing: firing, rain: verdict.rain,
             closestSpread: NightWindow(pitched, packByMinutes: settings.packByMinutes).closestSpread
         )
         guard let found = kind?.foundMoisture else { return judgement }

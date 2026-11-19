@@ -68,11 +68,6 @@ struct NightWindow: Sendable {
         max(decided.fetchedAt, anchor(of: decided))
     }
 
-    /// The last forecast fetched before sunrise, which shows how the forecast moved overnight.
-    static func beforeMorning(_ fetches: [NightForecast]) -> NightForecast? {
-        fetches.filter(\.fetchedBeforeSunrise).max { $0.fetchedAt < $1.fetchedAt }
-    }
-
     static let anchorHour = 22
     static let handoverHour = 12
 

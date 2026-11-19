@@ -28,16 +28,12 @@ struct ForecastCache {
         NightWindow.decided(all(at: campName, on: date))
     }
 
-    func beforeMorning(at campName: String, on date: NightDate) -> NightForecast? {
-        NightWindow.beforeMorning(all(at: campName, on: date))
-    }
-
-    /// The night's latest forecast with the two its overnight and morning words compare against.
+    /// The night's latest forecast with the one its overnight and morning words compare against.
     func fetches(at campName: String, on date: NightDate) -> NightFetches? {
         let all = all(at: campName, on: date)
         return all.max { $0.fetchedAt < $1.fetchedAt }.map {
             NightFetches(
-                latest: $0, decided: NightWindow.decided(all), beforeMorning: NightWindow.beforeMorning(all),
+                latest: $0, decided: NightWindow.decided(all),
                 found: found(at: campName, on: date)
             )
         }
@@ -80,7 +76,7 @@ struct ForecastCache {
         let others = all.filter { $0.sunrise.addingTimeInterval(86_400) > now && !isSame($0) }
         let same = all.filter(isSame) + [night]
         let latest = same.max { $0.fetchedAt < $1.fetchedAt }
-        let kept = [latest, NightWindow.decided(same), NightWindow.beforeMorning(same)].compactMap { $0 }
+        let kept = [latest, NightWindow.decided(same)].compactMap { $0 }
         store.save(others + kept.reduce(into: []) { unique, fetch in if !unique.contains(fetch) { unique.append(fetch) } })
     }
 
