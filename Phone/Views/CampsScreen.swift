@@ -144,7 +144,7 @@ private struct TripRow: View {
     var body: some View {
         TimelineView(.everyMinute) { context in
             let now = VerdictScreen.now(context.date)
-            let words = words(at: now)
+            let words = fetches.map { TripNightScreen.text($0, of: night, model: model, at: now).row }
             HStack(spacing: 12) {
                 if let words {
                     TentGlyph(flyOn: words.flyOn)
@@ -169,16 +169,6 @@ private struct TripRow: View {
             .accessibilityElement(children: .combine)
         }
     }
-
-    private func words(at now: Date) -> (flyOn: Bool, headline: String, detail: String)? {
-        guard let fetches else { return nil }
-        let text = TripNightScreen.text(fetches.latest, model: model)
-        guard night.date == model.nightDate(at: now), text.window.phase(at: now) != .evening else {
-            return (text.verdict.flyOn, text.headline, text.reason)
-        }
-        let face = ComplicationFace(text, at: now, fetches: fetches)
-        return (face.flyOn ?? text.verdict.flyOn, face.headline, face.detail)
-    }
 }
 
 /// A downloaded night of the trip, laid out as the main screen is.
@@ -190,32 +180,31 @@ private struct TripNightScreen: View {
     var body: some View {
         TimelineView(.everyMinute) { context in
             let now = VerdictScreen.now(context.date)
-            let text = Self.text(fetches.latest, model: model)
-            let tonight = model.nightDate(at: now)
-            if night.date == tonight {
-                let shown = night.campName == model.campName
-                switch text.window.phase(at: now) {
-                case .evening:
-                    NightView(text: text, now: now, attribution: model.attribution)
-                case .overnight:
-                    let current = shown ? model.current : nil
-                    OvernightView(
-                        overnight: fetches.overnight(text, now: now, current: current),
-                        current: current, pressure: nil, now: now, attribution: model.attribution
-                    ) { EmptyView() }
-                case .morning:
-                    MorningView(morning: fetches.morning(text), now: now, attribution: model.attribution) { EmptyView() }
-                }
-            } else {
-                NightView(text: text, now: now, attribution: model.attribution, period: Self.title(night, tonight: tonight))
+            let trip = Self.text(fetches, of: night, model: model, at: now)
+            let text = trip.text
+            switch trip.phase {
+            case .evening:
+                NightView(text: text, now: now, attribution: model.attribution)
+            case .overnight:
+                let current = night.campName == model.campName ? model.current : nil
+                OvernightView(
+                    overnight: fetches.overnight(text, now: now, current: current),
+                    current: current, pressure: nil, now: now, attribution: model.attribution
+                ) { EmptyView() }
+            case .morning:
+                MorningView(morning: fetches.morning(text), now: now, attribution: model.attribution) { EmptyView() }
+            case nil:
+                NightView(text: text, now: now, attribution: model.attribution, period: Self.title(night, tonight: model.nightDate(at: now)))
             }
         }
         .navigationTitle(night.campName)
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    static func text(_ forecast: NightForecast, model: ForecastModel) -> VerdictText {
-        VerdictText(night: forecast, settings: model.settings, units: model.preferences.units)
+    static func text(_ fetches: NightFetches, of night: TripNight, model: ForecastModel, at now: Date) -> TripNightText {
+        TripNightText(
+            fetches, of: night, tonight: model.nightDate(at: now), settings: model.settings, units: model.preferences.units, at: now
+        )
     }
 
     static func title(_ night: TripNight, tonight: NightDate) -> String {
