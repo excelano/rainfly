@@ -2,9 +2,13 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "1.3.10"
+version = "1.3.11"
 
 [locales."en-us"]
 whats-new = """
-The red night screen now covers the top bar too. The camp and settings buttons and the camp's name had stayed white above the red, bright enough to undo what the red is for.
+Each night now gets one call. Rainfly takes the last forecast before 10 PM and keeps what it says about the night from then until pack-up, so the overnight screen, the overnight alert, the Apple Watch and the widgets all judge the night by that forecast, and changing a setting later no longer rewrites a night that has passed.
+
+In the morning, Rainfly says what it expected last night: dew, frost, rain, a cold night or a dry one. With the dew diary on, it asks one question, whether it was right, and the diary scores each night against that call. A night with no forecast before 10 PM is kept without counting as right or wrong.
+
+Your iPhone and Apple Watch share the call for a saved camp, and nights kept by earlier versions get their call the first time you open this one.
 """
