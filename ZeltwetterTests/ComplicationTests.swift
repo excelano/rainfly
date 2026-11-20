@@ -58,6 +58,17 @@ struct ComplicationTimelineTests {
         #expect(morning.inline == "Rainfly expected dew")
     }
 
+    @Test func theMorningTentIsTheCallsNotTheLatestForecasts() {
+        let dewy = F.dewyNight { F.hour($0, temp: 15, dewPoint: 5) }
+        let afterADryCall = entries(dewy, now: F.sunrise, called: F.night())[0].face
+        #expect(afterADryCall.flyOn == false)
+        #expect(afterADryCall.headline == "Expected a dry night")
+
+        let afterADewyCall = entries(F.night(), now: F.sunrise, called: dewy)[0].face
+        #expect(afterADewyCall.flyOn == true)
+        #expect(afterADewyCall.headline == "Expected dew")
+    }
+
     @Test func aMorningWithNoCallSaysSo() {
         let late = F.night()
         let unsealed = NightForecast(location: late.location, fetchedAt: F.at(1, 1), sunset: late.sunset, sunrise: late.sunrise, hours: late.hours)
