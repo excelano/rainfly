@@ -31,7 +31,7 @@ The rule engine in `Shared/Engine` uses Foundation alone and is covered by the t
 Rainfly sends a camp's position only to Apple's weather and map services, and answered dew diary nights only to Excelano's CloudKit database while sharing is on. [SECURITY.md](SECURITY.md#what-rainfly-can-access) says what it reads and sends, and [What Rainfly stores](SECURITY.md#what-rainfly-stores) what it keeps. The privacy policy is at https://excelano.com/legal/#rainfly.
 
 > [!WARNING]
-> Don't submit Rainfly, or a copy of it under another name, to the App Store. Apple's
+> Do NOT submit Rainfly, or a copy of it under another name, to the App Store. Apple's
 > App Review Guideline 4.3 treats copies of other apps as spam, and a 4.3
 > finding can flag the developer account that submitted it, so that every app
 > the account sends afterwards is flagged too. Build it for your own devices and keep
